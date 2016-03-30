@@ -1,28 +1,82 @@
 {
-  "name": "hexo-blog-encrypt",
-  "version": "0.0.1",
+  "_args": [
+    [
+      "hexo-blog-encrypt@0.0.3",
+      "/Users/Mike/Workspace/js-code/hexo"
+    ]
+  ],
+  "_from": "hexo-blog-encrypt@0.0.3",
+  "_id": "hexo-blog-encrypt@0.0.3",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/hexo-blog-encrypt",
+  "_nodeVersion": "5.9.1",
+  "_npmOperationalInternal": {
+    "host": "packages-16-east.internal.npmjs.com",
+    "tmp": "tmp/hexo-blog-encrypt-0.0.3.tgz_1459304098692_0.12889039027504623"
+  },
+  "_npmUser": {
+    "email": "mike@mikecoder.cn",
+    "name": "mikecoder"
+  },
+  "_npmVersion": "3.7.3",
+  "_phantomChildren": {},
+  "_requested": {
+    "name": "hexo-blog-encrypt",
+    "raw": "hexo-blog-encrypt@0.0.3",
+    "rawSpec": "0.0.3",
+    "scope": null,
+    "spec": "0.0.3",
+    "type": "version"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_shasum": "132a8b072baba3a028011c368652053f94d022d0",
+  "_shrinkwrap": null,
+  "_spec": "hexo-blog-encrypt@0.0.3",
+  "_where": "/Users/Mike/Workspace/js-code/hexo",
+  "author": {
+    "name": "mike"
+  },
+  "bugs": {
+    "url": "https://github.com/MikeCoder/hexo-blog-encrypt/issues"
+  },
+  "dependencies": {
+    "crypto-js": "3.1.*",
+    "hexo-fs": "0.1.5"
+  },
   "description": "A blog encrypt plugin for hexo.",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "devDependencies": {},
+  "directories": {},
+  "dist": {
+    "shasum": "132a8b072baba3a028011c368652053f94d022d0",
+    "tarball": "http://registry.npmjs.org/hexo-blog-encrypt/-/hexo-blog-encrypt-0.0.3.tgz"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/MikeCoder/hexo-blog-encrypt.git"
-  },
+  "gitHead": "9388761dc457c36a76dea1d76278acbf4e5ade13",
+  "homepage": "https://github.com/MikeCoder/hexo-blog-encrypt#readme",
   "keywords": [
     "encrypt",
     "blog",
     "hexo"
   ],
-  "dependencies": {
-    "hexo-fs": "0.1.5"
-  },
-  "readmeFilename": "ReadMe.md",
-  "author": "mike",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/MikeCoder/hexo-blog-encrypt/issues"
+  "main": "index.js",
+  "maintainers": [
+    {
+      "email": "mike@mikecoder.cn",
+      "name": "mikecoder"
+    }
+  ],
+  "name": "hexo-blog-encrypt",
+  "optionalDependencies": {},
+  "readme": "ERROR: No README data found!",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/MikeCoder/hexo-blog-encrypt.git"
   },
-  "homepage": "https://github.com/MikeCoder/hexo-blog-encrypt#readme"
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "version": "0.0.3"
 }
