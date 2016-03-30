@@ -30,9 +30,12 @@ hexo.extend.filter.register("after_post_render", function (data) {
 
     for (var i = 0, len = hexo.config.encrypt.blogs.length; i < len; i++) {
         if (data.title == hexo.config.encrypt.blogs[i].title) {
-            data.content = CryptoJS.AES.encrypt(data.content, hexo.config.encrypt.blogs[i].password);
-            data.content = '<script src="' + hexo.config.root + 'aes.js"></script>' + data.content;
-            data.content = '<div id="security"><h4>文章已经被加密，请输入密码进行查看。</h4><div><input id="pass"></input><input type="button" id="submit" value="解密" onclick="decryptAES"></input></div></div><div id="encrypt-blog" style="display:none">' + data.content + '</div>';
+            console.log(data.content);
+            data.content = escape(data.content);
+            data.content = CryptoJS.AES.encrypt(data.content, hexo.config.encrypt.blogs[i].password).toString();
+            data.content = '<div id="security"><h4>文章已经被加密，请输入密码进行查看。</h4><div><input id="pass"></input><input type="button" id="submit" value="解密" onclick="decryptAES()"></input></div></div><div id="encrypt-blog" style="display:none">' + data.content;
+            data.content = '<script src="' + hexo.config.root + 'mcommon.js"></script>' + data.content;
+            data.content = '<script src="' + hexo.config.root + 'crypto-js.js"></script>' + data.content;
             data.more = "文章已经被加密，请在文章页输入密码进行查看。";
             data.excerpt = data.more;
         }
@@ -41,38 +44,22 @@ hexo.extend.filter.register("after_post_render", function (data) {
 });
 
 hexo.on('exit', function() {
-    var easjs = pathFn.join(pathFn.join(pathFn.join(pathFn.join(hexo.base_dir, 'node_modules'), 'hexo-blog-encrypt'), 'lib'), 'aes.js');
-    fs.exists(pathFn.join(hexo.public_dir, 'aes.js')).then(function (res) {
+    var mcommonjs = pathFn.join(pathFn.join(pathFn.join(pathFn.join(hexo.base_dir, 'node_modules'), 'hexo-blog-encrypt'), 'lib'), 'mcommon.js');
+    fs.exists(pathFn.join(hexo.public_dir, 'mcommon.js')).then(function (res) {
         console.log(res);
         if (!res) {
-            fs.readFile(easjs).then(function(content) {
-                console.log("copying aes.js");
-                fs.copyFile(easjs, pathFn.join(hexo.public_dir, 'aes.js'));
-                console.log("finishing copying aes.js");
+            fs.readFile(mcommonjs).then(function(content) {
+                fs.copyFile(mcommonjs, pathFn.join(hexo.public_dir, 'mcommon.js'));
             });
         }
     });
 
-    var corejs = pathFn.join(pathFn.join(pathFn.join(pathFn.join(hexo.base_dir, 'node_modules'), 'hexo-blog-encrypt'), 'lib'), 'aes.js');
-    fs.exists(pathFn.join(hexo.public_dir, 'aes.js')).then(function (res) {
+    var corejs = pathFn.join(pathFn.join(pathFn.join(pathFn.join(hexo.base_dir, 'node_modules'), 'hexo-blog-encrypt'), 'lib'), 'crypto-js.js');
+    fs.exists(pathFn.join(hexo.public_dir, 'crypto-js.js')).then(function (res) {
         console.log(res);
         if (!res) {
             fs.readFile(corejs).then(function(content) {
-                console.log("copying aes.js");
-                fs.copyFile(corejs, pathFn.join(hexo.public_dir, 'aes.js'));
-                console.log("finishing copying aes.js");
-            });
-        }
-    });
-
-    var easjs = pathFn.join(pathFn.join(pathFn.join(pathFn.join(hexo.base_dir, 'node_modules'), 'hexo-blog-encrypt'), 'lib'), 'aes.js');
-    fs.exists(pathFn.join(hexo.public_dir, 'aes.js')).then(function (res) {
-        console.log(res);
-        if (!res) {
-            fs.readFile(easjs).then(function(content) {
-                console.log("copying aes.js");
-                fs.copyFile(easjs, pathFn.join(hexo.public_dir, 'aes.js'));
-                console.log("finishing copying aes.js");
+                fs.copyFile(corejs, pathFn.join(hexo.public_dir, 'crypto-js.js'));
             });
         }
     });
