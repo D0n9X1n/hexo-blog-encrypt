@@ -36,6 +36,7 @@ hexo.extend.filter.register("after_post_render", function (data) {
             data.content = '<div id="security"><h4>文章已经被加密，请输入密码进行查看。</h4><div><input id="pass"></input><input type="button" id="submit" value="解密" onclick="decryptAES()"></input></div></div><div id="encrypt-blog" style="display:none">' + data.content;
             data.content = '<script src="' + hexo.config.root + 'mcommon.js"></script>' + data.content;
             data.content = '<script src="' + hexo.config.root + 'crypto-js.js"></script>' + data.content;
+
             data.more = "文章已经被加密，请在文章页输入密码进行查看。";
             data.excerpt = data.more;
         }
