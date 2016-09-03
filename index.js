@@ -36,7 +36,8 @@ hexo.extend.filter.register("after_post_render", function (data) {
     }
 
     for (var i = 0, len = hexo.config.encrypt.blogs.length; i < len; i++) {
-        if (data.title == hexo.config.encrypt.blogs[i].title) {
+        if (data.title.trim() == hexo.config.encrypt.blogs[i].title.trim()) {
+            console.log('encrypt the blog :' + data.title.trim());
             if (!hexo.config.encrypt.blogs[i].more) {
                 hexo.config.encrypt.blogs[i].more = hexo.config.encrypt.default_more;
             }
