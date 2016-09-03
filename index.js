@@ -24,20 +24,32 @@ var pathFn = require('path');
 var CryptoJS = require("crypto-js");
 
 hexo.extend.filter.register("after_post_render", function (data) {
+    // close the encrypt function
     if (!hexo.config.encrypt.enable) {
         return data;
-    } // close the encrypt function
+    }
+    if (!hexo.config.encrypt.default_template) { // no such template
+        hexo.config.encrypt.default_template = '<div id="security"> <h4>The article has been encrypted, please enter your password to view.</h4> <div> <input id="pass"></input> <input type="button" id="submit" value="decrypt" onclick="decryptAES()"/> </div> </div> <div id="encrypt-blog" style="display:none"> </div>';
+    }
+    if (!hexo.config.encrypt.default_more) { // no read more info
+        hexo.config.encrypt.default_more = 'The article has been encrypted, please enter your password to view.<br>';
+    }
 
     for (var i = 0, len = hexo.config.encrypt.blogs.length; i < len; i++) {
         if (data.title == hexo.config.encrypt.blogs[i].title) {
-            console.log(data.content);
+            if (!hexo.config.encrypt.blogs[i].more) {
+                hexo.config.encrypt.blogs[i].more = hexo.config.encrypt.default_more;
+            }
+            if (!hexo.config.encrypt.blogs[i].template) {
+                hexo.config.encrypt.blogs[i].template = hexo.config.encrypt.default_template;
+            }
             data.content = escape(data.content);
             data.content = CryptoJS.AES.encrypt(data.content, hexo.config.encrypt.blogs[i].password).toString();
-            data.content = '<div id="security"><h4>文章已经被加密，请输入密码进行查看。</h4><div><input id="pass"></input><input type="button" id="submit" value="解密" onclick="decryptAES()"></input></div></div><div id="encrypt-blog" style="display:none">' + data.content;
+            data.content = hexo.config.encrypt.blogs[i].template.replace('{{content}}', data.content);
             data.content = '<script src="' + hexo.config.root + 'mcommon.js"></script>' + data.content;
             data.content = '<script src="' + hexo.config.root + 'crypto-js.js"></script>' + data.content;
 
-            data.more = "文章已经被加密，请在文章页输入密码进行查看。";
+            data.more = hexo.config.encrypt.blogs[i].more;
             data.excerpt = data.more;
         }
     }
@@ -46,23 +58,13 @@ hexo.extend.filter.register("after_post_render", function (data) {
 
 hexo.on('exit', function() {
     var mcommonjs = pathFn.join(pathFn.join(pathFn.join(pathFn.join(hexo.base_dir, 'node_modules'), 'hexo-blog-encrypt'), 'lib'), 'mcommon.js');
-    fs.exists(pathFn.join(hexo.public_dir, 'mcommon.js')).then(function (res) {
-        console.log(res);
-        if (!res) {
-            fs.readFile(mcommonjs).then(function(content) {
-                fs.copyFile(mcommonjs, pathFn.join(hexo.public_dir, 'mcommon.js'));
-            });
-        }
+    fs.readFile(mcommonjs).then(function(content) {
+        fs.copyFile(mcommonjs, pathFn.join(hexo.public_dir, 'mcommon.js'));
     });
 
     var corejs = pathFn.join(pathFn.join(pathFn.join(pathFn.join(hexo.base_dir, 'node_modules'), 'hexo-blog-encrypt'), 'lib'), 'crypto-js.js');
-    fs.exists(pathFn.join(hexo.public_dir, 'crypto-js.js')).then(function (res) {
-        console.log(res);
-        if (!res) {
-            fs.readFile(corejs).then(function(content) {
-                fs.copyFile(corejs, pathFn.join(hexo.public_dir, 'crypto-js.js'));
-            });
-        }
+    fs.readFile(corejs).then(function(content) {
+        fs.copyFile(corejs, pathFn.join(hexo.public_dir, 'crypto-js.js'));
     });
 });
 
