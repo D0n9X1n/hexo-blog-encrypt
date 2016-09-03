@@ -29,7 +29,7 @@ hexo.extend.filter.register("after_post_render", function (data) {
         return data;
     }
     if (!hexo.config.encrypt.default_template) { // no such template
-        hexo.config.encrypt.default_template = '<div id="security"> <h4>The article has been encrypted, please enter your password to view.</h4> <div> <input id="pass"></input> <input type="button" id="submit" value="decrypt" onclick="decryptAES()"/> </div> </div> <div id="encrypt-blog" style="display:none"> </div>';
+        hexo.config.encrypt.default_template = '<link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css"> <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap-theme.min.css"> <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script> <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script> <div id="security"> <h4>文章已经被加密，请输入密码进行查看。</h4> <div> <div class="input-group"> <input type="text" class="form-control" aria-label="请输入密码" id="pass"/> <div class="input-group-btn"> <button type="button" class="btn btn-default" onclick="decryptAES()">Decrypt</button> </div> </div> </div> </div> <div id="encrypt-blog" style="display:none"> {{content}} </div>';
     }
     if (!hexo.config.encrypt.default_more) { // no read more info
         hexo.config.encrypt.default_more = 'The article has been encrypted, please enter your password to view.<br>';
