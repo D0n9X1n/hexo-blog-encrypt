@@ -2,26 +2,25 @@ Hexo-Blog-Encrypt
 ===
 [![npm version](https://badge.fury.io/js/hexo-blog-encrypt.svg)](https://badge.fury.io/js/hexo-blog-encrypt)
 
-[中文说明](./ReadMe.zh.md)
+[English ReadMe](./ReadMe.md)
 
-##What is Hexo Blog Encrypt
-> Think about this, you write an article, but not want everyone to read. So you will add a passwrod on the blog, others need to answer the password to access the blog.
-> It is easy on wordpress or emlog or other blog system. However, when you on hexo, there is no such a plugin or function before.
-> Now let me introduce my plugin "Hexo-Blog-Encrypt".
+##什么是 Hexo-Blog-Encrypt
+> 尝试着想一下，你写了一篇博客，但是，出于某种原因，不太希望每一个人都可以看到他。所以你常常会为这种文章设置一个密码，其他人需要输入密码才可以访问这篇博客。对于 emlog 或者 wordpress 来说，这很容易，但是对于 hexo 来说，之前并没有一个类似的功能。
+>
+> 所以，Hexo-Blog-Encrypt 因为这个需求而诞生了。
 
-##Live Demo
-See [http://mikecoder.github.io/](http://mikecoder.github.io/2016/03/30/helloworld/)
+##线上 Demo
+你可以查看 [http://mikecoder.github.io/](http://mikecoder.github.io/2016/03/30/helloworld/)
 
-#Install
-+ Add '"hexo-blog-encrypt": "1.0.\*"' to your hexo *package.json*.
-+ Then use *npm install*.
-+ This plugin will install automatic.
+#安装
++ 在 hexo 根目录的 *package.json* 中添加 '"hexo-blog-encrypt": "1.0.\*"' 依赖。
++ 然后执行 *npm install* 命令。
++ 该插件会自动安装
 
-##How to Use
+##如何使用
 
-###For easy usage
-+ You should add your config in your hexo config file **_config.yml**.
-+ Add the following config to **_config.yml**
+###对于简单的使用
++ 在 hexo 根木录的 **_config.yml** 中添加配置信息:
 
 ```
 # Security
@@ -35,8 +34,8 @@ encrypt:
           password: fff
 ```
 
-+ It means the blog named **hello world** has been encrypted with the password 'mikemessi'.
-+ **Blog's title, it should be the same.**
++ 这个配置的意思是，开启加密 --- enable: true
++ 对于标题为 hello world 的博客，设置密码为 mikemessi，对于标题为 fff 的博客，密码设置为 fff
 
 ```
 ---
@@ -45,9 +44,10 @@ date: 2016-03-30 21:18:02
 tags:
 ---
 ```
++ 这边要注意，标题一定要一致(前后空格无所谓)
 
-###For professional usage
-+ You can follow the following config file:
+###对于进阶使用
++ 你可以自定义加密后文章在列表页的内容，以及输入密码前的样式，具体可以看下面的配置:
 
 ```
 # Security
@@ -103,17 +103,17 @@ encrypt:
                     </div>
 ```
 
-+ You can see **default_more** and **default_template** and **more** and **template** here.
-    + default_more : means the default description which will be shown on the blogs list page.
-    + default_template : means the default detail page which will be shown on the detial page.
-    + more : whith means the blog's description you selected will be used instead of the default one.
-    + template : it's like more.
-        + the content div's id **must** be 'encrypt-blog'
-        + there must be a input's id **must** be pass, which will let reader to input their password
-        + there must be trigger which calls the 'decryptAES' function
++ 可以看见，和上面的配置文件对比来看，多了 **default_template** 和 **default_more** 配置项，blogs 里也多了 **template** 和 **more** 配置项。
+    + default_more : 这个是指在文章列表页，我们看到的加密文章描述。当然这是对所有加密文章生效的。
+    + default_template : 这个是指在文章详情页，我们看到的输入密码阅读的模板，同理，这个也是针对所有文章的。
+    + more : 这个就是针对这篇博客，自定义的文章列表页的文章描述，只针对该博客生效。
+    + template : 和上述类似，只对当前博客生效。
+        + 最后的 content 显示 div 的 id **必须** 是 'encrypt-blog'，同时为了好看，也希望进行隐藏。
+        + 同时，必须要有一个 input 输入框，id **必须**是"pass"，用来供用户输入密码。
+        + 输入密码之后，务必要有一个触发器，用来调用 'decryptAES' 函数。样例中以 button 来触发。
 
 ##TODO
-See [TODO](./TODO.md) file.
+See [TODO](./TODO.md) File
 
 ##License
-See [LICENSE](./LICENSE) file.
+See [LICENSE](./LICENSE) File.

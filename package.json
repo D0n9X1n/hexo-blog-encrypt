@@ -26,7 +26,6 @@
   ],
   "name": "hexo-blog-encrypt",
   "optionalDependencies": {},
-  "readme": "ERROR: No README data found!",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/MikeCoder/hexo-blog-encrypt.git"
@@ -34,5 +33,5 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "version": "1.0.0"
+  "version": "1.0.1"
 }
