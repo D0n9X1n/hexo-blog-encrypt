@@ -35,23 +35,48 @@ hexo.extend.filter.register("after_post_render", function (data) {
         hexo.config.encrypt.default_more = 'The article has been encrypted, please enter your password to view.<br>';
     }
 
-    for (var i = 0, len = hexo.config.encrypt.blogs.length; i < len; i++) {
-        if (data.title.trim() == hexo.config.encrypt.blogs[i].title.trim()) {
-            console.log('encrypt the blog :' + data.title.trim());
-            if (!hexo.config.encrypt.blogs[i].more) {
-                hexo.config.encrypt.blogs[i].more = hexo.config.encrypt.default_more;
-            }
-            if (!hexo.config.encrypt.blogs[i].template) {
-                hexo.config.encrypt.blogs[i].template = hexo.config.encrypt.default_template;
-            }
-            data.content = escape(data.content);
-            data.content = CryptoJS.AES.encrypt(data.content, hexo.config.encrypt.blogs[i].password).toString();
-            data.content = hexo.config.encrypt.blogs[i].template.replace('{{content}}', data.content);
-            data.content = '<script src="' + hexo.config.root + 'mcommon.js"></script>' + data.content;
-            data.content = '<script src="' + hexo.config.root + 'crypto-js.js"></script>' + data.content;
+    if ('password' in data && data.password) {
+        // use the blog's config first
+        console.log('encrypt the blog :' + data.title.trim());
+        if (!data.abstract) {
+            data.abstract = hexo.config.encrypt.default_more;
+        }
+        if (!data.template) {
+            data.template = hexo.config.encrypt.default_template;
+        }
+        data.content = escape(data.content);
+        data.content = CryptoJS.AES.encrypt(data.content, data.password).toString();
+        data.content = data.template.replace('{{content}}', data.content);
+        if (data.message) {
+            data.content = '<h4 class="hexo-blog-encrypt-message">' + data.message + '</h4>' + data.content;
+        }
+        data.content = '<script src="' + hexo.config.root + 'mcommon.js"></script>' + data.content;
+        data.content = '<script src="' + hexo.config.root + 'crypto-js.js"></script>' + data.content;
 
-            data.more = hexo.config.encrypt.blogs[i].more;
-            data.excerpt = data.more;
+        data.more = data.abstract;
+        data.excerpt = data.more;
+    } else {
+        for (var i = 0, len = hexo.config.encrypt.blogs.length; i < len; i++) {
+            if (data.title.trim() == hexo.config.encrypt.blogs[i].title.trim()) {
+                console.log('encrypt the blog :' + data.title.trim());
+                if (!hexo.config.encrypt.blogs[i].more) {
+                    hexo.config.encrypt.blogs[i].more = hexo.config.encrypt.default_more;
+                }
+                if (!hexo.config.encrypt.blogs[i].template) {
+                    hexo.config.encrypt.blogs[i].template = hexo.config.encrypt.default_template;
+                }
+                data.content = escape(data.content);
+                data.content = CryptoJS.AES.encrypt(data.content, hexo.config.encrypt.blogs[i].password).toString();
+                data.content = hexo.config.encrypt.blogs[i].template.replace('{{content}}', data.content);
+                if (hexo.config.encrypt.blogs[i].message) {
+                    data.content = '<h4 class="hexo-blog-encrypt-message">' + hexo.config.encrypt.blogs[i].message + '</h4>' + data.content;
+                }
+                data.content = '<script src="' + hexo.config.root + 'mcommon.js"></script>' + data.content;
+                data.content = '<script src="' + hexo.config.root + 'crypto-js.js"></script>' + data.content;
+
+                data.more = hexo.config.encrypt.blogs[i].more;
+                data.excerpt = data.more;
+            }
         }
     }
     return data;
