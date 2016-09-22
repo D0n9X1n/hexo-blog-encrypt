@@ -141,7 +141,7 @@ encrypt:
                     </div>
 ```
 
-+ You can see **default_more** and **default_template** and **default_message** here.
++ You can see **default_abstract** and **default_template** and **default_message** here.
     + default_abstract: means the default description which will be shown on the blogs list page.
     + default_message: means the default message will show above the password input area.
     + default_template : means the default detail page which will be shown on the detial page.
