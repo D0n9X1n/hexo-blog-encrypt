@@ -13,10 +13,9 @@ Hexo-Blog-Encrypt
 See [http://mikecoder.github.io/](http://mikecoder.github.io/2016/03/30/helloworld/)
 
 #Install
-+ Add '"hexo-blog-encrypt": "1.0.\*"' to your hexo *package.json*.
++ Add '"hexo-blog-encrypt": "1.1.\*"' to your hexo *package.json*.
 + Then use *npm install*.
 + This plugin will install automatic.
-
 
 #Quick Start
 + First you should enable the plugin in your _config.yml like below:
@@ -191,7 +190,7 @@ template:
 
 The plugin will use the template content instead of the default one.
 
-Or you can use these feature in the old way.
+Or you can use these feature in the old way, but not recomand any more.
 
 ```
 # Security

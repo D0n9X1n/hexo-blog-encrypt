@@ -13,15 +13,73 @@ Hexo-Blog-Encrypt
 你可以查看 [http://mikecoder.github.io/](http://mikecoder.github.io/2016/03/30/helloworld/)
 
 #安装
-+ 在 hexo 根目录的 *package.json* 中添加 '"hexo-blog-encrypt": "1.0.\*"' 依赖。
++ 在 hexo 根目录的 *package.json* 中添加 '"hexo-blog-encrypt": "1.1.\*"' 依赖。
 + 然后执行 *npm install* 命令。
 + 该插件会自动安装
 
-##如何使用
 
-###对于简单的使用
+#快速开始
++ 首先在 _config.yml 中启用该插件:
+
+```
+# Security
+##
+encrypt:
+    enable: true
+```
+
++ 然后在你的文章的头部添加上对应的字段，如 password, abstract, message
+
+```
+---
+title: hello world
+date: 2016-03-30 21:18:02
+tags:
+    - fdsafsdaf
+password: Mike
+abstract: Welcome to my blog, enter password to read.
+message: Welcome to my blog, enter password to read.
+---
+```
+
++ 然后使用 *hexo clean && hexo g && hexo s*，来查看效果。
+
+
+#具体的使用方法
+
+###首先，你需要在 _config.yml 中启用该插件
+```
+# Security
+##
+encrypt:
+    enable: true
+```
+
+###有两种方法给文章添加密码：
+
+####比较推荐的一种方法, 在文章文件中添加:
+
+```
+---
+title: hello world
+date: 2016-03-30 21:18:02
+tags:
+    - fdsfadsfa
+    - fdsafsdaf
+password: Mike
+abstract: Welcome to my blog, enter password to read.
+message: Welcome to my blog, enter password to read.
+---
+```
+
++ password: 是该博客加密使用的密码
++ abstract: 是该博客的摘要，会显示在博客的列表页
++ message: 这个是博客查看时，密码输入框上面的描述性文字
+
 + 在 hexo 根木录的 **_config.yml** 中添加配置信息:
 
+
+####之前的老版本的配置方法依旧是可行的，不过将会废除。
 ```
 # Security
 ##
@@ -30,11 +88,12 @@ encrypt:
     blogs:
         - title: hello world
           password: mikemessi
+          abstract: Hello
         - title: fff
           password: fff
+          abstract: Hello
 ```
 
-+ 这个配置的意思是，开启加密 --- enable: true
 + 对于标题为 hello world 的博客，设置密码为 mikemessi，对于标题为 fff 的博客，密码设置为 fff
 
 ```
@@ -47,7 +106,79 @@ tags:
 + 这边要注意，标题一定要一致(前后空格无所谓)
 
 ###对于进阶使用
-+ 你可以自定义加密后文章在列表页的内容，以及输入密码前的样式，具体可以看下面的配置:
+
++ 如果你对默认的主题不满意，或者希望修改默认的提示和摘要内容，你可以添加如下配置在 *_config.yml* 中。
+
+```
+# Security
+##
+encrypt:
+    enable: true
+    default_abstract: the content has been encrypted, enter the password to read.</br>
+    default_message: Please enter the password to read.
+    default_template:
+                    <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css">
+                    <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+                    <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
+                    <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+                    <div id="security">
+                        <div>
+                            <div class="input-group">
+                                <input type="text" class="form-control" aria-label="enter the password" id="pass"/>
+                                <div class="input-group-btn">
+                                    <button type="button" class="btn btn-default" onclick="decryptAES()">解密</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="encrypt-blog" style="display:none">
+                        {{content}}
+                    </div>
+```
++ 可以看见，和上面的配置文件对比来看，多了 **default_template** 和 **default_abstract**  和 **default_message** 配置项。
+    + default_abstract : 这个是指在文章列表页，我们看到的加密文章描述。当然这是对所有加密文章生效的。
+    + default_message : 这个在文章详情页的密码输入框上方的描述性文字。
+    + default_template : 这个是指在文章详情页，我们看到的输入密码阅读的模板，同理，这个也是针对所有文章的。
+        + 最后的 content 显示 div 的 id **必须** 是 'encrypt-blog'，同时为了好看，也希望进行隐藏。
+        + 同时，必须要有一个 input 输入框，id **必须**是"pass"，用来供用户输入密码。
+        + 输入密码之后，务必要有一个触发器，用来调用 'decryptAES' 函数。样例中以 button 来触发。
+
+
++ 如果你希望对某一篇特定的文章做特殊处理，这有两种方法可以达到这个效果, 在博客的源文件添加 template 配置:
+
+```
+---
+title: hello world
+date: 2016-03-30 21:18:02
+tags:
+    - fdsfadsfa
+    - fdsafsdaf
+password: Mike
+abstract: Welcome to my blog, enter password to read.
+message: Welcome to my blog, enter password to read.
+template:
+        <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css">
+        <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+        <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
+        <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+        <div id="security">
+            <h4>密码是 "mikemessi"</h4>
+            <div>
+                <div class="input-group">
+                    <input type="text" class="form-control" aria-label="enter the password" id="pass"/>
+                    <div class="input-group-btn">
+                        <button type="button" class="btn btn-default" onclick="decryptAES()">解密</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="encrypt-blog" style="display:none">
+            {{content}}
+        </div>
+---
+```
+
++ 原有的添加方式依旧有效，不过已经不再推荐。
 
 ```
 # Security
@@ -55,12 +186,9 @@ tags:
 encrypt:
     enable: true
     blogs:
-        - title: fff
-          password: fff
-
         - title: hello world
           password: mikemessi
-          more: 文章已经被加密，请在文章页输入密码查看</br>
+          abstract: 文章已经被加密，请在文章页输入密码查看</br>
           template:
                     <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css">
                     <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
@@ -80,37 +208,7 @@ encrypt:
                     <div id="encrypt-blog" style="display:none">
                         {{content}}
                     </div>
-
-    default_more: 文章已经被加密，请在文章页输入密码查看</br>
-    default_template:
-                    <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css">
-                    <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
-                    <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
-                    <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-                    <div id="security">
-                        <h4>请输入密码查看</h4>
-                        <div>
-                            <div class="input-group">
-                                <input type="text" class="form-control" aria-label="请输入密码" id="pass"/>
-                                <div class="input-group-btn">
-                                    <button type="button" class="btn btn-default" onclick="decryptAES()">解密</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="encrypt-blog" style="display:none">
-                        {{content}}
-                    </div>
 ```
-
-+ 可以看见，和上面的配置文件对比来看，多了 **default_template** 和 **default_more** 配置项，blogs 里也多了 **template** 和 **more** 配置项。
-    + default_more : 这个是指在文章列表页，我们看到的加密文章描述。当然这是对所有加密文章生效的。
-    + default_template : 这个是指在文章详情页，我们看到的输入密码阅读的模板，同理，这个也是针对所有文章的。
-    + more : 这个就是针对这篇博客，自定义的文章列表页的文章描述，只针对该博客生效。
-    + template : 和上述类似，只对当前博客生效。
-        + 最后的 content 显示 div 的 id **必须** 是 'encrypt-blog'，同时为了好看，也希望进行隐藏。
-        + 同时，必须要有一个 input 输入框，id **必须**是"pass"，用来供用户输入密码。
-        + 输入密码之后，务必要有一个触发器，用来调用 'decryptAES' 函数。样例中以 button 来触发。
 
 ##TODO
 See [TODO](./TODO.md) File
