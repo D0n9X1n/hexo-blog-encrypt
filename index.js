@@ -25,7 +25,7 @@ var CryptoJS = require("crypto-js");
 
 hexo.extend.filter.register("after_post_render", function (data) {
     // close the encrypt function
-    if (!('encrypt' in hexo.config && 'enable' in hexo.config && hexo.config.encrypt.enable)) {
+    if (!('encrypt' in hexo.config && hexo.config.encrypt && 'enable' in hexo.config.encrypt && hexo.config.encrypt.enable)) {
         return data;
     }
 
