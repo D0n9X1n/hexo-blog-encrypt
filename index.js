@@ -51,7 +51,10 @@ hexo.extend.filter.register("after_post_render", function (data) {
         if (!('message' in data && data.message)) {
             data.message = hexo.config.encrypt.default_message;
         }
+
         data.content = escape(data.content);
+        data.content = CryptoJS.enc.Utf8.parse(data.content);
+        data.content = CryptoJS.enc.Base64.stringify(data.content);
         data.content = CryptoJS.AES.encrypt(data.content, data.password).toString();
         data.content = data.template.replace('{{content}}', data.content);
         data.content = '<h4 class="hexo-blog-encrypt-message">' + data.message + '</h4>' + data.content;
@@ -77,7 +80,10 @@ hexo.extend.filter.register("after_post_render", function (data) {
                 if (!hexo.config.encrypt.blogs[i].message) {
                     hexo.config.encrypt.blogs[i].message = hexo.config.encrypt.default_message;
                 }
+
                 data.content = escape(data.content);
+                data.content = CryptoJS.enc.Utf8.parse(data.content);
+                data.content = CryptoJS.enc.Base64.stringify(data.content);
                 data.content = CryptoJS.AES.encrypt(data.content, hexo.config.encrypt.blogs[i].password).toString();
                 data.content = hexo.config.encrypt.blogs[i].template.replace('{{content}}', data.content);
                 data.content = '<h4 class="hexo-blog-encrypt-message">' + hexo.config.encrypt.blogs[i].message + '</h4>' + data.content;

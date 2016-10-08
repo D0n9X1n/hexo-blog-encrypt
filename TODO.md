@@ -6,3 +6,4 @@
 
 ##BUG
 1. √ ~~hexo g will not work when the config file with no blogs block.~~
+2. if blog content has special character, it will crush.
