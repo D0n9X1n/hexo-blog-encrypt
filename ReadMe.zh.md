@@ -162,7 +162,7 @@ template:
         <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
         <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
         <div id="security">
-            <h4>密码是 "mikemessi"</h4>
+            <span>密码是 "mikemessi"</span>
             <div>
                 <div class="input-group">
                     <input type="text" class="form-control" aria-label="enter the password" id="pass"/>
@@ -195,7 +195,7 @@ encrypt:
                     <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
                     <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
                     <div id="security">
-                        <h4>密码是 "mikemessi"</h4>
+                        <span>密码是 "mikemessi"</span>
                         <div>
                             <div class="input-group">
                                 <input type="text" class="form-control" aria-label="请输入密码" id="pass"/>
