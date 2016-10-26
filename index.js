@@ -28,7 +28,6 @@ hexo.extend.filter.register("after_post_render", function (data) {
     if (!('encrypt' in hexo.config && hexo.config.encrypt && 'enable' in hexo.config.encrypt && hexo.config.encrypt.enable)) {
         return data;
     }
-
     if (!('default_template' in hexo.config.encrypt && hexo.config.encrypt.default_template)) { // no such template
         hexo.config.encrypt.default_template = '<link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css"> <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap-theme.min.css"> <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script> <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script> <div id="security"> <div> <div class="input-group"> <input type="text" class="form-control" aria-label="Enter the password." id="pass"/> <div class="input-group-btn"> <button type="button" class="btn btn-default" onclick="decryptAES()">Decrypt</button> </div> </div> </div> </div> <div id="encrypt-blog" style="display:none"> {{content}} </div>';
     }
@@ -42,6 +41,11 @@ hexo.extend.filter.register("after_post_render", function (data) {
     if ('password' in data && data.password) {
         // use the blog's config first
         console.log('encrypt the blog :' + data.title.trim());
+
+        // store the origin data
+        data.origin = data.content;
+        data.encrypt = true;
+
         if (!('abstract' in data && data.abstract)) {
             data.abstract = hexo.config.encrypt.default_abstract;
         }
@@ -57,7 +61,7 @@ hexo.extend.filter.register("after_post_render", function (data) {
         data.content = CryptoJS.enc.Base64.stringify(data.content);
         data.content = CryptoJS.AES.encrypt(data.content, data.password).toString();
         data.content = data.template.replace('{{content}}', data.content);
-        data.content = '<span class="hexo-blog-encrypt-message">' + data.message + '</span>' + data.content;
+        data.content = '<span id="encrypt-message">' + data.message + '</span>' + data.content;
         data.content = '<script src="' + hexo.config.root + 'mcommon.js"></script>' + data.content;
         data.content = '<script src="' + hexo.config.root + 'crypto-js.js"></script>' + data.content;
 
@@ -71,6 +75,11 @@ hexo.extend.filter.register("after_post_render", function (data) {
         for (var i = 0, len = hexo.config.encrypt.blogs.length; i < len; i++) {
             if ('blogs' in hexo.config.encrypt && data.title.trim() == hexo.config.encrypt.blogs[i].title.trim()) {
                 console.log('encrypt the blog :' + data.title.trim());
+
+                // store the origin data
+                data.origin = data.content;
+                data.encrypt = true;
+
                 if (!hexo.config.encrypt.blogs[i].abstract) {
                     hexo.config.encrypt.blogs[i].abstract = hexo.config.encrypt.default_abstract;
                 }
@@ -86,7 +95,7 @@ hexo.extend.filter.register("after_post_render", function (data) {
                 data.content = CryptoJS.enc.Base64.stringify(data.content);
                 data.content = CryptoJS.AES.encrypt(data.content, hexo.config.encrypt.blogs[i].password).toString();
                 data.content = hexo.config.encrypt.blogs[i].template.replace('{{content}}', data.content);
-                data.content = '<span class="hexo-blog-encrypt-message">' + hexo.config.encrypt.blogs[i].message + '</span>' + data.content;
+                data.content = '<span id="encrypt-message">' + hexo.config.encrypt.blogs[i].message + '</span>' + data.content;
                 data.content = '<script src="' + hexo.config.root + 'mcommon.js"></script>' + data.content;
                 data.content = '<script src="' + hexo.config.root + 'crypto-js.js"></script>' + data.content;
 

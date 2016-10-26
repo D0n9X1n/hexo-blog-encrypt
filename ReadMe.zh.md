@@ -12,6 +12,8 @@ Hexo-Blog-Encrypt
 ##线上 Demo
 你可以查看 [http://mikecoder.github.io/](http://mikecoder.github.io/2016/03/30/helloworld/)
 
+所有的密码都是 "mikemessi"
+
 #安装
 + 在 hexo 根目录的 *package.json* 中添加 '"hexo-blog-encrypt": "1.1.\*"' 依赖。
 + 然后执行 *npm install* 命令。
@@ -40,6 +42,22 @@ password: Mike
 abstract: Welcome to my blog, enter password to read.
 message: Welcome to my blog, enter password to read.
 ---
+```
+
++ 如果你想对 TOC 也进行加密，则在 article.ejs 中将 TOC 的生成代码修改成如下：
+
+```
+    <% if(post.toc == true){ %>
+        <div id="toc-div" class="toc-article" <% if (post.encrypt == true) { %>style="display:none" <% } %>>
+            <strong class="toc-title">Index</strong>
+            <% if (post.encrypt == true) { %>
+                <%- toc(post.origin, {list_number: true}) %>
+            <% } else { %>
+                <%- toc(post.content, {list_number: true}) %>
+            <% } %>
+        </div>
+    <% } %>
+    <%- post.content %>
 ```
 
 + 然后使用 *hexo clean && hexo g && hexo s*，来查看效果。
@@ -105,7 +123,29 @@ tags:
 ```
 + 这边要注意，标题一定要一致(前后空格无所谓)
 
-###对于进阶使用
+
+### 对 TOC 进行加密
+
+如果你有一篇文章使用了 TOC，你需要修改模板的部分代码。这里用 landscape 作为例子：
+
++ 你可以在 *hexo/themes/landscape/layout/_partial/article.ejs* 找到 article.ejs。
++ 然后找到 <% post.content %> 这段代码，通常在30行左右。
++ 使用如下的代码来替代它:
+```
+<% if(post.toc == true){ %>
+    <div id="toc-div" class="toc-article" <% if (post.encrypt == true) { %>style="display:none" <% } %>>
+        <strong class="toc-title">Index</strong>
+        <% if (post.encrypt == true) { %>
+            <%- toc(post.origin, {list_number: true}) %>
+        <% } else { %>
+            <%- toc(post.content, {list_number: true}) %>
+        <% } %>
+    </div>
+<% } %>
+<%- post.content %>
+```
+
+### 修改加密模板
 
 + 如果你对默认的主题不满意，或者希望修改默认的提示和摘要内容，你可以添加如下配置在 *_config.yml* 中。
 

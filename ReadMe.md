@@ -10,7 +10,7 @@ Hexo-Blog-Encrypt
 > Now let me introduce my plugin "Hexo-Blog-Encrypt".
 
 ##Live Demo
-See [http://mikecoder.github.io/](http://mikecoder.github.io/2016/03/30/helloworld/)
+See [http://mikecoder.github.io/](http://mikecoder.github.io/), **all passwords are *mikemessi***.
 
 #Install
 + Add '"hexo-blog-encrypt": "1.1.\*"' to your hexo *package.json*.
@@ -31,22 +31,30 @@ encrypt:
 
 ```
 ---
-title: hello world
+title: Hello World
 date: 2016-03-30 21:18:02
-tags:
-    - fdsfadsfa
-    - fasdf
-    - fdsafdasf
-    - fdasfasdf
-    - fff
-    - fsdaf
-    - qfdsaf
-    - fdsafsdaf
-password: Mike
+password: mikemessi
 abstract: Welcome to my blog, enter password to read.
 message: Welcome to my blog, enter password to read.
 ---
 ```
+
++ If you want to encrypt you TOC of the blog, you should add the following code to your article.ejs:
+
+```
+<% if(post.toc == true){ %>
+    <div id="toc-div" class="toc-article" <% if (post.encrypt == true) { %>style="display:none" <% } %>>
+        <strong class="toc-title">Index</strong>
+        <% if (post.encrypt == true) { %>
+            <%- toc(post.origin, {list_number: true}) %>
+        <% } else { %>
+            <%- toc(post.content, {list_number: true}) %>
+        <% } %>
+    </div>
+<% } %>
+<%- post.content %>
+```
+
 + Then use *hexo clean && hexo g && hexo s* to see your blog.
 
 #Detail Usage
@@ -64,18 +72,9 @@ encrypt:
 #### The recomanded one: add password to the source blog file.
 ```
 ---
-title: hello world
+title: Hello World
 date: 2016-03-30 21:18:02
-tags:
-    - fdsfadsfa
-    - fasdf
-    - fdsafdasf
-    - fdasfasdf
-    - fff
-    - fsdaf
-    - qfdsaf
-    - fdsafsdaf
-password: Mike
+password: mikemessi
 abstract: Welcome to my blog, enter password to read.
 message: Welcome to my blog, enter password to read.
 ---
@@ -106,11 +105,31 @@ encrypt:
 ---
 title: hello world
 date: 2016-03-30 21:18:02
-tags:
 ---
 ```
 
-###For professional usage
+### Encrypt TOC
+
+If you has a post with TOC, you should change the code of template. Use the default theme 'landscape' as an example:
+
++ You should find the *article.ejs* file which is located in *hexo/themes/landscape/layout/_partial/article.ejs*.
++ Find the code like <% post.content %>, which is usually at line 30.
++ Replace the <% post.content %> with the following code block:
+```
+<% if(post.toc == true){ %>
+    <div id="toc-div" class="toc-article" <% if (post.encrypt == true) { %>style="display:none" <% } %>>
+        <strong class="toc-title">Index</strong>
+        <% if (post.encrypt == true) { %>
+            <%- toc(post.origin, {list_number: true}) %>
+        <% } else { %>
+            <%- toc(post.content, {list_number: true}) %>
+        <% } %>
+    </div>
+<% } %>
+<%- post.content %>
+```
+
+### Change Template
 
 If you are not satisfied with the default template, you can just change it to your favorite one. Just follow the following steps.
 
@@ -154,15 +173,6 @@ If you want to make the blog special, You can add abstract and template to your 
 ---
 title: hello world
 date: 2016-03-30 21:18:02
-tags:
-    - fdsfadsfa
-    - fasdf
-    - fdsafdasf
-    - fdasfasdf
-    - fff
-    - fsdaf
-    - qfdsaf
-    - fdsafsdaf
 password: Mike
 abstract: Welcome to my blog, enter password to read.
 message: Welcome to my blog, enter password to read.
