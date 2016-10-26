@@ -51,9 +51,9 @@ message: Welcome to my blog, enter password to read.
         <div id="toc-div" class="toc-article" <% if (post.encrypt == true) { %>style="display:none" <% } %>>
             <strong class="toc-title">Index</strong>
             <% if (post.encrypt == true) { %>
-                <%- toc(post.origin, {list_number: true}) %>
+                <%- toc(post.origin) %>
             <% } else { %>
-                <%- toc(post.content, {list_number: true}) %>
+                <%- toc(post.content) %>
             <% } %>
         </div>
     <% } %>
