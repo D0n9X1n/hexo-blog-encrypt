@@ -59,7 +59,7 @@ hexo.extend.filter.register("after_post_render", function (data) {
         data.content = escape(data.content);
         data.content = CryptoJS.enc.Utf8.parse(data.content);
         data.content = CryptoJS.enc.Base64.stringify(data.content);
-        data.content = CryptoJS.AES.encrypt(data.content, data.password).toString();
+        data.content = CryptoJS.AES.encrypt(data.content, String(data.password)).toString();
         data.content = data.template.replace('{{content}}', data.content);
         data.content = '<span id="encrypt-message">' + data.message + '</span>' + data.content;
         data.content = '<script src="' + hexo.config.root + 'mcommon.js"></script>' + data.content;

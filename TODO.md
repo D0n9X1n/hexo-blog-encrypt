@@ -9,3 +9,4 @@
 1. √ ~~hexo g will not work when the config file with no blogs block.~~
 2. √ ~~if blog content has special character, it will crush.~~
 3. √ ~~if no toc div the decrypt will throw a exception.~~
+4. √ ~~if the password is numbers, the encrypt lib will crush.~~
