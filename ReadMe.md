@@ -57,7 +57,7 @@ message: Welcome to my blog, enter password to read.
 
 + Then use *hexo clean && hexo g && hexo s* to see your blog.
 
-#Detail Usage
+#Advanced Usage
 
 ###First you should enable the plugin in your _config.yml like below.
 ```
@@ -67,9 +67,8 @@ encrypt:
     enable: true
 ```
 
-###Then, there are two ways to add password to the blogs.
+###Then, add password to the blogs.
 
-#### The recomanded one: add password to the source blog file.
 ```
 ---
 title: Hello World
@@ -83,30 +82,6 @@ As we can see above, we add 'password, abstract, message' the new 3 items in the
 + password is the blog password.
 + abstract is the content which will be showed in the blog list page.
 + message is the content which will be showed in the blog detail page.
-
-
-#### The original one: add config to the _config.yml file.
-```
-# Security
-##
-encrypt:
-    enable: true
-    blogs:
-        - title: hello world
-          password: mikemessi
-        - title: fff
-          password: fff
-```
-
-+ It means the blog named **hello world** has been encrypted with the password 'mikemessi'.
-+ **Blog's title, it should be the same.**
-
-```
----
-title: hello world
-date: 2016-03-30 21:18:02
----
-```
 
 ### Encrypt TOC
 
@@ -199,41 +174,6 @@ template:
 ```
 
 The plugin will use the template content instead of the default one.
-
-Or you can use these feature in the old way, but not recomand any more.
-
-```
-# Security
-##
-encrypt:
-    enable: true
-    blogs:
-        - title: hello world
-          password: mikemessi
-          abstract: 文章已经被加密，请在文章页输入密码查看</br>
-          template:
-                    <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css">
-                    <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
-                    <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
-                    <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-                    <div id="security">
-                        <span>密码是 "mikemessi"</span>
-                        <div>
-                            <div class="input-group">
-                                <input type="text" class="form-control" aria-label="请输入密码" id="pass"/>
-                                <div class="input-group-btn">
-                                    <button type="button" class="btn btn-default" onclick="decryptAES()">解密</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="encrypt-blog" style="display:none">
-                        {{content}}
-                    </div>
-
-```
-
-This method is not recomanded because if we use the plugin for a long time, the _config.yml will be too long and hard to fix.
 
 ##TODO
 See [TODO](./TODO.md) file.

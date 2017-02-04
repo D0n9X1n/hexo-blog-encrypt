@@ -73,10 +73,7 @@ encrypt:
     enable: true
 ```
 
-###有两种方法给文章添加密码：
-
-####比较推荐的一种方法, 在文章文件中添加:
-
+###给文章添加密码：
 ```
 ---
 title: hello world
@@ -94,34 +91,6 @@ message: Welcome to my blog, enter password to read.
 + abstract: 是该博客的摘要，会显示在博客的列表页
 + message: 这个是博客查看时，密码输入框上面的描述性文字
 
-+ 在 hexo 根木录的 **_config.yml** 中添加配置信息:
-
-
-####之前的老版本的配置方法依旧是可行的，不过将会废除。
-```
-# Security
-##
-encrypt:
-    enable: true
-    blogs:
-        - title: hello world
-          password: mikemessi
-          abstract: Hello
-        - title: fff
-          password: fff
-          abstract: Hello
-```
-
-+ 对于标题为 hello world 的博客，设置密码为 mikemessi，对于标题为 fff 的博客，密码设置为 fff
-
-```
----
-title: hello world
-date: 2016-03-30 21:18:02
-tags:
----
-```
-+ 这边要注意，标题一定要一致(前后空格无所谓)
 
 
 ### 对 TOC 进行加密
@@ -216,38 +185,6 @@ template:
             {{content}}
         </div>
 ---
-```
-
-+ 原有的添加方式依旧有效，不过已经不再推荐。
-
-```
-# Security
-##
-encrypt:
-    enable: true
-    blogs:
-        - title: hello world
-          password: mikemessi
-          abstract: 文章已经被加密，请在文章页输入密码查看</br>
-          template:
-                    <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css">
-                    <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
-                    <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
-                    <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-                    <div id="security">
-                        <span>密码是 "mikemessi"</span>
-                        <div>
-                            <div class="input-group">
-                                <input type="text" class="form-control" aria-label="请输入密码" id="pass"/>
-                                <div class="input-group-btn">
-                                    <button type="button" class="btn btn-default" onclick="decryptAES()">解密</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="encrypt-blog" style="display:none">
-                        {{content}}
-                    </div>
 ```
 
 ##TODO

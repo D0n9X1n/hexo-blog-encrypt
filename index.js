@@ -61,7 +61,7 @@ hexo.extend.filter.register("after_post_render", function (data) {
         data.content = CryptoJS.enc.Base64.stringify(data.content);
         data.content = CryptoJS.AES.encrypt(data.content, String(data.password)).toString();
         data.content = data.template.replace('{{content}}', data.content);
-        data.content = '<span id="encrypt-message">' + data.message + '</span>' + data.content;
+        data.content = '<h3 id="encrypt-message">' + data.message + '</h3>' + data.content;
         data.content = '<script src="' + hexo.config.root + 'mcommon.js"></script>' + data.content;
         data.content = '<script src="' + hexo.config.root + 'crypto-js.js"></script>' + data.content;
 
@@ -95,7 +95,7 @@ hexo.extend.filter.register("after_post_render", function (data) {
                 data.content = CryptoJS.enc.Base64.stringify(data.content);
                 data.content = CryptoJS.AES.encrypt(data.content, hexo.config.encrypt.blogs[i].password).toString();
                 data.content = hexo.config.encrypt.blogs[i].template.replace('{{content}}', data.content);
-                data.content = '<span id="encrypt-message">' + hexo.config.encrypt.blogs[i].message + '</span>' + data.content;
+                data.content = '<h3 id="encrypt-message">' + hexo.config.encrypt.blogs[i].message + '</h3>' + data.content;
                 data.content = '<script src="' + hexo.config.root + 'mcommon.js"></script>' + data.content;
                 data.content = '<script src="' + hexo.config.root + 'crypto-js.js"></script>' + data.content;
 
