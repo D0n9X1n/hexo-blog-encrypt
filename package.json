@@ -9,7 +9,7 @@
     "crypto-js": "3.1.*",
     "hexo-fs": "0.1.5"
   },
-  "description": "A blog encrypt plugin for hexo.",
+  "description": "Yet, just another blog encrypt plugin for hexo.",
   "homepage": "https://github.com/MikeCoder/hexo-blog-encrypt#readme",
   "keywords": [
     "encrypt",
@@ -33,5 +33,5 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "version": "1.1.11"
+  "version": "1.1.12"
 }
