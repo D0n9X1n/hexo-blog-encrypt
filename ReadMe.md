@@ -1,5 +1,5 @@
-Hexo Blog Encrypt
-===
+#hexo-blog-encrypt
+
 [![npm version](https://badge.fury.io/js/hexo-blog-encrypt.svg)](https://badge.fury.io/js/hexo-blog-encrypt)
 
 [中文说明](./ReadMe.zh.md)
