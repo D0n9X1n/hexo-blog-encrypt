@@ -175,8 +175,8 @@ template:
 
 The plugin will use the template content instead of the default one.
 
-##TODO
+## TODO
 See [TODO](./TODO.md) file.
 
-##License
+## License
 See [LICENSE](./LICENSE) file.
