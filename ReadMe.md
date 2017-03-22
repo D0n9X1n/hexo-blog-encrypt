@@ -1,23 +1,23 @@
-#hexo-blog-encrypt
+# hexo-blog-encrypt
 
 [![npm version](https://badge.fury.io/js/hexo-blog-encrypt.svg)](https://badge.fury.io/js/hexo-blog-encrypt)
 
 [中文说明](./ReadMe.zh.md)
 
-##What is Hexo Blog Encrypt
+## What is Hexo Blog Encrypt
 > Think about this, you write an article, but not want everyone to read. So you will add a passwrod on the blog, others need to answer the password to access the blog.
 > It is easy on wordpress or emlog or other blog system. However, when you on hexo, there is no such a plugin or function before.
 > Now let me introduce my plugin "Hexo-Blog-Encrypt".
 
-##Live Demo
+## Live Demo
 See [http://mikecoder.github.io/](http://mikecoder.github.io/), **all passwords are *mikemessi***.
 
-#Install
+# Install
 + Add '"hexo-blog-encrypt": "1.1.\*"' to your hexo *package.json*.
 + Then use *npm install*.
 + This plugin will install automatic.
 
-#Quick Start
+# Quick Start
 + First you should enable the plugin in your _config.yml like below:
 
 ```
@@ -57,9 +57,9 @@ message: Welcome to my blog, enter password to read.
 
 + Then use *hexo clean && hexo g && hexo s* to see your blog.
 
-#Advanced Usage
+# Advanced Usage
 
-###First you should enable the plugin in your _config.yml like below.
+### First you should enable the plugin in your _config.yml like below.
 ```
 # Security
 ##
@@ -67,7 +67,7 @@ encrypt:
     enable: true
 ```
 
-###Then, add password to the blogs.
+### Then, add password to the blogs.
 
 ```
 ---

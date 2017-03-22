@@ -1,26 +1,27 @@
-#hexo-blog-encrypt
+hexo-blog-encrypt
+---
 
 [![npm version](https://badge.fury.io/js/hexo-blog-encrypt.svg)](https://badge.fury.io/js/hexo-blog-encrypt)
 
 [English ReadMe](./ReadMe.md)
 
-##什么是 Hexo-Blog-Encrypt
+## 什么是 Hexo-Blog-Encrypt
 > 尝试着想一下，你写了一篇博客，但是，出于某种原因，不太希望每一个人都可以看到他。所以你常常会为这种文章设置一个密码，其他人需要输入密码才可以访问这篇博客。对于 emlog 或者 wordpress 来说，这很容易，但是对于 hexo 来说，之前并没有一个类似的功能。
 >
 > 所以，Hexo-Blog-Encrypt 因为这个需求而诞生了。
 
-##线上 Demo
+## 线上 Demo
 你可以查看 [http://mikecoder.github.io/](http://mikecoder.github.io/2016/03/30/helloworld/)
 
 所有的密码都是 "mikemessi"
 
-#安装
+# 安装
 + 在 hexo 根目录的 *package.json* 中添加 '"hexo-blog-encrypt": "1.1.\*"' 依赖。
 + 然后执行 *npm install* 命令。
 + 该插件会自动安装
 
 
-#快速开始
+# 快速开始
 + 首先在 _config.yml 中启用该插件:
 
 ```
@@ -63,9 +64,9 @@ message: Welcome to my blog, enter password to read.
 + 然后使用 *hexo clean && hexo g && hexo s*，来查看效果。
 
 
-#具体的使用方法
+# 具体的使用方法
 
-###首先，你需要在 _config.yml 中启用该插件
+### 首先，你需要在 _config.yml 中启用该插件
 ```
 # Security
 ##
@@ -73,7 +74,7 @@ encrypt:
     enable: true
 ```
 
-###给文章添加密码：
+### 给文章添加密码：
 ```
 ---
 title: hello world
@@ -187,8 +188,8 @@ template:
 ---
 ```
 
-##TODO
+## TODO
 See [TODO](./TODO.md) File
 
-##License
+## License
 See [LICENSE](./LICENSE) File.
