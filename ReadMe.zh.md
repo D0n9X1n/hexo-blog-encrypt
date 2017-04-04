@@ -11,7 +11,7 @@ hexo-blog-encrypt
 > 所以，Hexo-Blog-Encrypt 因为这个需求而诞生了。
 
 ## 线上 Demo
-你可以查看 [http://mikecoder.github.io/](http://mikecoder.github.io/2016/03/30/helloworld/)
+你可以查看 [https://mhexo.github.io/example-site/2016/10/26/HexoBlogEncrpyt/](https://mhexo.github.io/example-site/2016/10/26/HexoBlogEncrpyt/)
 
 所有的密码都是 "mikemessi"
 

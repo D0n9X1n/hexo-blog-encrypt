@@ -10,7 +10,7 @@
 > Now let me introduce my plugin "Hexo-Blog-Encrypt".
 
 ## Live Demo
-See [http://mikecoder.github.io/](http://mikecoder.github.io/), **all passwords are *mikemessi***.
+See [https://mhexo.github.io/example-site/2016/10/26/HexoBlogEncrpyt/](https://mhexo.github.io/example-site/2016/10/26/HexoBlogEncrpyt/), **all passwords are *mikemessi***.
 
 # Install
 + Add '"hexo-blog-encrypt": "1.1.\*"' to your hexo *package.json*.
