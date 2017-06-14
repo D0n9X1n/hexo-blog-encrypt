@@ -1,0 +1,69 @@
+.input-container {
+    width: 500px;
+    position: relative;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: reverse;
+    -ms-flex-flow: column-reverse;
+    flex-flow: column-reverse;
+    -webkit-box-align: start;
+    -ms-flex-align: start;
+    align-items: flex-start;
+    margin: 100px auto;
+}
+.input-container input {
+    -webkit-box-ordinal-group: 11;
+    order: 10;
+    -ms-flex-order: 10;
+    outline: none;
+    border: none;
+    width: 100%;
+    padding: 15px 0;
+    font-size: 20px;
+    border-bottom: 1px solid #d5d5d5;
+    text-indent: 10px;
+}
+.input-container input::-moz-placeholder {
+    opacity: 0;
+}
+.input-container input::-webkit-input-placeholder {
+    opacity: 0;
+}
+.input-container input:-ms-input-placeholder {
+    opacity: 0;
+}
+.input-container input, .input-container label {
+    transition: all 0.3s;
+}
+.input-container label {
+    -webkit-box-ordinal-group: 101;
+    -ms-flex-order: 100;
+    font-size: 18px;
+    order: 100;
+    color: #3f4f5b;
+    -webkit-transform-origin: left bottom;
+    transform-origin: left bottom;
+    -webkit-transform: translate(10px, 40px);
+transform: translate(0px, 40px); }
+.input-container .bottom-line {
+    order: 2;
+    width: 0;
+    height: 2px;
+    background: #658db5;
+    transition: all 0.3s;
+}
+.input-container input:focus {
+    border-bottom-color: #fff;
+}
+.input-container input:focus ~ div,
+.input-container input:not(:placeholder-shown) ~ div {
+    width: 100%;
+}
+.input-container input:focus + label,
+.input-container input:not(:placeholder-shown) + label {
+    color: #52616c;
+    -webkit-transform: translate(10px) scale(0.9);
+    transform: translate(10px) scale(0.9);
+}

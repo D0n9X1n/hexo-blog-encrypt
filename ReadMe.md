@@ -13,7 +13,7 @@
 See [https://mhexo.github.io/example-site/2016/10/26/HexoBlogEncrpyt/](https://mhexo.github.io/example-site/2016/10/26/HexoBlogEncrpyt/), **all passwords are *mikemessi***.
 
 # Install
-+ Add '"hexo-blog-encrypt": "1.1.\*"' to your hexo *package.json*.
++ Add '"hexo-blog-encrypt": "2.0.\*"' to your hexo *package.json*.
 + Then use *npm install*.
 + This plugin will install automatic.
 
@@ -116,18 +116,12 @@ encrypt:
     default_abstract: the content has been encrypted, enter the password to read.</br>
     default_message: Please enter the password to read.
     default_template:
-                    <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css">
-                    <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
                     <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
-                    <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
                     <div id="security">
-                        <div>
-                            <div class="input-group">
-                                <input type="text" class="form-control" aria-label="enter the password" id="pass"/>
-                                <div class="input-group-btn">
-                                    <button type="button" class="btn btn-default" onclick="decryptAES()">解密</button>
-                                </div>
-                            </div>
+                        <div class="input-container">
+                            <input type="password" class="form-control" id="pass" placeholder=" {{message}} " />
+                            <label for="pass"> {{message}} </label>
+                            <div class="bottom-line"></div>
                         </div>
                     </div>
                     <div id="encrypt-blog" style="display:none">
@@ -152,19 +146,12 @@ password: Mike
 abstract: Welcome to my blog, enter password to read.
 message: Welcome to my blog, enter password to read.
 template:
-        <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css">
-        <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
         <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
-        <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
         <div id="security">
-            <span>密码是 "mikemessi"</span>
-            <div>
-                <div class="input-group">
-                    <input type="text" class="form-control" aria-label="enter the password" id="pass"/>
-                    <div class="input-group-btn">
-                        <button type="button" class="btn btn-default" onclick="decryptAES()">解密</button>
-                    </div>
-                </div>
+            <div class="input-container">
+                <input type="password" class="form-control" id="pass" placeholder=" {{message}} " />
+                <label for="pass"> {{message}} </label>
+                <div class="bottom-line"></div>
             </div>
         </div>
         <div id="encrypt-blog" style="display:none">

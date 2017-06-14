@@ -29,7 +29,7 @@ hexo.extend.filter.register("after_post_render", function (data) {
         return data;
     }
     if (!('default_template' in hexo.config.encrypt && hexo.config.encrypt.default_template)) { // no such template
-        hexo.config.encrypt.default_template = '<link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css"> <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap-theme.min.css"> <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script> <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script> <div id="security"> <div> <div class="input-group"> <input type="text" class="form-control" aria-label="Enter the password." id="pass"/> <div class="input-group-btn"> <button type="button" class="btn btn-default" onclick="decryptAES()">Decrypt</button> </div> </div> </div> </div> <div id="encrypt-blog" style="display:none"> {{content}} </div>';
+        hexo.config.encrypt.default_template = '<script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script> <div id="security"> <div> <div class="input-container"> <input type="password" class="form-control" id="pass" placeholder=" {{message}} "/> <label for="pass"> {{message}} </label> <div class="bottom-line"></div> </div> </div> </div> <div id="encrypt-blog" style="display:none"> {{content}} </div>';
     }
     if (!('default_abstract' in hexo.config.encrypt && hexo.config.encrypt.default_abstract)) { // no read more info
         hexo.config.encrypt.default_abstract = 'The article has been encrypted, please enter your password to view.<br>';
@@ -60,49 +60,18 @@ hexo.extend.filter.register("after_post_render", function (data) {
         data.content = CryptoJS.enc.Utf8.parse(data.content);
         data.content = CryptoJS.enc.Base64.stringify(data.content);
         data.content = CryptoJS.AES.encrypt(data.content, String(data.password)).toString();
-        data.content = data.template.replace('{{content}}', data.content);
-        data.content = '<h3 id="encrypt-message">' + data.message + '</h3>' + data.content;
+        console.log(data.content);
+        data.template = data.template.replace('{{content}}', data.content);
+        data.template = data.template.replace('{{message}}', data.message);
+        data.template = data.template.replace('{{message}}', data.message);
+
+        data.content = data.template;
         data.content = '<script src="' + hexo.config.root + 'mcommon.js"></script>' + data.content;
         data.content = '<script src="' + hexo.config.root + 'crypto-js.js"></script>' + data.content;
+        data.content = '<link href="' + hexo.config.root + 'style.css" rel="stylesheet" type="text/css">' + data.content;
 
         data.more = data.abstract;
         data.excerpt = data.more;
-    } else {
-        // no blogs config
-        if (!'blogs' in hexo.config.encrypt || !hexo.config.encrypt.blogs) {
-            return data;
-        }
-        for (var i = 0, len = hexo.config.encrypt.blogs.length; i < len; i++) {
-            if ('blogs' in hexo.config.encrypt && data.title.trim() == hexo.config.encrypt.blogs[i].title.trim()) {
-                console.log('encrypt the blog :' + data.title.trim());
-
-                // store the origin data
-                data.origin = data.content;
-                data.encrypt = true;
-
-                if (!hexo.config.encrypt.blogs[i].abstract) {
-                    hexo.config.encrypt.blogs[i].abstract = hexo.config.encrypt.default_abstract;
-                }
-                if (!hexo.config.encrypt.blogs[i].template) {
-                    hexo.config.encrypt.blogs[i].template = hexo.config.encrypt.default_template;
-                }
-                if (!hexo.config.encrypt.blogs[i].message) {
-                    hexo.config.encrypt.blogs[i].message = hexo.config.encrypt.default_message;
-                }
-
-                data.content = escape(data.content);
-                data.content = CryptoJS.enc.Utf8.parse(data.content);
-                data.content = CryptoJS.enc.Base64.stringify(data.content);
-                data.content = CryptoJS.AES.encrypt(data.content, hexo.config.encrypt.blogs[i].password).toString();
-                data.content = hexo.config.encrypt.blogs[i].template.replace('{{content}}', data.content);
-                data.content = '<h3 id="encrypt-message">' + hexo.config.encrypt.blogs[i].message + '</h3>' + data.content;
-                data.content = '<script src="' + hexo.config.root + 'mcommon.js"></script>' + data.content;
-                data.content = '<script src="' + hexo.config.root + 'crypto-js.js"></script>' + data.content;
-
-                data.more = hexo.config.encrypt.blogs[i].abstract;
-                data.excerpt = data.more;
-            }
-        }
     }
     return data;
 });
@@ -116,6 +85,11 @@ hexo.on('exit', function() {
     var corejs = pathFn.join(pathFn.join(pathFn.join(pathFn.join(hexo.base_dir, 'node_modules'), 'hexo-blog-encrypt'), 'lib'), 'crypto-js.js');
     fs.readFile(corejs).then(function(content) {
         fs.copyFile(corejs, pathFn.join(hexo.public_dir, 'crypto-js.js'));
+    });
+
+    var cssFile = pathFn.join(pathFn.join(pathFn.join(pathFn.join(hexo.base_dir, 'node_modules'), 'hexo-blog-encrypt'), 'lib'), 'style.css');
+    fs.readFile(cssFile).then(function(content) {
+        fs.copyFile(cssFile, pathFn.join(hexo.public_dir, 'style.css'));
     });
 });
 
