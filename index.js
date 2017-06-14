@@ -60,7 +60,7 @@ hexo.extend.filter.register("after_post_render", function (data) {
         data.content = CryptoJS.enc.Utf8.parse(data.content);
         data.content = CryptoJS.enc.Base64.stringify(data.content);
         data.content = CryptoJS.AES.encrypt(data.content, String(data.password)).toString();
-        console.log(data.content);
+        // console.log(data.content);
         data.template = data.template.replace('{{content}}', data.content);
         data.template = data.template.replace('{{message}}', data.message);
         data.template = data.template.replace('{{message}}', data.message);
