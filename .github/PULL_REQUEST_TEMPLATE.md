@@ -3,7 +3,6 @@ Issue Fixed #
 ## Proposed Changes
 
   - 
-  - 
-  - 
+  - - 
 
-@daniellmb
+@MikeCoder
