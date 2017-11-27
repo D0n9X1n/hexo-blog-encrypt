@@ -1,6 +1,7 @@
 # Created by .ignore support plugin (hsz.mobi)
 ### *.iml template
 node_modules/
+package-lock.json
 ### .git template
 
 

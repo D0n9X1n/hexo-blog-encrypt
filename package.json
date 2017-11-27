@@ -6,7 +6,7 @@
     "url": "https://github.com/MikeCoder/hexo-blog-encrypt/issues"
   },
   "dependencies": {
-    "crypto-js": "3.1.*",
+    "crypto-js": "^3.1.8",
     "hexo-fs": "0.1.5"
   },
   "description": "Yet, just another blog encrypt plugin for hexo.",
