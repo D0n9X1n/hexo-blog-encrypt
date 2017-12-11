@@ -18,7 +18,7 @@ See [https://mhexo.github.io/example-site/2016/10/26/HexoBlogEncrpyt/](https://m
 + This plugin will install automatic.
 
 # Quick Start
-+ First you should enable the plugin in your _config.yml like below:
++ First you should enable the plugin in your `_config.yml` like below:
 
 ```
 # Security
@@ -55,7 +55,7 @@ message: Welcome to my blog, enter password to read.
 <%- post.content %>
 ```
 
-+ Then use *hexo clean && hexo g && hexo s* to see your blog.
++ Then use `hexo clean && hexo g && hexo s` to see your blog.
 
 # Advanced Usage
 

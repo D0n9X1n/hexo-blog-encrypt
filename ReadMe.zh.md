@@ -22,7 +22,7 @@ hexo-blog-encrypt
 
 
 # 快速开始
-+ 首先在 _config.yml 中启用该插件:
++ 首先在 `_config.yml` 中启用该插件:
 
 ```
 # Security

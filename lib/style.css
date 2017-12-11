@@ -1,5 +1,6 @@
 .input-container {
-    width: 500px;
+    width: 80%;
+    max-width: 800px;
     position: relative;
     display: -webkit-box;
     display: -ms-flexbox;

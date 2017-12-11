@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "crypto-js": "^3.1.8",
-    "hexo-fs": "0.1.5"
+    "hexo-fs": "^0.2.2"
   },
   "description": "Yet, just another blog encrypt plugin for hexo.",
   "homepage": "https://github.com/MikeCoder/hexo-blog-encrypt#readme",
@@ -33,5 +33,5 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "version": "2.0.2"
+  "version": "2.0.3"
 }
