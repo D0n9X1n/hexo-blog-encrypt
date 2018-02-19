@@ -6,7 +6,7 @@
     "url": "https://github.com/MikeCoder/hexo-blog-encrypt/issues"
   },
   "dependencies": {
-    "crypto-js": "^3.1.8",
+    "crypto-js": "^3.1.9-1",
     "hexo-fs": "^0.2.2"
   },
   "description": "Yet, just another blog encrypt plugin for hexo.",
@@ -31,7 +31,11 @@
     "url": "git+ssh://git@github.com/MikeCoder/hexo-blog-encrypt.git"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint --ext .js ./"
   },
-  "version": "2.0.3"
+  "version": "2.0.3",
+  "devDependencies": {
+    "eslint": "^4.18.0"
+  }
 }
