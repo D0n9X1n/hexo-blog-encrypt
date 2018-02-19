@@ -16,7 +16,7 @@ hexo.extend.filter.register('after_post_render', function encrypt (data) {
   }
   if (!('default_template' in hexo.config.encrypt && hexo.config.encrypt.default_template)) { // No such template
 
-    hexo.config.encrypt.default_template = fs.readFileSync('./template.html', 'utf8');
+    hexo.config.encrypt.default_template = fs.readFileSync(path.resolve(__dirname, './template.html'));
 
   }
   if (!('default_abstract' in hexo.config.encrypt && hexo.config.encrypt.default_abstract)) { // No read more info
@@ -65,8 +65,8 @@ hexo.extend.filter.register('after_post_render', function encrypt (data) {
     data.template = data.template.replace('{{message}}', data.message);
 
     data.content = data.template;
-    data.content += `<script src="${hexo.config.root}lib/blog-encrypt.js"></script>
-<script src="${hexo.config.root}lib/crypto-js.js"></script>'
+    data.content += `<script src="${hexo.config.root}lib/crypto-js.js"></script>
+<script src="${hexo.config.root}lib/blog-encrypt.js"></script>'
 <link href="${hexo.config.root}css/blog-encrypt.css" rel="stylesheet" type="text/css">`;
 
     data.more = data.abstract;
@@ -80,12 +80,12 @@ hexo.extend.filter.register('after_post_render', function encrypt (data) {
 hexo.extend.generator.register('blog-encrypt', () => [
   {
     'data': () => fs.createReadStream(path.resolve(path.dirname(require.resolve('crypto-js')), 'crypto-js.js')),
-    'path': 'lib/blog-encrypt.js',
+    'path': 'lib/crypto-js.js',
   }, {
     'data': () => fs.createReadStream(path.resolve(__dirname, 'lib/blog-encrypt.js')),
     'path': 'lib/blog-encrypt.js',
   }, {
     'data': () => fs.createReadStream(path.resolve(__dirname, 'lib/blog-encrypt.css')),
-    'path': 'lib/blog-encrypt.css',
+    'path': 'css/blog-encrypt.css',
   },
 ]);
