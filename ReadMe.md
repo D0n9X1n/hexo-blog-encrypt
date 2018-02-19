@@ -169,3 +169,6 @@ See [TODO](./TODO.md) file.
 
 ## License
 See [LICENSE](./LICENSE) file.
+
+## Thanks
+Collaborator - [xiazeyu](https://github.com/xiazeyu)
