@@ -29,6 +29,16 @@ hexo.extend.filter.register('after_post_render', function encrypt (data) {
     hexo.config.encrypt.default_message = 'Please enter the password to read the blog.';
 
   }
+  if (!('default_decryption_error' in hexo.config.encrypt && hexo.config.encrypt.default_decryption_error)) { // wrong password
+
+    hexo.config.encrypt.default_decryption_error = 'Incorrect Password!';
+
+  }
+  if (!('default_no_content_error' in hexo.config.encrypt && hexo.config.encrypt.default_no_content_error)) { // no content
+
+    hexo.config.encrypt.default_no_content_error = 'No content to display!';
+
+  }
 
   if ('password' in data && data.password) {
 
@@ -54,6 +64,16 @@ hexo.extend.filter.register('after_post_render', function encrypt (data) {
       data.message = hexo.config.encrypt.default_message;
 
     }
+    if (!('decryptionError' in data && data.decryptionError)) {
+
+      data.decryptionError = hexo.config.encrypt.default_decryption_error;
+
+    }
+    if (!('noContentError' in data && data.noContentError)) {
+
+      data.noContentError = hexo.config.encrypt.default_no_content_error;
+
+    }
 
     data.content = escape(data.content);
     data.content = CryptoJS.enc.Utf8.parse(data.content);
@@ -63,6 +83,8 @@ hexo.extend.filter.register('after_post_render', function encrypt (data) {
     data.template = data.template.replace('{{content}}', data.content);
     data.template = data.template.replace('{{message}}', data.message);
     data.template = data.template.replace('{{message}}', data.message);
+    data.template = data.template.replace('{{decryptionError}}', data.decryptionError);
+    data.template = data.template.replace('{{noContentError}}', data.noContentError);
 
     data.content = data.template;
     data.content += `<script src="${hexo.config.root}lib/crypto-js.js"></script>
