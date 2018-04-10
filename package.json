@@ -7,7 +7,8 @@
   },
   "dependencies": {
     "crypto-js": "^3.1.9-1",
-    "hexo-fs": "^0.2.2"
+    "hexo-fs": "^0.2.2",
+    "hexo-log": "^0.2.0"
   },
   "description": "Yet, just another blog encrypt plugin for hexo.",
   "homepage": "https://github.com/MikeCoder/hexo-blog-encrypt#readme",
