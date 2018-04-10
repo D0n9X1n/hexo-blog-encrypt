@@ -1,117 +1,106 @@
-/* global hexo, __dirname */
-
 'use strict';
 
-const fs = require('hexo-fs');
-const path = require('path');
-const CryptoJS = require('crypto-js');
-const log = require('hexo-log')({
-  'debug': false,
-  'silent': false,
-});
+function decryptAES () {
 
-hexo.extend.filter.register('after_post_render', function encrypt (data) {
+  const pass = String(document.getElementById('pass').value);
+  try {
 
-  // Close the encrypt function
-  if (!('encrypt' in hexo.config && hexo.config.encrypt && 'enable' in hexo.config.encrypt && hexo.config.encrypt.enable)) {
+    var decryptionError = String(document.getElementById('decryptionError').innerHTML);
+    var noContentError = String(document.getElementById('noContentError').innerHTML);
 
-    return data;
+  } catch (e) {
 
-  }
-  if (!('default_template' in hexo.config.encrypt && hexo.config.encrypt.default_template)) { // No such template
-
-    hexo.config.encrypt.default_template = fs.readFileSync(path.resolve(__dirname, './template.html'));
-
-  }
-  if (!('default_abstract' in hexo.config.encrypt && hexo.config.encrypt.default_abstract)) { // No read more info
-
-    hexo.config.encrypt.default_abstract = 'The article has been encrypted, please enter your password to view.<br>';
-
-  }
-  if (!('default_message' in hexo.config.encrypt && hexo.config.encrypt.default_message)) { // No message
-
-    hexo.config.encrypt.default_message = 'Please enter the password to read the blog.';
-
-  }
-  if (!('default_decryption_error' in hexo.config.encrypt && hexo.config.encrypt.default_decryption_error)) { // wrong password
-
-    hexo.config.encrypt.default_decryption_error = 'Incorrect Password!';
-
-  }
-  if (!('default_no_content_error' in hexo.config.encrypt && hexo.config.encrypt.default_no_content_error)) { // no content
-
-    hexo.config.encrypt.default_no_content_error = 'No content to display!';
+    decryptionError = 'Incorrect Password!';
+    noContentError = 'No content to display!';
 
   }
 
-  if ('password' in data && data.password) {
+  try {
 
-    // Use the blog's config first
-    log.info(`Encrypted the blog: ${ data.title.trim() }`);
+    let content = CryptoJS.AES.decrypt(document.getElementById('encrypt-blog').innerHTML.trim(), pass);
+    content = content.toString(CryptoJS.enc.Utf8);
+    content = decodeBase64(content);
+    content = unescape(content);
+    if (content === '') {
 
-    // Store the origin data
-    data.origin = data.content;
-    data.encrypt = true;
+      throw new Error(noContentError); // ???
 
-    if (!('abstract' in data && data.abstract)) {
+    } else {
 
-      data.abstract = hexo.config.encrypt.default_abstract;
+      document.getElementById('encrypt-blog').style.display = 'inline';
+      document.getElementById('encrypt-blog').innerHTML = '';
+      // Use jquery to load some js code
+      $('#encrypt-blog').html(content);
+      document.getElementById('security').style.display = 'none';
+      if (document.getElementById('toc-div')) {
+
+        document.getElementById('toc-div').style.display = 'inline';
+
+      }
 
     }
-    if (!('template' in data && data.template)) {
+    // Call MathJax to render
+    if(typeof MathJax !== 'undefined') {
 
-      data.template = hexo.config.encrypt.default_template;
-
-    }
-    if (!('message' in data && data.message)) {
-
-      data.message = hexo.config.encrypt.default_message;
-
-    }
-    if (!('decryptionError' in data && data.decryptionError)) {
-
-      data.decryptionError = hexo.config.encrypt.default_decryption_error;
-
-    }
-    if (!('noContentError' in data && data.noContentError)) {
-
-      data.noContentError = hexo.config.encrypt.default_no_content_error;
+      MathJax.Hub.Queue(
+        ['resetEquationNumbers', MathJax.InputJax.TeX, ],
+        ['PreProcess', MathJax.Hub, ],
+        ['Reprocess', MathJax.Hub, ]
+      );
 
     }
 
-    data.content = escape(data.content);
-    data.content = CryptoJS.enc.Utf8.parse(data.content);
-    data.content = CryptoJS.enc.Base64.stringify(data.content);
-    data.content = CryptoJS.AES.encrypt(data.content, String(data.password)).toString();
-    // Console.log(data.content);
-    data.template = data.template.replace('{{content}}', data.content);
-    data.template = data.template.replace('{{message}}', data.message);
-    data.template = data.template.replace('{{message}}', data.message);
-    data.template = data.template.replace('{{decryptionError}}', data.decryptionError);
-    data.template = data.template.replace('{{noContentError}}', data.noContentError);
+  } catch (e) {
 
-    data.content = data.template;
-    data.content += `<script src="${hexo.config.root}lib/crypto-js.js"></script>
-<script src="${hexo.config.root}lib/blog-encrypt.js"></script>'
-<link href="${hexo.config.root}css/blog-encrypt.css" rel="stylesheet" type="text/css">`;
-
-    data.more = data.abstract;
-    data.excerpt = data.more;
+    alert(decryptionError);
+    console.log(e);
 
   }
-  return data;
 
-});
+}
 
-hexo.extend.generator.register('blog-encrypt', () => [
-  {
-    'data': () => fs.createReadStream(path.resolve(path.dirname(require.resolve('crypto-js')), 'crypto-js.js')),
-    'path': 'lib/crypto-js.js',
-  }, {
-    'data': () => fs.createReadStream(path.resolve(__dirname, 'lib/blog-encrypt.js')),
-    'path': 'lib/blog-encrypt.js',
-  }, {
-    'data': () => fs.createReadStream(path.resolve(__dirname, 'lib/blog-encrypt.css')),
-    'path': 'css/blog-encrypt.css',
-  },
-]);
+function htmlDecode (str) {
+
+  let s = '';
+  if (str.length == 0) {
+
+    return '';
+
+  }
+
+  s = str.replace(/&gt;/g, '&');
+  s = s.replace(/&lt;/g, '<');
+  s = s.replace(/&gt;/g, '>');
+  s = s.replace(/&nbsp;/g, '    '); // ??? why not ' '
+  s = s.replace(/'/g, '\'');
+  s = s.replace(/&quot;/g, '"');
+  s = s.replace(/<br>/g, '\n');
+  return s;
+
+}
+
+function decodeBase64 (content) {
+
+  content = CryptoJS.enc.Base64.parse(content);
+  content = CryptoJS.enc.Utf8.stringify(content);
+  return content;
+
+}
+
+// Since you decided to use jQuery.
+$(document).ready(
+  function () {
+
+    console.log('Registering Enter for decrypt.');
+    document.getElementById('pass').onkeypress = function (keyPressEvent) {
+
+      if (keyPressEvent.keyCode === 13) {
+
+        decryptAES();
+
+      }
+
+    };
+
+  }
+);
