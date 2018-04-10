@@ -5,6 +5,10 @@
 const fs = require('hexo-fs');
 const path = require('path');
 const CryptoJS = require('crypto-js');
+const log = require('hexo-log')({
+  'debug': false,
+  'silent': false,
+});
 
 hexo.extend.filter.register('after_post_render', function encrypt (data) {
 
@@ -43,7 +47,7 @@ hexo.extend.filter.register('after_post_render', function encrypt (data) {
   if ('password' in data && data.password) {
 
     // Use the blog's config first
-    console.log(`encrypt the blog :${ data.title.trim() }`);
+    log.info(`Encrypted the blog: ${ data.title.trim() }`);
 
     // Store the origin data
     data.origin = data.content;
