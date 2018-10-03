@@ -1,4 +1,4 @@
-.input-container {
+.hbe-input-container {
     width: 80%;
     max-width: 800px;
     position: relative;
@@ -14,7 +14,7 @@
     align-items: flex-start;
     margin: 100px auto;
 }
-.input-container input {
+.hbe-input-container input {
     -webkit-box-ordinal-group: 11;
     order: 10;
     -ms-flex-order: 10;
@@ -26,19 +26,20 @@
     border-bottom: 1px solid #d5d5d5;
     text-indent: 10px;
 }
-.input-container input::-moz-placeholder {
+.hbe-input-container input::-moz-placeholder {
     opacity: 0;
 }
-.input-container input::-webkit-input-placeholder {
+.hbe-input-container input::-webkit-input-placeholder {
     opacity: 0;
 }
-.input-container input:-ms-input-placeholder {
+.hbe-input-container input:-ms-input-placeholder {
     opacity: 0;
 }
-.input-container input, .input-container label {
+.hbe-input-container input,
+.hbe-input-container label {
     transition: all 0.3s;
 }
-.input-container label {
+.hbe-input-container label {
     -webkit-box-ordinal-group: 101;
     -ms-flex-order: 100;
     font-size: 18px;
@@ -47,23 +48,24 @@
     -webkit-transform-origin: left bottom;
     transform-origin: left bottom;
     -webkit-transform: translate(10px, 40px);
-transform: translate(0px, 40px); }
-.input-container .bottom-line {
+    transform: translate(0px, 40px);
+}
+.hbe-input-container .bottom-line {
     order: 2;
     width: 0;
     height: 2px;
     background: #658db5;
     transition: all 0.3s;
 }
-.input-container input:focus {
+.hbe-input-container input:focus {
     border-bottom-color: #fff;
 }
-.input-container input:focus ~ div,
-.input-container input:not(:placeholder-shown) ~ div {
+.hbe-input-container input:focus ~ div,
+.hbe-input-container input:not(:placeholder-shown) ~ div {
     width: 100%;
 }
-.input-container input:focus + label,
-.input-container input:not(:placeholder-shown) + label {
+.hbe-input-container input:focus + label,
+.hbe-input-container input:not(:placeholder-shown) + label {
     color: #52616c;
     -webkit-transform: translate(10px) scale(0.9);
     transform: translate(10px) scale(0.9);
