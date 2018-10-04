@@ -15,9 +15,9 @@
 See [https://mhexo.github.io/example-site/2016/10/26/HexoBlogEncrpyt/](https://mhexo.github.io/example-site/2016/10/26/HexoBlogEncrpyt/), **all passwords are *mikemessi***.
 
 # Install
-+ Add '"hexo-blog-encrypt": "2.0.\*"' to your hexo *package.json*.
-+ Then use *npm install*.
-+ This plugin will install automatic.
++ `npm install --save hexo-blog-encrypt`
+
++ or `yarn add hexo-blog-encrypt` (require [Yarn](https://yarnpkg.com/en/))
 
 # Quick Start
 + First you should enable the plugin in your `_config.yml` like below:
