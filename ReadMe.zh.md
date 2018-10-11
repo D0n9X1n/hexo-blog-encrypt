@@ -18,9 +18,9 @@ hexo-blog-encrypt
 所有的密码都是 "mikemessi"
 
 # 安装
-+ 在 hexo 根目录的 *package.json* 中添加 '"hexo-blog-encrypt": "1.1.\*"' 依赖。
-+ 然后执行 *npm install* 命令。
-+ 该插件会自动安装
++ `npm install --save hexo-blog-encrypt`
+
++ 或者 `yarn add hexo-blog-encrypt` (需要安装 [Yarn](https://yarnpkg.com/en/))
 
 
 # 快速开始
