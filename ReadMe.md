@@ -135,6 +135,7 @@ encrypt:
     + default_abstract: means the default description which will be shown on the blogs list page.
     + default_message: means the default message will show above the password input area.
     + default_template : means the default detail page which will be shown on the detial page.
+        + the decryption div's id **must** be 'security'
         + the content div's id **must** be 'encrypt-blog'
         + there must be a input's id **must** be pass, which will let reader to input their password
         + there must be trigger which calls the 'decryptAES' function
