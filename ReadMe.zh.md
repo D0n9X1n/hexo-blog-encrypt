@@ -145,6 +145,7 @@ encrypt:
     + default_abstract : 这个是指在文章列表页，我们看到的加密文章描述。当然这是对所有加密文章生效的。
     + default_message : 这个在文章详情页的密码输入框上方的描述性文字。
     + default_template : 这个是指在文章详情页，我们看到的输入密码阅读的模板，同理，这个也是针对所有文章的。
+        + 开始的解密部分需要由 div 包裹，而且 div 的 id **必须** 是 'security'，解密后以便于隐藏。
         + 最后的 content 显示 div 的 id **必须** 是 'encrypt-blog'，同时为了好看，也希望进行隐藏。
         + 同时，必须要有一个 input 输入框，id **必须**是"pass"，用来供用户输入密码。
         + 输入密码之后，务必要有一个触发器，用来调用 'decryptAES' 函数。样例中以 button 来触发。
