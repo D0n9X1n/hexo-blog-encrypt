@@ -12,7 +12,7 @@
 > Now let me introduce my plugin "Hexo-Blog-Encrypt".
 
 ## Live Demo
-See [https://mhexo.github.io/example-site/2016/10/26/HexoBlogEncrpyt/](https://mhexo.github.io/example-site/2016/10/26/HexoBlogEncrpyt/), **all passwords are *mikemessi***.
+See [mhexo.github.io/example-site/2016/10/26/HexoBlogEncrpyt/](https://mhexo.github.io/example-site/2016/10/26/HexoBlogEncrpyt/), **all passwords are *mikemessi***.
 
 # Install
 + `npm install --save hexo-blog-encrypt`
@@ -119,7 +119,7 @@ encrypt:
     default_message: Please enter the password to read.
     default_template:
                     <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
-                    <div id="security">
+                    <div id="hbe-security">
                         <div class="input-container">
                             <input type="password" class="form-control" id="pass" placeholder=" {{message}} " />
                             <label for="pass"> {{message}} </label>
@@ -135,6 +135,7 @@ encrypt:
     + default_abstract: means the default description which will be shown on the blogs list page.
     + default_message: means the default message will show above the password input area.
     + default_template : means the default detail page which will be shown on the detial page.
+        + the decryption div's id **must** be 'hbe-security'
         + the content div's id **must** be 'encrypt-blog'
         + there must be a input's id **must** be pass, which will let reader to input their password
         + there must be trigger which calls the 'decryptAES' function
@@ -149,7 +150,7 @@ abstract: Welcome to my blog, enter password to read.
 message: Welcome to my blog, enter password to read.
 template:
         <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
-        <div id="security">
+        <div id="hbe-security">
             <div class="input-container">
                 <input type="password" class="form-control" id="pass" placeholder=" {{message}} " />
                 <label for="pass"> {{message}} </label>

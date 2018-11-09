@@ -13,7 +13,7 @@ hexo-blog-encrypt
 > 所以，Hexo-Blog-Encrypt 因为这个需求而诞生了。
 
 ## 线上 Demo
-你可以查看 [https://mhexo.github.io/example-site/2016/10/26/HexoBlogEncrpyt/](https://mhexo.github.io/example-site/2016/10/26/HexoBlogEncrpyt/)
+你可以查看 [mhexo.github.io/example-site/2016/10/26/HexoBlogEncrpyt/](https://mhexo.github.io/example-site/2016/10/26/HexoBlogEncrpyt/)
 
 所有的密码都是 "mikemessi"
 
@@ -130,7 +130,7 @@ encrypt:
     default_message: Please enter the password to read.
     default_template:
                     <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
-                    <div id="security">
+                    <div id="hbe-security">
                         <div class="input-container">
                             <input type="password" class="form-control" id="pass" placeholder=" {{message}} " />
                             <label for="pass"> {{message}} </label>
@@ -144,7 +144,8 @@ encrypt:
 + 可以看见，和上面的配置文件对比来看，多了 **default_template** 和 **default_abstract**  和 **default_message** 配置项。
     + default_abstract : 这个是指在文章列表页，我们看到的加密文章描述。当然这是对所有加密文章生效的。
     + default_message : 这个在文章详情页的密码输入框上方的描述性文字。
-    + default_template : 这个是指在文章详情页，我们看到的输入密码阅读的模板，同理，这个也是针对所有文章的。
+    + default_template : 这个是指在文章详情页，我们看到的输入密码阅读的模板，同理，这个也是针对所有文章的
+        + 开始的解密部分需要由 div 包裹，而且 div 的 id **必须** 是 'hbe-security'，解密后以便于隐藏。
         + 最后的 content 显示 div 的 id **必须** 是 'encrypt-blog'，同时为了好看，也希望进行隐藏。
         + 同时，必须要有一个 input 输入框，id **必须**是"pass"，用来供用户输入密码。
         + 输入密码之后，务必要有一个触发器，用来调用 'decryptAES' 函数。样例中以 button 来触发。
@@ -164,7 +165,7 @@ abstract: Welcome to my blog, enter password to read.
 message: Welcome to my blog, enter password to read.
 template:
         <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
-        <div id="security">
+        <div id="hbe-security">
             <div class="input-container">
                 <input type="password" class="form-control" id="pass" placeholder=" {{message}} " />
                 <label for="pass"> {{message}} </label>
