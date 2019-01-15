@@ -129,17 +129,19 @@ encrypt:
     default_abstract: the content has been encrypted, enter the password to read.</br>
     default_message: Please enter the password to read.
     default_template:
-                    <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
-                    <div id="hbe-security">
-                        <div class="input-container">
-                            <input type="password" class="form-control" id="pass" placeholder=" {{message}} " />
-                            <label for="pass"> {{message}} </label>
-                            <div class="bottom-line"></div>
-                        </div>
-                    </div>
-                    <div id="encrypt-blog" style="display:none">
-                        {{content}}
-                    </div>
+        <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
+        <div id="hbe-security">
+          <div class="hbe-input-container">
+          <input type="password" class="hbe-form-control" id="pass" placeholder="{{message}}" />
+            <label for="pass">{{message}}</label>
+            <div class="bottom-line"></div>
+          </div>
+        </div>
+        <div id="decryptionError" style="display: none;">{{decryptionError}}</div>
+        <div id="noContentError" style="display: none;">{{noContentError}}</div>
+        <div id="encrypt-blog" style="display:none">
+        {{content}}
+        </div>
 ```
 + 可以看见，和上面的配置文件对比来看，多了 **default_template** 和 **default_abstract**  和 **default_message** 配置项。
     + default_abstract : 这个是指在文章列表页，我们看到的加密文章描述。当然这是对所有加密文章生效的。
@@ -164,17 +166,19 @@ password: Mike
 abstract: Welcome to my blog, enter password to read.
 message: Welcome to my blog, enter password to read.
 template:
-        <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
-        <div id="hbe-security">
-            <div class="input-container">
-                <input type="password" class="form-control" id="pass" placeholder=" {{message}} " />
-                <label for="pass"> {{message}} </label>
-                <div class="bottom-line"></div>
-            </div>
-        </div>
-        <div id="encrypt-blog" style="display:none">
-            {{content}}
-        </div>
+    <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
+    <div id="hbe-security">
+      <div class="hbe-input-container">
+      <input type="password" class="hbe-form-control" id="pass" placeholder="{{message}}" />
+        <label for="pass">{{message}}</label>
+        <div class="bottom-line"></div>
+      </div>
+    </div>
+    <div id="decryptionError" style="display: none;">{{decryptionError}}</div>
+    <div id="noContentError" style="display: none;">{{noContentError}}</div>
+    <div id="encrypt-blog" style="display:none">
+    {{content}}
+    </div>
 ---
 ```
 
