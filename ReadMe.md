@@ -126,8 +126,8 @@ encrypt:
             <div class="bottom-line"></div>
           </div>
         </div>
-        <div id="decryptionError" style="display: none;">{{decryptionError}}</div>
-        <div id="noContentError" style="display: none;">{{noContentError}}</div>
+        <div id="decryptionError" style="display:none;">{{decryptionError}}</div>
+        <div id="noContentError" style="display:none;">{{noContentError}}</div>
         <div id="encrypt-blog" style="display:none">
         {{content}}
         </div>
@@ -159,8 +159,8 @@ template:
             <div class="bottom-line"></div>
           </div>
         </div>
-        <div id="decryptionError" style="display: none;">{{decryptionError}}</div>
-        <div id="noContentError" style="display: none;">{{noContentError}}</div>
+        <div id="decryptionError" style="display:none;">{{decryptionError}}</div>
+        <div id="noContentError" style="display:none;">{{noContentError}}</div>
         <div id="encrypt-blog" style="display:none">
         {{content}}
         </div>
