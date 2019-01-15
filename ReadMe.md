@@ -118,17 +118,19 @@ encrypt:
     default_abstract: the content has been encrypted, enter the password to read.</br>
     default_message: Please enter the password to read.
     default_template:
-                    <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
-                    <div id="hbe-security">
-                        <div class="input-container">
-                            <input type="password" class="form-control" id="pass" placeholder=" {{message}} " />
-                            <label for="pass"> {{message}} </label>
-                            <div class="bottom-line"></div>
-                        </div>
-                    </div>
-                    <div id="encrypt-blog" style="display:none">
-                        {{content}}
-                    </div>
+        <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
+        <div id="hbe-security">
+          <div class="hbe-input-container">
+          <input type="password" class="hbe-form-control" id="pass" placeholder="{{message}}" />
+            <label for="pass">{{message}}</label>
+            <div class="bottom-line"></div>
+          </div>
+        </div>
+        <div id="decryptionError" style="display: none;">{{decryptionError}}</div>
+        <div id="noContentError" style="display: none;">{{noContentError}}</div>
+        <div id="encrypt-blog" style="display:none">
+        {{content}}
+        </div>
 ```
 
 + You can see **default_abstract** and **default_template** and **default_message** here.
@@ -151,14 +153,16 @@ message: Welcome to my blog, enter password to read.
 template:
         <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
         <div id="hbe-security">
-            <div class="input-container">
-                <input type="password" class="form-control" id="pass" placeholder=" {{message}} " />
-                <label for="pass"> {{message}} </label>
-                <div class="bottom-line"></div>
-            </div>
+          <div class="hbe-input-container">
+          <input type="password" class="hbe-form-control" id="pass" placeholder="{{message}}" />
+            <label for="pass">{{message}}</label>
+            <div class="bottom-line"></div>
+          </div>
         </div>
+        <div id="decryptionError" style="display: none;">{{decryptionError}}</div>
+        <div id="noContentError" style="display: none;">{{noContentError}}</div>
         <div id="encrypt-blog" style="display:none">
-            {{content}}
+        {{content}}
         </div>
 ---
 ```
