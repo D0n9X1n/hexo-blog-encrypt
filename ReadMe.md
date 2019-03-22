@@ -118,7 +118,7 @@ encrypt:
     default_abstract: the content has been encrypted, enter the password to read.</br>
     default_message: Please enter the password to read.
     default_template:
-        <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
         <div id="hbe-security">
           <div class="hbe-input-container">
           <input type="password" class="hbe-form-control" id="pass" placeholder="{{message}}" />
@@ -151,7 +151,7 @@ password: Mike
 abstract: Welcome to my blog, enter password to read.
 message: Welcome to my blog, enter password to read.
 template:
-        <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
         <div id="hbe-security">
           <div class="hbe-input-container">
           <input type="password" class="hbe-form-control" id="pass" placeholder="{{message}}" />
