@@ -12,7 +12,7 @@
 > Now let me introduce my plugin "Hexo-Blog-Encrypt".
 
 ## Live Demo
-See [mhexo.github.io/example-site/2016/10/26/HexoBlogEncrpyt/](https://mhexo.github.io/example-site/2016/10/26/HexoBlogEncrpyt/), **all passwords are *mikemessi***.
+See [Demo Page](https://mhexo.github.io/example-site/2018/06/25/encrypt-test/), **all passwords are `123`**.
 
 # Install
 + `npm install --save hexo-blog-encrypt`

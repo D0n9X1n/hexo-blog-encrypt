@@ -13,7 +13,7 @@ hexo-blog-encrypt
 > 所以，Hexo-Blog-Encrypt 因为这个需求而诞生了。
 
 ## 线上 Demo
-你可以查看 [mhexo.github.io/example-site/2016/10/26/HexoBlogEncrpyt/](https://mhexo.github.io/example-site/2016/10/26/HexoBlogEncrpyt/)
+你可以查看 [Demo Page](https://mhexo.github.io/example-site/2018/06/25/encrypt-test/)
 
 所有的密码都是 "mikemessi"
 
