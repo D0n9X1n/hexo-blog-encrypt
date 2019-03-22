@@ -15,7 +15,7 @@ hexo-blog-encrypt
 ## 线上 Demo
 你可以查看 [Demo Page](https://mhexo.github.io/example-site/2018/06/25/encrypt-test/)
 
-所有的密码都是 "mikemessi"
+所有的密码都是 `123`
 
 # 安装
 + `npm install --save hexo-blog-encrypt`
