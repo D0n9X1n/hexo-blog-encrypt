@@ -182,6 +182,23 @@ template:
 ---
 ```
 
+## 回调
+
+如果您需要在文章解密之后调用一些代码，您可以参考以下配置：
+
+```yaml
+encrypt:
+  enable: true
+  callback: |-
+    initLightGallery()
+    initImageResize()
+    initTocBot()
+```
+
+> 在`callback` 之后的这个符号`|-`代表多行的yaml值 
+
+如果您在其他js文件里面定义了函数，您可以在这里调用它们，或者您也可以在`callback`这里写上您自己的代码逻辑，比如`$('#someId').lightGallery()`，上面的`initXXX()`只是示例，您不应该直接复制上面的配置。
+
 ## TODO
 See [TODO](./TODO.md) File
 

@@ -169,6 +169,23 @@ template:
 
 The plugin will use the template content instead of the default one.
 
+## callback
+
+In case that you would like to invoke some code after blog content is decrypted, you can add one config as below demo:
+
+```yaml
+encrypt:
+  enable: true
+  callback: |-
+    initLightGallery()
+    initImageResize()
+    initTocBot()
+```
+
+> the symbol `|-` after `callback` means multi-line value. 
+
+You should write your own js code here, some functions if you defined it elsewhere, do not just copy the code like `initXXXX()` 
+
 ## TODO
 See [TODO](./TODO.md) file.
 
