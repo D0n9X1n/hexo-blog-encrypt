@@ -108,7 +108,14 @@ hexo.extend.generator.register('blog-encrypt', () => [
     'data': () => fs.createReadStream(path.resolve(path.dirname(require.resolve('crypto-js')), 'crypto-js.js')),
     'path': 'lib/crypto-js.js',
   }, {
-    'data': () => fs.createReadStream(path.resolve(__dirname, 'lib/blog-encrypt.js')),
+    'data': function() {
+      const Readable = require('stream').Readable;
+      let stream = new Readable;
+      stream.push(fs.readFileSync(path.resolve(__dirname, 'lib/blog-encrypt.js'))
+        .replace('{callback}', hexo.config.encrypt && hexo.config.encrypt.enable && hexo.config.encrypt.callback ? hexo.config.encrypt.callback : ''));
+      stream.push(null);      // indicates the end of the stream
+      return stream;
+    },
     'path': 'lib/blog-encrypt.js',
   }, {
     'data': () => fs.createReadStream(path.resolve(__dirname, 'lib/blog-encrypt.css')),
