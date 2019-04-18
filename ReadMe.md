@@ -20,8 +20,8 @@ See [Demo Page](https://mhexo.github.io/example-site/2018/06/25/encrypt-test/), 
 + or `yarn add hexo-blog-encrypt` (require [Yarn](https://yarnpkg.com/en/))
 
 # Quick Start
-+ First you should enable the plugin in your `_config.yml` like below:
-
++ First, make sure your post has content(not empty, or only has space).
++ Then you should enable the plugin in your `_config.yml` like below:
 ```
 # Security
 ##

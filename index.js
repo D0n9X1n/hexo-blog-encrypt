@@ -79,6 +79,12 @@ hexo.extend.filter.register('after_post_render', function encrypt (data) {
 
     }
 
+    if (data.content.trim() === '') {
+
+      log.warn('Warning: Your blog has no content, it may cause error when decrypting.');
+
+    }
+
     data.content = escape(data.content);
     data.content = CryptoJS.enc.Utf8.parse(data.content);
     data.content = CryptoJS.enc.Base64.stringify(data.content);

@@ -24,7 +24,8 @@ hexo-blog-encrypt
 
 
 # 快速开始
-+ 首先在 `_config.yml` 中启用该插件:
++ 首先, 你需要确保你的文章中含有内容（不能为空，或者只包含空格）
++ 然后在 `_config.yml` 中启用该插件:
 
 ```
 # Security
