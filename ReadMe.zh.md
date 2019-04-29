@@ -7,6 +7,8 @@ hexo-blog-encrypt
 
 [English ReadMe](./ReadMe.md)
 
+# 提 issue 前请学会如何总结归纳，请不要直接一句话描述问题，除非问题十分明确。可以参考这几个 issue: [#79](https://github.com/MikeCoder/hexo-blog-encrypt/issues/79), [#68](https://github.com/MikeCoder/hexo-blog-encrypt/issues/68), [#83](https://github.com/MikeCoder/hexo-blog-encrypt/issues/83), [#21](https://github.com/MikeCoder/hexo-blog-encrypt/issues/21)
+
 ## 什么是 Hexo-Blog-Encrypt
 > 尝试着想一下，你写了一篇博客，但是，出于某种原因，不太希望每一个人都可以看到他。所以你常常会为这种文章设置一个密码，其他人需要输入密码才可以访问这篇博客。对于 emlog 或者 wordpress 来说，这很容易，但是对于 hexo 来说，之前并没有一个类似的功能。
 >
