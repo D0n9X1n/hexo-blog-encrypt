@@ -14,6 +14,9 @@ hexo-blog-encrypt
 >
 > 所以，Hexo-Blog-Encrypt 因为这个需求而诞生了。
 
+## 特点
++ 一旦你输入了正确的密码，你可以在接下来的 30 分钟内，无需密码访问该网页。
+
 ## 线上 Demo
 你可以查看 [Demo Page](https://mhexo.github.io/example-site/2018/06/25/encrypt-test/)
 

@@ -11,6 +11,9 @@
 > It is easy on wordpress or emlog or other blog system. However, when you on hexo, there is no such a plugin or function before.
 > Now let me introduce my plugin "Hexo-Blog-Encrypt".
 
+## Feature
++ Once you enter the correct password, you can get the access for 30 minutes.
+
 ## Live Demo
 See [Demo Page](https://mhexo.github.io/example-site/2018/06/25/encrypt-test/), **all passwords are `123`**.
 
