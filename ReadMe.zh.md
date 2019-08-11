@@ -142,7 +142,6 @@ encrypt: # hexo-blog-encrypt
     default_abstract: Something was encrypted, please enter password to read.</br>
     default_message: Welcome to my blog, enter password to read.
     default_template: |-
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
         <div id="hbe-security">
           <div class="hbe-input-container">
           <input type="password" class="hbe-form-control" id="pass" placeholder="{{message}}" />
@@ -178,7 +177,6 @@ password: Mike
 abstract: Welcome to my blog, enter password to read.
 message: Welcome to my blog, enter password to read.
 template:
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
         <div id="hbe-security">
           <div class="hbe-input-container">
           <input type="password" class="hbe-form-control" id="pass" placeholder="{{message}}" />
