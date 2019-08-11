@@ -120,7 +120,7 @@ hexo.extend.generator.register('blog-encrypt', () => [
       const Readable = require('stream').Readable;
       const stream = new Readable();
       stream.push(fs.readFileSync(path.resolve(__dirname, 'lib/blog-encrypt.js'))
-        .replace('{ callback() }', hexo.config.encrypt && hexo.config.encrypt.enable && hexo.config.encrypt.callback ? hexo.config.encrypt.callback : ''));
+        .replace('callBackReplaceHere', hexo.config.encrypt && hexo.config.encrypt.enable && hexo.config.encrypt.callback ? hexo.config.encrypt.callback : ''));
       stream.push(null); // Indicates the end of the stream
       return stream;
 
