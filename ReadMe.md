@@ -7,83 +7,100 @@
 [中文说明](./ReadMe.zh.md)
 
 ## What is Hexo Blog Encrypt
+
 > Think about this, you write an article, but not want everyone to read. So you will add a passwrod on the blog, others need to answer the password to access the blog.
 > It is easy on wordpress or emlog or other blog system. However, when you on hexo, there is no such a plugin or function before.
-> Now let me introduce my plugin "Hexo-Blog-Encrypt".
+> Now let me introduce my plugin "hexo-blog-encrypt".
 
 ## Feature
+
 + Once you enter the correct password, you can get the access for 30 minutes.
 
 ## Live Demo
+
 See [Demo Page](https://mhexo.github.io/example-site/2018/06/25/encrypt-test/), **all passwords are `123`**.
 
-# Install
+## Install
+
 + `npm install --save hexo-blog-encrypt`
 
 + or `yarn add hexo-blog-encrypt` (require [Yarn](https://yarnpkg.com/en/))
 
-# Quick Start
+## Quick Start
+
 + First, make sure your post has content(not empty, or only has space).
 + Then you should enable the plugin in your `_config.yml` like below:
-```
+
+```yaml
+
 # Security
-##
-encrypt:
-    enable: true
+encrypt: # hexo-blog-encrypt
+  enable: true
+
 ```
 
 + Add password and abstract and message to your blog source like below:
 
-```
+```markdown
+
 ---
 title: Hello World
 date: 2016-03-30 21:18:02
 password: mikemessi
-abstract: Welcome to my blog, enter password to read.
-message: Welcome to my blog, enter password to read.
+abstract: Something was encrypted, please enter password to read.
+message: Welcome to my blog, please enter password to read.
 ---
+
 ```
 
 + If you want to encrypt you TOC of the blog, you should add the following code to your article.ejs:
 
-```
+```ejs
+
 <% if(post.toc == true){ %>
-    <div id="toc-div" class="toc-article" <% if (post.encrypt == true) { %>style="display:none" <% } %>>
-        <strong class="toc-title">Index</strong>
-        <% if (post.encrypt == true) { %>
-            <%- toc(post.origin) %>
-        <% } else { %>
-            <%- toc(post.content) %>
-        <% } %>
-    </div>
+  <div id="toc-div" class="toc-article" <% if (post.encrypt == true) { %>style="display:none" <% } %>>
+    <strong class="toc-title">Index</strong>
+      <% if (post.encrypt == true) { %>
+        <%- toc(post.origin) %>
+      <% } else { %>
+        <%- toc(post.content) %>
+      <% } %>
+  </div>
 <% } %>
 <%- post.content %>
+
 ```
 
 + Then use `hexo clean && hexo g && hexo s` to see your blog.
 
-# Advanced Usage
+## For Advanced Users
 
-### First you should enable the plugin in your _config.yml like below.
-```
+### First you should enable the plugin in your _config.yml like below
+
+```yaml
+
 # Security
-##
-encrypt:
-    enable: true
-```
-
-### Then, add password to the blogs.
+encrypt: # hexo-blog-encrypt
+  enable: true
 
 ```
+
+### Then, add password to the blogs
+
+```markdown
+
 ---
 title: Hello World
 date: 2016-03-30 21:18:02
 password: mikemessi
-abstract: Welcome to my blog, enter password to read.
+abstract: Something was encrypted, please enter password to read.
 message: Welcome to my blog, enter password to read.
 ---
+
 ```
+
 As we can see above, we add 'password, abstract, message' the new 3 items in the blog info block.
+
 + password is the blog password.
 + abstract is the content which will be showed in the blog list page.
 + message is the content which will be showed in the blog detail page.
@@ -95,32 +112,35 @@ If you has a post with TOC, you should change the code of template. Use the defa
 + You should find the *article.ejs* file which is located in *hexo/themes/landscape/layout/_partial/article.ejs*.
 + Find the code like <% post.content %>, which is usually at line 30.
 + Replace the <% post.content %> with the following code block:
-```
+
+```ejs
+
 <% if(post.toc == true){ %>
-    <div id="toc-div" class="toc-article" <% if (post.encrypt == true) { %>style="display:none" <% } %>>
-        <strong class="toc-title">Index</strong>
-        <% if (post.encrypt == true) { %>
-            <%- toc(post.origin, {list_number: true}) %>
-        <% } else { %>
-            <%- toc(post.content, {list_number: true}) %>
-        <% } %>
-    </div>
+  <div id="toc-div" class="toc-article" <% if (post.encrypt == true) { %>style="display:none" <% } %>>
+    <strong class="toc-title">Index</strong>
+      <% if (post.encrypt == true) { %>
+        <%- toc(post.origin, {list_number: true}) %>
+      <% } else { %>
+        <%- toc(post.content, {list_number: true}) %>
+      <% } %>
+  </div>
 <% } %>
 <%- post.content %>
+
 ```
 
 ### Change Template
 
 If you are not satisfied with the default template, you can just change it to your favorite one. Just follow the following steps.
 
-```
+```yaml
+
 # Security
-##
-encrypt:
-    enable: true
-    default_abstract: the content has been encrypted, enter the password to read.</br>
-    default_message: Please enter the password to read.
-    default_template:
+encrypt: # hexo-blog-encrypt
+  enable: true
+    default_abstract: Something was encrypted, please enter password to read.</br>
+    default_message: Welcome to my blog, enter password to read.
+    default_template: |-
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
         <div id="hbe-security">
           <div class="hbe-input-container">
@@ -134,19 +154,22 @@ encrypt:
         <div id="encrypt-blog" style="display:none">
         {{content}}
         </div>
+
 ```
 
 + You can see **default_abstract** and **default_template** and **default_message** here.
-    + default_abstract: means the default description which will be shown on the blogs list page.
-    + default_message: means the default message will show above the password input area.
-    + default_template : means the default detail page which will be shown on the detial page.
-        + the decryption div's id **must** be 'hbe-security'
-        + the content div's id **must** be 'encrypt-blog'
-        + there must be a input's id **must** be pass, which will let reader to input their password
-        + there must be trigger which calls the 'decryptAES' function
+  + default_abstract: means the default description which will be shown on the blogs list page.
+  + default_message: means the default message will show above the password input area.
+  + default_template : means the default detail page which will be shown on the detial page.
+    + the decryption div's id **must** be 'hbe-security'
+    + the content div's id **must** be 'encrypt-blog'
+    + there must be a input's id **must** be pass, which will let reader to input their password
+    + there must be trigger which calls the 'decryptAES' function
 
 If you want to make the blog special, You can add abstract and template to your blog files, like these:
-```
+
+```markdown
+
 ---
 title: hello world
 date: 2016-03-30 21:18:02
@@ -168,6 +191,7 @@ template:
         {{content}}
         </div>
 ---
+
 ```
 
 The plugin will use the template content instead of the default one.
@@ -177,23 +201,28 @@ The plugin will use the template content instead of the default one.
 In case that you would like to invoke some code after blog content is decrypted, you can add one config as below demo:
 
 ```yaml
+
 encrypt:
   enable: true
   callback: |-
     initLightGallery()
     initImageResize()
     initTocBot()
+
 ```
 
-> the symbol `|-` after `callback` means multi-line value. 
+> the symbol `|-` after `callback` means multi-line value.
 
-You should write your own js code here, some functions if you defined it elsewhere, do not just copy the code like `initXXXX()` 
+You should write your own js code here, some functions if you defined it elsewhere, do not just copy the code like `initXXXX()`
 
 ## TODO
+
 See [TODO](./TODO.md) file.
 
 ## License
+
 See [LICENSE](./LICENSE) file.
 
 ## Thanks
+
 Collaborator - [xiazeyu](https://github.com/xiazeyu)
