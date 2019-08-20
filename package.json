@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "crypto-js": "^3.1.9-1",
-    "hexo-fs": "^0.2.3",
+    "hexo-fs": "^1.0.2",
     "hexo-log": "^0.2.0"
   },
   "description": "Yet, just another blog encrypt plugin for hexo.",
@@ -37,6 +37,6 @@
   },
   "version": "2.2.2",
   "devDependencies": {
-    "eslint": "^4.19.1"
+    "eslint": "^6.1.0"
   }
 }
