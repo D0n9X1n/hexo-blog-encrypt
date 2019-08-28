@@ -14,8 +14,9 @@ const UglifyJS = require('uglify-js');
 const defaultConfig = {
   'abstract': 'Here\'s something encrypted, password is required to continue reading.',
   'prompt': 'Hey, password is required here.',
-  'template': fs.readFileSync(path.resolve(__dirname, './template.html')).toString(),
+  'template': fs.readFileSync(path.resolve(__dirname, './lib/template.html')).toString(),
   'wrong_pass_message': 'Oh, this is an invalid password. Check and try again, please.',
+  'wrong_hash_message': 'Oh, these decrypted content cannot be verified, but you can still have a look.',
 };
 const saltKey = 'hexo-blog-encrypt的作者(们)都是大帅比!';
 const saltIv = 'hexo-blog-encrypt是地表最强Hexo加密插件!';
@@ -61,6 +62,7 @@ hexo.extend.filter.register('after_post_render', (data) => {
   data.content = config.template.replace(/{{hbeEncryptedData}}/g, encryptedData)
   .replace(/{{hbeHmacDigest}}/g, hmacDigest)
   .replace(/{{hbeWrongPassMessage}}/g, config.wrong_pass_message)
+  .replace(/{{hbeWrongHashMessage}}/g, config.wrong_hash_message)
   .replace(/{{hbePrompt}}/g, config.prompt);
   data.content += `<script src="${hexo.config.root}lib/blog-encrypt.js"></script><link href="${hexo.config.root}css/blog-encrypt.css" rel="stylesheet" type="text/css">`;
   data.excerpt = data.more = config.abstract;
