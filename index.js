@@ -2,132 +2,79 @@
 
 'use strict';
 
+const crypto = require('crypto');
 const fs = require('hexo-fs');
-const path = require('path');
-const CryptoJS = require('crypto-js');
 const log = require('hexo-log')({
   'debug': false,
-  'silent': false,
+  'slient': false,
 });
+const path = require('path');
 
-hexo.extend.filter.register('after_post_render', function encrypt (data) {
+const defaultConfig = {
+  'abstract': 'Here\'s something encrypted, password is required to continue reading.',
+  'prompt': 'Hey, password is required here.',
+  'template': fs.readFileSync(path.resolve(__dirname, './template.html')).toString(),
+  'wrong_pass_message': 'Oh, this is an invalid password. Check and try again, please.',
+};
+const saltKey = 'hexo-blog-encrypt的作者(们)都是大帅比!';
+const saltIv = 'hexo-blog-encrypt是地表最强Hexo加密插件!';
 
-  // Close the encrypt function
-  if (!('encrypt' in hexo.config && hexo.config.encrypt && 'enable' in hexo.config.encrypt && hexo.config.encrypt.enable)) {
+hexo.extend.filter.register('after_post_render', (data) => {
 
+  if(!('password' in data)){
     return data;
-
-  }
-  if (!('default_template' in hexo.config.encrypt && hexo.config.encrypt.default_template)) { // No such template
-
-    hexo.config.encrypt.default_template = fs.readFileSync(path.resolve(__dirname, './template.html'));
-
-  }
-  if (!('default_abstract' in hexo.config.encrypt && hexo.config.encrypt.default_abstract)) { // No read more info
-
-    hexo.config.encrypt.default_abstract = 'The article has been encrypted, please enter your password to view.<br>';
-
-  }
-  if (!('default_message' in hexo.config.encrypt && hexo.config.encrypt.default_message)) { // No message
-
-    hexo.config.encrypt.default_message = 'Please enter the password to read the blog.';
-
-  }
-  if (!('default_decryption_error' in hexo.config.encrypt && hexo.config.encrypt.default_decryption_error)) { // Wrong password
-
-    hexo.config.encrypt.default_decryption_error = 'Incorrect Password!';
-
-  }
-  if (!('default_no_content_error' in hexo.config.encrypt && hexo.config.encrypt.default_no_content_error)) { // No content
-
-    hexo.config.encrypt.default_no_content_error = 'No content to display!';
-
   }
 
-  if ('password' in data && data.password) {
+  // Let's rock n roll
+  const config = Object.assign(defaultConfig, hexo.config.encrypt, data);
 
-    // Use the blog's config first
-    log.info(`Encrypted the blog: ${ data.title.trim() }`);
-
-    // Store the origin data
-    data.origin = data.content;
-    data.encrypt = true;
-
-    if (!('abstract' in data && data.abstract)) {
-
-      data.abstract = hexo.config.encrypt.default_abstract;
-
+  // --- Begin --- Remove in the next version please
+  const deprecatedConfigs = [
+    'default_template',
+    'default_abstract',
+    'default_message',
+    'default_decryption_error',
+    'default_no_content_error',
+  ];
+  deprecatedConfigs.forEach((key) => {
+    if(key in config){
+      log.warn(`hexo-blog-encrypt: ${key} is DEPRECATED, please change to newer API.`);
     }
-    if (!('template' in data && data.template)) {
+  });
 
-      data.template = hexo.config.encrypt.default_template;
+  // --- End --- Remove in the next version please
 
-    }
-    if (!('message' in data && data.message)) {
+  log.info(`hexo-blog-encrypt: encrypt blog ${data.title.trim()}`);
 
-      data.message = hexo.config.encrypt.default_message;
+  const key = crypto.pbkdf2Sync(config.password, saltKey, 128, 256/8, 'sha256');
+  const iv = crypto.pbkdf2Sync(config.password, saltIv, 128, 16, 'sha256');
+  
+  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+  const hmac = crypto.createHmac('sha256', key);
 
-    }
-    if (!('decryptionError' in data && data.decryptionError)) {
+  let encryptedData = cipher.update(data.content, 'utf8', 'hex');
+  hmac.update(data.content, 'utf8');
+  encryptedData += cipher.final('hex');
+  const hmacDigest = hmac.digest('hex');
 
-      data.decryptionError = hexo.config.encrypt.default_decryption_error;
-
-    }
-    if (!('noContentError' in data && data.noContentError)) {
-
-      data.noContentError = hexo.config.encrypt.default_no_content_error;
-
-    }
-
-    if (data.content.trim() === '') {
-
-      log.warn('Warning: Your blog has no content, it may cause error when decrypting.');
-
-    }
-
-    data.content = escape(data.content);
-    data.content = CryptoJS.enc.Utf8.parse(data.content);
-    data.content = CryptoJS.enc.Base64.stringify(data.content);
-    data.content = CryptoJS.AES.encrypt(data.content, String(data.password)).toString();
-
-    data.template = data.template.replace('{{content}}', data.content);
-    data.template = data.template.replace('{{message}}', data.message);
-    data.template = data.template.replace('{{message}}', data.message);
-    data.template = data.template.replace('{{decryptionError}}', data.decryptionError);
-    data.template = data.template.replace('{{noContentError}}', data.noContentError);
-
-    data.content = data.template;
-    data.content += `<script src="${hexo.config.root}lib/crypto-js.js"></script>`;
-    data.content += `<script src="${hexo.config.root}lib/blog-encrypt.js"></script>`;
-    data.content += `<link href="${hexo.config.root}css/blog-encrypt.css" rel="stylesheet" type="text/css">`;
-
-    data.more = data.abstract;
-    data.excerpt = data.more;
-
-  }
+  data.content = config.template.replace(/{{hbeEncryptedData}}/g, encryptedData)
+  .replace(/{{hbeHmacDigest}}/g, hmacDigest)
+  .replace(/{{hbeWrongPassMessage}}/g, config.wrong_pass_message)
+  .replace(/{{hbePrompt}}/g, config.prompt);
+  data.content += `<script src="${hexo.config.root}lib/blog-encrypt.js"></script><link href="${hexo.config.root}css/blog-encrypt.css" rel="stylesheet" type="text/css">`;
+  data.excerpt = data.more = config.abstract;
 
   return data;
 
-});
+})
 
-hexo.extend.generator.register('blog-encrypt', () => [
+hexo.extend.generator.register('hexo-blog-encrypt', () => [
   {
-    'data': () => fs.createReadStream(path.resolve(path.dirname(require.resolve('crypto-js')), 'crypto-js.js')),
-    'path': 'lib/crypto-js.js',
-  }, {
-    'data': function () {
-
-      const Readable = require('stream').Readable;
-      const stream = new Readable();
-      stream.push(fs.readFileSync(path.resolve(__dirname, 'lib/blog-encrypt.js'))
-        .replace('callBackReplaceHere', hexo.config.encrypt && hexo.config.encrypt.enable && hexo.config.encrypt.callback ? hexo.config.encrypt.callback : ''));
-      stream.push(null); // Indicates the end of the stream
-      return stream;
-
-    },
+    'data': () => fs.createReadStream(path.resolve(__dirname, 'lib/blog-encrypt.js')),
     'path': 'lib/blog-encrypt.js',
-  }, {
+  },
+  {
     'data': () => fs.createReadStream(path.resolve(__dirname, 'lib/blog-encrypt.css')),
     'path': 'css/blog-encrypt.css',
-  },
+  }
 ]);
