@@ -9,6 +9,7 @@ const log = require('hexo-log')({
   'slient': false,
 });
 const path = require('path');
+const UglifyJS = require('uglify-js');
 
 const defaultConfig = {
   'abstract': 'Here\'s something encrypted, password is required to continue reading.',
@@ -68,13 +69,37 @@ hexo.extend.filter.register('after_post_render', (data) => {
 
 })
 
+const code = fs.readFileSync(path.resolve(__dirname, './lib/blog-encrypt.js')).toString();
+const result = UglifyJS(code, {
+  'sourceMap': {
+    'filename': 'blog-encrypt.js',
+    'url': 'blog-encrypt.js.map',
+  },
+});
+
 hexo.extend.generator.register('hexo-blog-encrypt', () => [
   {
-    'data': () => fs.createReadStream(path.resolve(__dirname, 'lib/blog-encrypt.js')),
+    'data': () => fs.createReadStream(path.resolve(__dirname, './lib/blog-encrypt.css')),
+    'path': 'css/blog-encrypt.css',
+  },
+  {
+    'data': () => {
+      const Readable = require('stream').Readable;
+      const stream = new Readable();
+      stream.push(result.code, 'utf8');
+      stream.push(null);
+      return stream;
+    },
     'path': 'lib/blog-encrypt.js',
   },
   {
-    'data': () => fs.createReadStream(path.resolve(__dirname, 'lib/blog-encrypt.css')),
-    'path': 'css/blog-encrypt.css',
-  }
+    'data': () => {
+      const Readable = require('stream').Readable;
+      const stream = new Readable();
+      stream.push(result.map, 'utf8');
+      stream.push(null);
+      return stream;
+    },
+    'path': 'lib/blog-encrypt.js.map',
+  },
 ]);
