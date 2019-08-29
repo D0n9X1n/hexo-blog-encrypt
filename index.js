@@ -28,6 +28,7 @@ hexo.extend.filter.register('after_post_render', (data) => {
   }
 
   // Let's rock n roll
+  data.password = data.password.toString();
   const config = Object.assign(defaultConfig, hexo.config.encrypt, data);
 
   // --- Begin --- Remove in the next version please
@@ -54,7 +55,7 @@ hexo.extend.filter.register('after_post_render', (data) => {
 
   // --- End --- Remove in the next version please
 
-  log.info(`hexo-blog-encrypt: encrypt blog ${data.title.trim()}`);
+  log.info(`hexo-blog-encrypt: encrypting "${data.title.trim()}".`);
 
   const key = crypto.pbkdf2Sync(config.password, keySalt, 256, 256/8, 'sha256');
   const iv = crypto.pbkdf2Sync(config.password, ivSalt, 128, 16, 'sha256');
