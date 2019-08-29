@@ -18,8 +18,8 @@ const defaultConfig = {
   'wrong_pass_message': 'Oh, this is an invalid password. Check and try again, please.',
   'wrong_hash_message': 'Oh, these decrypted content cannot be verified, but you can still have a look.',
 };
-const saltKey = 'hexo-blog-encrypt的作者(们)都是大帅比!';
-const saltIv = 'hexo-blog-encrypt是地表最强Hexo加密插件!';
+const keySalt = new Uint8Array(Array.from('hexo-blog-encrypt的作者(们)都是大帅比!'));
+const ivSalt = new Uint8Array(Array.from('hexo-blog-encrypt是地表最强Hexo加密插件!'));
 
 hexo.extend.filter.register('after_post_render', (data) => {
 
@@ -38,9 +38,17 @@ hexo.extend.filter.register('after_post_render', (data) => {
     'default_decryption_error',
     'default_no_content_error',
   ];
-  deprecatedConfigs.forEach((key) => {
+  const newKeyNames = [
+    'template',
+    'abstract',
+    'prompt',
+    'wrong_pass_message',
+    'wrong_hash_message',
+  ]
+  deprecatedConfigs.forEach((key, index) => {
     if(key in config){
       log.warn(`hexo-blog-encrypt: ${key} is DEPRECATED, please change to newer API.`);
+      config[newKeyNames[index]] = config[key];
     }
   });
 
@@ -48,8 +56,8 @@ hexo.extend.filter.register('after_post_render', (data) => {
 
   log.info(`hexo-blog-encrypt: encrypt blog ${data.title.trim()}`);
 
-  const key = crypto.pbkdf2Sync(config.password, saltKey, 128, 256/8, 'sha256');
-  const iv = crypto.pbkdf2Sync(config.password, saltIv, 128, 16, 'sha256');
+  const key = crypto.pbkdf2Sync(config.password, keySalt, 256, 256/8, 'sha256');
+  const iv = crypto.pbkdf2Sync(config.password, ivSalt, 128, 16, 'sha256');
   
   const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
   const hmac = crypto.createHmac('sha256', key);
