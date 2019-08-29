@@ -37,6 +37,6 @@
   },
   "version": "4.0.0",
   "devDependencies": {
-    "eslint": "^6.1.0"
+    "eslint": "^6.2.2"
   }
 }
