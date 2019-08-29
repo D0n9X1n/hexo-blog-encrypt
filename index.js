@@ -58,7 +58,7 @@ hexo.extend.filter.register('after_post_render', (data) => {
 
   const key = crypto.pbkdf2Sync(config.password, keySalt, 256, 256/8, 'sha256');
   const iv = crypto.pbkdf2Sync(config.password, ivSalt, 128, 16, 'sha256');
-  
+
   const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
   const hmac = crypto.createHmac('sha256', key);
 
@@ -80,7 +80,7 @@ hexo.extend.filter.register('after_post_render', (data) => {
 })
 
 const code = fs.readFileSync(path.resolve(__dirname, './lib/blog-encrypt.js')).toString();
-const result = UglifyJS(code, {
+const result = UglifyJS.minify(code, {
   'sourceMap': {
     'filename': 'blog-encrypt.js',
     'url': 'blog-encrypt.js.map',
