@@ -17,8 +17,41 @@ const defaultConfig = {
   'wrong_pass_message': 'Oh, this is an invalid password. Check and try again, please.',
   'wrong_hash_message': 'Oh, these decrypted content cannot be verified, but you can still have a look.',
 };
-const keySalt = new Uint8Array(Array.from('hexo-blog-encrypt的作者(们)都是大帅比!'));
-const ivSalt = new Uint8Array(Array.from('hexo-blog-encrypt是地表最强Hexo加密插件!'));
+
+const keySalt = textToArray('hexo-blog-encrypt的作者们都是大帅比!');
+const ivSalt = textToArray('hexo-blog-encrypt是地表最强Hexo加密插件!');
+
+function textToArray(s) {
+  var i = s.length;
+  var n = 0;
+  var ba = new Array()
+  for (var j = 0; j < i;) {
+    var c = s.codePointAt(j);
+    if (c < 128) {
+      ba[n++] = c;
+      j++;
+    }
+    else if ((c > 127) && (c < 2048)) {
+      ba[n++] = (c >> 6) | 192;
+      ba[n++] = (c & 63) | 128;
+      j++;
+    }
+    else if ((c > 2047) && (c < 65536)) {
+      ba[n++] = (c >> 12) | 224;
+      ba[n++] = ((c >> 6) & 63) | 128;
+      ba[n++] = (c & 63) | 128;
+      j++;
+    }
+    else {
+      ba[n++] = (c >> 18) | 240;
+      ba[n++] = ((c >> 12) & 63) | 128;
+      ba[n++] = ((c >> 6) & 63) | 128;
+      ba[n++] = (c & 63) | 128;
+      j += 2;
+    }
+  }
+  return new Uint8Array(ba);
+}
 
 hexo.extend.filter.register('after_post_render', (data) => {
 
@@ -78,8 +111,6 @@ hexo.extend.filter.register('after_post_render', (data) => {
   return data;
 
 })
-
-const code = fs.readFileSync(path.resolve(__dirname, './lib/blog-encrypt.js')).toString();
 
 hexo.extend.generator.register('hexo-blog-encrypt', () => [
   {
