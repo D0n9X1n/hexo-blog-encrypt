@@ -6,40 +6,41 @@
 
 [中文说明](./ReadMe.zh.md)
 
-## What is Hexo Blog Encrypt
+## What is Hexo-blog-encrypt
 
-> Think about this, you write an article, but not want everyone to read. So you will add a passwrod on the blog, others need to answer the password to access the blog.
-> It is easy on wordpress or emlog or other blog system. However, when you on hexo, there is no such a plugin or function before.
-> Now let me introduce my plugin "hexo-blog-encrypt".
+- ~~First of all, the **BEST** post encryption plugin in the universe for hexo.(But what about the other plugins?)~~
+
+- It is for who wrote a post, but don't want everyone to read. Thus, password is required in certain pages to access these encrypted posts.
+
+- It is simple on wordpress, emlog or other blog system, except hexo. :(
+
+- So it's "hexo-blog-encrypt"'s time.
 
 ## Feature
 
-+ Once you enter the correct password, you can get the access for 30 minutes.
+- Once you enter the correct password, you can get the access to read encrypted posts, and the password is remembered at local. Press the button once, and the stored password will be erased. If there're scripts in the post, they will be executed once the post is decrypted.
+
+- All functions are provided by the native APIs. We use [Crypto](https://nodejs.org/dist/latest-v12.x/docs/api/crypto.html) in Node.js, and use [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) in Browsers.
+
+- [PBKDF2](https://tools.ietf.org/html/rfc2898), [SHA256](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf) is used to derive keys, We use [AES256-CBC](https://csrc.nist.gov/publications/detail/sp/800-38a/final) to encrypt and decrypt data, we also use [HMAC](https://csrc.nist.gov/csrc/media/publications/fips/198/1/final/documents/fips-198-1_final.pdf) to verify message authentication codes to make sure the posts are decrypted well and not modified.
+
+- Promise is widely used to make sure our main procedures are asynchronous, so that the process have little chances to be block, and the experience will be more fluent.
+
+- Outdatad browsers may not work well. In such case, please upgrade your browser.
 
 ## Live Demo
 
-See [Demo Page](https://mhexo.github.io/example-site/2018/06/25/encrypt-test/), **all passwords are `123`**.
+- See [Demo Page](https://mhexo.github.io/example-site/2018/06/25/encrypt-test/), **all passwords are `123`**.
 
 ## Install
 
-+ `npm install --save hexo-blog-encrypt`
+- `npm install --save hexo-blog-encrypt`
 
-+ or `yarn add hexo-blog-encrypt` (require [Yarn](https://yarnpkg.com/en/))
+- or `yarn add hexo-blog-encrypt` (require [Yarn](https://yarnpkg.com/en/))
 
 ## Quick Start
 
-+ First, make sure your post has content(not empty, or only has space).
-+ Then you should enable the plugin in your `_config.yml` like below:
-
-```yaml
-
-# Security
-encrypt: # hexo-blog-encrypt
-  enable: true
-
-```
-
-+ Add password and abstract and message to your blog source like below:
+- Add password to your post's head like this:
 
 ```markdown
 
@@ -47,41 +48,15 @@ encrypt: # hexo-blog-encrypt
 title: Hello World
 date: 2016-03-30 21:18:02
 password: mikemessi
-abstract: Something was encrypted, please enter password to read.
-message: Welcome to my blog, please enter password to read.
 ---
 
 ```
 
-+ If you want to encrypt you TOC of the blog, you should add the following code to your article.ejs:
+- Then use `hexo clean && hexo g && hexo s` to see your blog at local.
 
-```ejs
+## Advanced settings
 
-<% if(post.toc == true){ %>
-  <div id="toc-div" class="toc-article" <% if (post.encrypt == true) { %>style="display:none" <% } %>>
-    <strong class="toc-title">Index</strong>
-      <% if (post.encrypt == true) { %>
-        <%- toc(post.origin) %>
-      <% } else { %>
-        <%- toc(post.content) %>
-      <% } %>
-  </div>
-<% } %>
-<%- post.content %>
-
-```
-
-+ Then use `hexo clean && hexo g && hexo s` to see your blog.
-
-## For Advanced Users
-
-### First you should enable the plugin in your _config.yml like below
-
-```yaml
-
-# Security
-encrypt: # hexo-blog-encrypt
-  enable: true
+You 
 
 ```
 
@@ -193,29 +168,6 @@ template:
 ```
 
 The plugin will use the template content instead of the default one.
-
-## callback
-
-In case that you would like to invoke some code after blog content is decrypted, you can add one config as below demo:
-
-```yaml
-
-encrypt:
-  enable: true
-  callback: |-
-    initLightGallery()
-    initImageResize()
-    initTocBot()
-
-```
-
-> the symbol `|-` after `callback` means multi-line value.
-
-You should write your own js code here, some functions if you defined it elsewhere, do not just copy the code like `initXXXX()`
-
-## TODO
-
-See [TODO](./TODO.md) file.
 
 ## License
 
