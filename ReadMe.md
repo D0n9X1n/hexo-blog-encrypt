@@ -85,6 +85,9 @@ message: Welcome to my blog, please enter password to read.
 # Security
 encrypt: # hexo-blog-encrypt
   enable: true
+  tags:  # encrypt posts by tags with the password separately
+    - {name: test, password: test}
+    - {name: diary, password: diary}
 
 ```
 
