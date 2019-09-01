@@ -36,6 +36,9 @@ See [Demo Page](https://mhexo.github.io/example-site/2018/06/25/encrypt-test/), 
 # Security
 encrypt: # hexo-blog-encrypt
   enable: true
+  tags:  # encrypt posts by tags with the password separately
+    - {name: test, password: test}
+    - {name: diary, password: diary}
 
 ```
 
