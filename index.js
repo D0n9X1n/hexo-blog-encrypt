@@ -43,6 +43,21 @@ hexo.extend.filter.register('after_post_render', function encrypt (data) {
     hexo.config.encrypt.default_no_content_error = 'No content to display!';
 
   }
+  
+  var currentTag, needToEncryptTag;
+  if (!('password' in data && data.password) && ('tags' in hexo.config.encrypt)) {
+    outer:
+    for (var i in data.tags.data) {
+      currentTag = data.tags.data[i].name
+      for (var j in hexo.config.encrypt.tags) {
+        needToEncryptTag = hexo.config.encrypt.tags[j].name
+        if (currentTag == needToEncryptTag) {
+          data.password = hexo.config.encrypt.tags[j].password;
+          break outer;
+        }
+      }
+    }
+  }
 
   if ('password' in data && data.password) {
 

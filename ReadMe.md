@@ -30,12 +30,16 @@ See [Demo Page](https://mhexo.github.io/example-site/2018/06/25/encrypt-test/), 
 
 + First, make sure your post has content(not empty, or only has space).
 + Then you should enable the plugin in your `_config.yml` like below:
++ The password in post is the highest priority, and then in tags encryption setting. The password priority in the post with multi-tag encryption is ordered by the post tags.
 
 ```yaml
 
 # Security
 encrypt: # hexo-blog-encrypt
   enable: true
+  tags:  # encrypt posts by tags with the password separately
+    - {name: test, password: test}
+    - {name: diary, password: diary}
 
 ```
 
@@ -82,6 +86,9 @@ message: Welcome to my blog, please enter password to read.
 # Security
 encrypt: # hexo-blog-encrypt
   enable: true
+  tags:  # encrypt posts by tags with the password separately
+    - {name: test, password: test}
+    - {name: diary, password: diary}
 
 ```
 
