@@ -44,17 +44,15 @@ hexo.extend.filter.register('after_post_render', function encrypt (data) {
 
   }
   
-  var tag1,tag2;
+  var currentTag, needToEncryptTag;
   if (!('password' in data && data.password) && ('tags' in hexo.config.encrypt)) {
     outer:
-    for(var i in data.tags.data){
-      tag1 = data.tags.data[i].name
-      console.log(tag1)
-      for(var j in hexo.config.encrypt.tags){
-        tag2 = hexo.config.encrypt.tags[j].name
-        if (tag1==tag2){
+    for (var i in data.tags.data) {
+      currentTag = data.tags.data[i].name
+      for (var j in hexo.config.encrypt.tags) {
+        needToEncryptTag = hexo.config.encrypt.tags[j].name
+        if (currentTag == needToEncryptTag) {
           data.password = hexo.config.encrypt.tags[j].password;
-          console.log(data.password)
           break outer;
         }
       }

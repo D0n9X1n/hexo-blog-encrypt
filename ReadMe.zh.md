@@ -33,13 +33,14 @@
 
 - 首先, 你需要确保你的文章中含有内容（不能为空，或者只包含空格）
 - 然后在 `_config.yml` 中启用该插件:
+- 文章设置的password优先级最高，其次是设置标签加密，文章多标签加密密码优先级跟文章标签先后顺序有关
 
 ```yaml
 
 # Security
 encrypt: # hexo-blog-encrypt
   enable: true
-  tags:  # encrypt posts by tags with the password separately
+  tags:  # 配置标签加密
     - {name: test, password: test}
     - {name: diary, password: diary}
 
@@ -88,7 +89,7 @@ message: Welcome to my blog, please enter password to read.
 # Security
 encrypt: # hexo-blog-encrypt
   enable: true
-  tags:  # encrypt posts by tags with the password separately
+  tags:   # 配置标签加密
     - {name: test, password: test}
     - {name: diary, password: diary}
 
