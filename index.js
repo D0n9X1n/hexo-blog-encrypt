@@ -55,12 +55,29 @@ function textToArray(s) {
 
 hexo.extend.filter.register('after_post_render', (data) => {
 
-  if(!('password' in data)){
-    return data;
+  const tagEncryptName = [];
+  const tagEncryptPass = [];
+  let password = data.password;
+
+  if(('encrypt' in hexo.config) && ('tags' in hexo.config.encrypt)){
+    hexo.config.encrypt.tags.forEach((tagObj) => {
+      tagEncryptName.push(tagObj.name);
+      tagEncryptPass.push(tagObj.password);
+    });
   }
 
+  data.tags.forEach((cTag, index) => {
+    if(tagEncryptName.includes(cTag.name)){
+      password = password || tagEncryptPass[index];
+    }
+  });
+  
+  if(password === undefined){
+    return data;
+  }
+  password = password.toString();
+
   // Let's rock n roll
-  data.password = data.password.toString();
   const config = Object.assign(defaultConfig, hexo.config.encrypt, data);
 
   // --- Begin --- Remove in the next version please
@@ -89,8 +106,8 @@ hexo.extend.filter.register('after_post_render', (data) => {
 
   log.info(`hexo-blog-encrypt: encrypting "${data.title.trim()}".`);
 
-  const key = crypto.pbkdf2Sync(config.password, keySalt, 1024, 256/8, 'sha256');
-  const iv = crypto.pbkdf2Sync(config.password, ivSalt, 512, 512, 'sha256');
+  const key = crypto.pbkdf2Sync(password, keySalt, 1024, 256/8, 'sha256');
+  const iv = crypto.pbkdf2Sync(password, ivSalt, 512, 512, 'sha256');
 
   const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
   const hmac = crypto.createHmac('sha256', key);

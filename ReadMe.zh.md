@@ -4,45 +4,43 @@
 [![Build Status](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/badges/build.png?b=master)](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/build-status/master)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/?branch=master)
 
-[English ReadMe](./ReadMe.md)
+## 这是个啥
 
-> 提 issue 前请学会如何总结归纳，请不要直接一句话描述问题，除非问题十分明确。可以参考这几个 issue: [#79](https://github.com/MikeCoder/hexo-blog-encrypt/issues/79), [#68](https://github.com/MikeCoder/hexo-blog-encrypt/issues/68), [#83](https://github.com/MikeCoder/hexo-blog-encrypt/issues/83), [#21](https://github.com/MikeCoder/hexo-blog-encrypt/issues/21)
+- ~~首先, 这是 Hexo 生态圈中 **最好的** 博客加密插件~~
 
-## 什么是 Hexo-Blog-Encrypt
+- 你可能需要写一些私密的博客, 通过密码验证的方式让人不能随意浏览. 
 
-> 尝试着想一下，你写了一篇博客，但是，出于某种原因，不太希望每一个人都可以看到他。所以你常常会为这种文章设置一个密码，其他人需要输入密码才可以访问这篇博客。对于 emlog 或者 wordpress 来说，这很容易，但是对于 hexo 来说，之前并没有一个类似的功能。
-> 所以，Hexo-Blog-Encrypt 因为这个需求而诞生了。
+- 这在 wordpress, emlog 或是其他博客系统中都很容易实现, 然而 hexo 除外. :(
 
-## 特点
+- 为了解决这个问题, 让我们有请 "hexo-blog-encrypt".
 
-- 一旦你输入了正确的密码，你可以在接下来的 30 分钟内，无需密码访问该网页。
+## 特性
 
-## 线上 Demo
+- 一旦你输入了正确的密码, 它将会被存储在本地浏览器的 localStorage中. 按个按钮, 密码将会被清空. 若博客中又脚本, 它将会被正确地执行.
 
-你可以查看 [Demo Page](https://mhexo.github.io/example-site/2018/06/25/encrypt-test/)
+- 支持按标签加密.
 
-所有的密码都是 `123`
+- 所有的核心功能都是由原生的 API 所提供的. 在 Node.js中, 我们使用 [Crypto](https://nodejs.org/dist/latest-v12.x/docs/api/crypto.html). 在浏览器中, 我们使用 [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API).
+
+- [PBKDF2](https://tools.ietf.org/html/rfc2898), [SHA256](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf) 被用于分发密钥, [AES256-CBC](https://csrc.nist.gov/publications/detail/sp/800-38a/final) 被用于加解密, 我们还使用 [HMAC](https://csrc.nist.gov/csrc/media/publications/fips/198/1/final/documents/fips-198-1_final.pdf) 来验证密文的来源, 并确保其未被篡改.
+
+- 我们广泛地使用 Promise 来进行异步操作, 以此确保线程不被杜塞.
+
+- 过时的浏览器将不能正常显示, 因此, 请升级您的浏览器.
+
+## 在线演示
+
+- 点击 [Demo Page](https://mhexo.github.io/example-site/2018/06/25/encrypt-test/), **所有的密码都是 `123`**.
 
 ## 安装
 
 - `npm install --save hexo-blog-encrypt`
 
-- 或者 `yarn add hexo-blog-encrypt` (需要安装 [Yarn](https://yarnpkg.com/en/))
+- 或 `yarn add hexo-blog-encrypt` (需要) [Yarn](https://yarnpkg.com/en/))
 
-## 快速开始
+## 快速使用
 
-- 首先, 你需要确保你的文章中含有内容（不能为空，或者只包含空格）
-- 然后在 `_config.yml` 中启用该插件:
-
-```yaml
-
-# Security
-encrypt: # hexo-blog-encrypt
-  enable: true
-
-```
-
-- 然后在你的文章的头部添加上对应的字段，如 password, abstract, message
+- 将 "password" 字段添加到您文章信息头就像这样.
 
 ```markdown
 
@@ -50,176 +48,63 @@ encrypt: # hexo-blog-encrypt
 title: Hello World
 date: 2016-03-30 21:18:02
 password: mikemessi
-abstract: Something was encrypted, please enter password to read.
-message: Welcome to my blog, please enter password to read.
 ---
 
 ```
 
-- 如果你想对 TOC 也进行加密，则在 article.ejs 中将 TOC 的生成代码修改成如下：
+- 再使用 `hexo clean && hexo g && hexo s` 在本地预览加密的文章.
 
-```ejs
+## 密码优先级
 
-<% if(post.toc == true){ %>
-  <div id="toc-div" class="toc-article" <% if (post.encrypt == true) { %>style="display:none" <% } %>>
-    <strong class="toc-title">Index</strong>
-      <% if (post.encrypt == true) { %>
-        <%- toc(post.origin) %>
-      <% } else { %>
-        <%- toc(post.content) %>
-      <% } %>
-  </div>
-<% } %>
-<%- post.content %>
+文章信息头 > 按标签加密
 
-```
+## 高级设置
 
-- 然后使用 *hexo clean && hexo g && hexo s*，来查看效果。
-
-## 具体的使用方法
-
-### 首先，你需要在 _config.yml 中启用该插件
-
-```yaml
-
-# Security
-encrypt: # hexo-blog-encrypt
-  enable: true
-
-```
-
-### 给文章添加密码
+### 文章信息头
 
 ```markdown
 
 ---
 title: Hello World
-date: 2016-03-30 21:18:02
+tags:
+- 作为日记加密
+date: 2016-03-30 21:12:21
 password: mikemessi
-abstract: Something was encrypted, please enter password to read.
-message: Welcome to my blog, enter password to read.
+abstract: 有东西被加密了, 请输入密码查看.
+prompt: 您好, 这里需要密码.
+wrong_pass_message: 抱歉, 这个密码看着不太对, 请再试试.
+wrong_hash_message: 抱歉, 这个文章不能被校验, 不过您还是能看看解密后的内容.
 ---
 
 ```
 
-- password: 是该博客加密使用的密码
-- abstract: 是该博客的摘要，会显示在博客的列表页
-- message: 这个是博客查看时，密码输入框上面的描述性文字
+### `_config.yml`
 
-### 对 TOC 进行加密
-
-如果你有一篇文章使用了 TOC，你需要修改模板的部分代码。这里用 landscape 作为例子：
-
-- 你可以在 *hexo/themes/landscape/layout/_partial/article.ejs* 找到 article.ejs。
-- 然后找到 <% post.content %> 这段代码，通常在30行左右。
-- 使用如下的代码来替代它:
-
-```ejs
-
-<% if(post.toc == true){ %>
-  <div id="toc-div" class="toc-article" <% if (post.encrypt == true) { %>style="display:none" <% } %>>
-    <strong class="toc-title">Index</strong>
-      <% if (post.encrypt == true) { %>
-        <%- toc(post.origin, {list_number: true}) %>
-      <% } else { %>
-        <%- toc(post.content, {list_number: true}) %>
-      <% } %>
-  </div>
-<% } %>
-<%- post.content %>
-
-```
-
-### 修改加密模板
-
-- 如果你对默认的主题不满意，或者希望修改默认的提示和摘要内容，你可以添加如下配置在 *_config.yml* 中。
+#### 示例
 
 ```yaml
 
 # Security
 encrypt: # hexo-blog-encrypt
-  enable: true
-    default_abstract: Something was encrypted, please enter password to read.</br>
-    default_message: Welcome to my blog, enter password to read.
-    default_template: |-
-        <div id="hbe-security">
-          <div class="hbe-input-container">
-          <input type="password" class="hbe-form-control" id="pass" placeholder="{{message}}" />
-            <label for="pass">{{message}}</label>
-            <div class="bottom-line"></div>
-          </div>
-        </div>
-        <div id="decryptionError" style="display:none;">{{decryptionError}}</div>
-        <div id="noContentError" style="display:none;">{{noContentError}}</div>
-        <div id="encrypt-blog" style="display:none">
-        {{content}}
-        </div>
+  abstract: 有东西被加密了, 请输入密码查看.
+  prompt: 您好, 这里需要密码.
+  tags: 
+  - {name: 作为日记加密, password: 密码A}
+  - {name: 作为便签加密, password: 密码B}
+  template: <div id="hexo-blog-encrypt" data-wpm="{{hbeWrongPassMessage}}" data-whm="{{hbeWrongHashMessage}}"><div class="hbe-input-container"><input type="password" id="hbePass" placeholder="{{hbePrompt}}" /><label>{{hbePrompt}}</label><div class="bottom-line"></div></div><script id="hbeData" type="hbeData" data-hmacdigest="{{hbeHmacDigest}}">{{hbeEncryptedData}}</script></div>
+  wrong_pass_message: 抱歉, 这个密码看着不太对, 请再试试.
+  wrong_hash_message: 抱歉, 这个文章不能被校验, 不过您还是能看看解密后的内容.
 
 ```
 
-- 可以看见，和上面的配置文件对比来看，多了 **default_template** 和 **default_abstract**  和 **default_message** 配置项。
-  - default_abstract : 这个是指在文章列表页，我们看到的加密文章描述。当然这是对所有加密文章生效的。
-  - default_message : 这个在文章详情页的密码输入框上方的描述性文字。
-  - default_template : 这个是指在文章详情页，我们看到的输入密码阅读的模板，同理，这个也是针对所有文章的
-    - 开始的解密部分需要由 div 包裹，而且 div 的 id **必须** 是 'hbe-security'，解密后以便于隐藏。
-    - 最后的 content 显示 div 的 id **必须** 是 'encrypt-blog'，同时为了好看，也希望进行隐藏。
-    - 同时，必须要有一个 input 输入框，id **必须**是"pass"，用来供用户输入密码。
-    - 输入密码之后，务必要有一个触发器，用来调用 'decryptAES' 函数。样例中以 button 来触发。
+### 配置优先级
 
-- 如果你希望对某一篇特定的文章做特殊处理，这有两种方法可以达到这个效果, 在博客的源文件添加 template 配置:
+文章信息头 > `_config.yml` (站点根目录下的) > 默认配置
 
-```markdown
+## 许可
 
----
-title: hello world
-date: 2016-03-30 21:18:02
-password: Mike
-abstract: Welcome to my blog, enter password to read.
-message: Welcome to my blog, enter password to read.
-template:
-        <div id="hbe-security">
-          <div class="hbe-input-container">
-          <input type="password" class="hbe-form-control" id="pass" placeholder="{{message}}" />
-            <label for="pass">{{message}}</label>
-            <div class="bottom-line"></div>
-          </div>
-        </div>
-        <div id="decryptionError" style="display:none;">{{decryptionError}}</div>
-        <div id="noContentError" style="display:none;">{{noContentError}}</div>
-        <div id="encrypt-blog" style="display:none">
-        {{content}}
-        </div>
----
+看看 [LICENSE](./LICENSE).
 
-```
-
-## 回调
-
-如果您需要在文章解密之后调用一些代码，您可以参考以下配置：
-
-```yaml
-
-encrypt:
-  enable: true
-  callback: |-
-    initLightGallery()
-    initImageResize()
-    initTocBot()
-
-```
-
-> 在`callback` 之后的这个符号`|-`代表多行的yaml值
-
-如果您在其他js文件里面定义了函数，您可以在这里调用它们，或者您也可以在`callback`这里写上您自己的代码逻辑，比如`$('#someId').lightGallery()`，上面的`initXXX()`只是示例，您不应该直接复制上面的配置。
-
-## TODO
-
-See [TODO](./TODO.md) File
-
-## License
-
-See [LICENSE](./LICENSE) File.
-
-## Thanks
+## 感谢
 
 Collaborator - [xiazeyu](https://github.com/xiazeyu)
