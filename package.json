@@ -6,7 +6,6 @@
     "url": "https://github.com/MikeCoder/hexo-blog-encrypt/issues"
   },
   "dependencies": {
-    "crypto-js": "^3.1.9-1",
     "hexo-fs": "^1.0.2",
     "hexo-log": "^0.2.0"
   },
@@ -35,8 +34,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint --ext .js ./"
   },
-  "version": "2.2.4",
+  "version": "3.0.0",
   "devDependencies": {
-    "eslint": "^6.1.0"
+    "eslint": "^6.2.2"
   }
 }
