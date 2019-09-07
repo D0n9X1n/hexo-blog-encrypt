@@ -18,7 +18,7 @@
 
 ## Live Demo
 
-See [Demo Page](https://mhexo.github.io/example-site/2018/06/25/encrypt-test/), **all passwords are `123`**.
+See [Demo Page](https://mhexo.github.io/), **all passwords are `123`**.
 
 ## Install
 

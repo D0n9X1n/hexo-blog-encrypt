@@ -19,7 +19,7 @@
 
 ## 线上 Demo
 
-你可以查看 [Demo Page](https://mhexo.github.io/example-site/2018/06/25/encrypt-test/)
+你可以查看 [Demo Page](https://mhexo.github.io/)
 
 所有的密码都是 `123`
 
