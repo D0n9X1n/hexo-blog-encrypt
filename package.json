@@ -1,42 +1,40 @@
 {
-  "author": {
-    "name": "mike"
-  },
-  "bugs": {
-    "url": "https://github.com/MikeCoder/hexo-blog-encrypt/issues"
-  },
-  "dependencies": {
-    "crypto-js": "^3.1.9-1",
-    "hexo-fs": "^1.0.2",
-    "hexo-log": "^0.2.0"
-  },
-  "description": "Yet, just another blog encrypt plugin for hexo.",
-  "homepage": "https://github.com/MikeCoder/hexo-blog-encrypt#readme",
-  "keywords": [
-    "encrypt",
-    "blog",
-    "hexo"
-  ],
-  "license": "MIT",
-  "main": "index.js",
-  "maintainers": [
-    {
-      "email": "mike@mikecoder.cn",
-      "name": "mikecoder"
+    "author": {
+        "name": "mike"
+    },
+    "bugs": {
+        "url": "https://github.com/MikeCoder/hexo-blog-encrypt/issues"
+    },
+    "dependencies": {
+        "crypto-js": "^3.1.9-1",
+        "hexo-fs": "^1.0.2",
+        "hexo-log": "^0.2.0"
+    },
+    "description": "Yet, just another blog encrypt plugin for hexo.",
+    "homepage": "https://github.com/MikeCoder/hexo-blog-encrypt#readme",
+    "keywords": [
+        "encrypt",
+        "blog",
+        "hexo"
+    ],
+    "license": "MIT",
+    "main": "index.js",
+    "maintainers": [{
+        "email": "mike@mikecoder.cn",
+        "name": "mikecoder"
+    }],
+    "name": "hexo-blog-encrypt",
+    "optionalDependencies": {},
+    "repository": {
+        "type": "git",
+        "url": "git+ssh://git@github.com/MikeCoder/hexo-blog-encrypt.git"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "lint": "eslint --ext .js ./"
+    },
+    "version": "2.2.7",
+    "devDependencies": {
+        "eslint": "^6.1.0"
     }
-  ],
-  "name": "hexo-blog-encrypt",
-  "optionalDependencies": {},
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/MikeCoder/hexo-blog-encrypt.git"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint --ext .js ./"
-  },
-  "version": "2.2.6",
-  "devDependencies": {
-    "eslint": "^6.1.0"
-  }
 }
