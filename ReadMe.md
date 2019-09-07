@@ -18,7 +18,7 @@
 
 ## Live Demo
 
-See [Demo Page](https://mhexo.github.io/), **all passwords are `123`**.
+See [Demo Page](https://mhexo.github.io/). 
 
 ## Install
 

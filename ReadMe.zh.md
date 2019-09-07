@@ -19,9 +19,7 @@
 
 ## 线上 Demo
 
-你可以查看 [Demo Page](https://mhexo.github.io/)
-
-所有的密码都是 `123`
+你可以查看 [Demo Page](https://mhexo.github.io/).
 
 ## 安装
 
