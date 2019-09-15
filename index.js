@@ -30,19 +30,16 @@ function textToArray(s) {
     if (c < 128) {
       ba[n++] = c;
       j++;
-    }
-    else if ((c > 127) && (c < 2048)) {
+    } else if ((c > 127) && (c < 2048)) {
       ba[n++] = (c >> 6) | 192;
       ba[n++] = (c & 63) | 128;
       j++;
-    }
-    else if ((c > 2047) && (c < 65536)) {
+    } else if ((c > 2047) && (c < 65536)) {
       ba[n++] = (c >> 12) | 224;
       ba[n++] = ((c >> 6) & 63) | 128;
       ba[n++] = (c & 63) | 128;
       j++;
-    }
-    else {
+    } else {
       ba[n++] = (c >> 18) | 240;
       ba[n++] = ((c >> 12) & 63) | 128;
       ba[n++] = ((c >> 6) & 63) | 128;
@@ -66,16 +63,21 @@ hexo.extend.filter.register('after_post_render', (data) => {
     });
   }
 
-  data.tags.forEach((cTag, index) => {
-    if(tagEncryptName.includes(cTag.name)){
-      password = password || tagEncryptPass[index];
-    }
-  });
-  
+  if (data.tags) {
+    data.tags.forEach((cTag, index) => {
+      if(tagEncryptName.includes(cTag.name)){
+        password = password || tagEncryptPass[index];
+      }
+    });
+  }
+
   if(password === undefined){
     return data;
   }
   password = password.toString();
+
+  // make sure toc can work.
+  data.origin = data.content;
 
   // Let's rock n roll
   const config = Object.assign(defaultConfig, hexo.config.encrypt, data);
@@ -88,7 +90,7 @@ hexo.extend.filter.register('after_post_render', (data) => {
     'default_decryption_error',
     'default_no_content_error',
   ];
-  const newKeyNames = [
+  const defaultConfigs = [
     'template',
     'abstract',
     'prompt',
@@ -97,14 +99,14 @@ hexo.extend.filter.register('after_post_render', (data) => {
   ]
   deprecatedConfigs.forEach((key, index) => {
     if(key in config){
-      log.warn(`hexo-blog-encrypt: ${key} is DEPRECATED, please change to newer API.`);
-      config[newKeyNames[index]] = config[key];
+      log.warn(`hexo-blog-encrypt: "${key}" is DEPRECATED, please change to newer API: "${defaultConfigs[index]}"`);
+      config[defaultConfigs[index]] = config[key];
     }
   });
 
   // --- End --- Remove in the next version please
 
-  log.info(`hexo-blog-encrypt: encrypting "${data.title.trim()}".`);
+  log.info(`hexo-blog-encrypt: encrypting "${data.title.trim()}" with password "${password}".`);
 
   const key = crypto.pbkdf2Sync(password, keySalt, 1024, 256/8, 'sha256');
   const iv = crypto.pbkdf2Sync(password, ivSalt, 512, 16, 'sha256');
@@ -118,10 +120,10 @@ hexo.extend.filter.register('after_post_render', (data) => {
   const hmacDigest = hmac.digest('hex');
 
   data.content = config.template.replace(/{{hbeEncryptedData}}/g, encryptedData)
-  .replace(/{{hbeHmacDigest}}/g, hmacDigest)
-  .replace(/{{hbeWrongPassMessage}}/g, config.wrong_pass_message)
-  .replace(/{{hbeWrongHashMessage}}/g, config.wrong_hash_message)
-  .replace(/{{hbePrompt}}/g, config.prompt);
+    .replace(/{{hbeHmacDigest}}/g, hmacDigest)
+    .replace(/{{hbeWrongPassMessage}}/g, config.wrong_pass_message)
+    .replace(/{{hbeWrongHashMessage}}/g, config.wrong_hash_message)
+    .replace(/{{hbePrompt}}/g, config.prompt);
   data.content += `<script src="${hexo.config.root}lib/blog-encrypt.js"></script><link href="${hexo.config.root}css/blog-encrypt.css" rel="stylesheet" type="text/css">`;
   data.excerpt = data.more = config.abstract;
 

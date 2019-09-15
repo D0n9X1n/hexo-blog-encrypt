@@ -8,7 +8,7 @@
 
 - ~~首先, 这是 Hexo 生态圈中 **最好的** 博客加密插件~~
 
-- 你可能需要写一些私密的博客, 通过密码验证的方式让人不能随意浏览. 
+- 你可能需要写一些私密的博客, 通过密码验证的方式让人不能随意浏览.
 
 - 这在 wordpress, emlog 或是其他博客系统中都很容易实现, 然而 hexo 除外. :(
 
@@ -30,7 +30,7 @@
 
 ## 在线演示
 
-- 点击 [Demo Page](https://mhexo.github.io/example-site/2018/06/25/encrypt-test/), **所有的密码都是 `123`**.
+- 点击 [Demo Page](https://mhexo.github.io/example-site/2018/06/25/encrypt-test/), **所有的密码都是 `hello`**.
 
 ## 安装
 
@@ -54,7 +54,7 @@ password: mikemessi
 
 - 再使用 `hexo clean && hexo g && hexo s` 在本地预览加密的文章.
 
-## 密码优先级
+## 设置优先级
 
 文章信息头 > 按标签加密
 
@@ -88,9 +88,9 @@ wrong_hash_message: 抱歉, 这个文章不能被校验, 不过您还是能看�
 encrypt: # hexo-blog-encrypt
   abstract: 有东西被加密了, 请输入密码查看.
   prompt: 您好, 这里需要密码.
-  tags: 
-  - {name: 作为日记加密, password: 密码A}
-  - {name: 作为便签加密, password: 密码B}
+  tags:
+  - {name: tagName, password: 密码A}
+  - {name: tagName, password: 密码B}
   template: <div id="hexo-blog-encrypt" data-wpm="{{hbeWrongPassMessage}}" data-whm="{{hbeWrongHashMessage}}"><div class="hbe-input-container"><input type="password" id="hbePass" placeholder="{{hbePrompt}}" /><label>{{hbePrompt}}</label><div class="bottom-line"></div></div><script id="hbeData" type="hbeData" data-hmacdigest="{{hbeHmacDigest}}">{{hbeEncryptedData}}</script></div>
   wrong_pass_message: 抱歉, 这个密码看着不太对, 请再试试.
   wrong_hash_message: 抱歉, 这个文章不能被校验, 不过您还是能看看解密后的内容.
@@ -100,6 +100,29 @@ encrypt: # hexo-blog-encrypt
 ### 配置优先级
 
 文章信息头 > `_config.yml` (站点根目录下的) > 默认配置
+
+
+### 对 TOC 进行加密
+
+如果你有一篇文章使用了 TOC，你需要修改模板的部分代码。这里用 landscape 作为例子：
+
++ 你可以在 hexo/themes/landscape/layout/_partial/article.ejs 找到 article.ejs。
++ 然后找到 <% post.content %> 这段代码，通常在30行左右。
++ 使用如下的代码来替代它:
+
+```
+<% if(post.toc == true){ %>
+  <div id="toc-div" class="toc-article" <% if (post.encrypt == true) { %>style="display:none" <% } %>>
+    <strong class="toc-title">Index</strong>
+      <% if (post.encrypt == true) { %>
+        <%- toc(post.origin, {list_number: true}) %>
+      <% } else { %>
+        <%- toc(post.content, {list_number: true}) %>
+      <% } %>
+  </div>
+<% } %>
+<%- post.content %>
+```
 
 ## 许可
 

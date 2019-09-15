@@ -32,7 +32,7 @@
 
 ## Online demo
 
-- See [Demo Page](https://mhexo.github.io/example-site/2018/06/25/encrypt-test/), **all passwords are `123`**.
+- See [Demo Page](https://mhexo.github.io/example-site/2018/06/25/encrypt-test/), **all passwords are `hello`**.
 
 ## Install
 
@@ -90,7 +90,7 @@ wrong_hash_message: Oh, these decrypted content cannot be verified, but you can 
 encrypt: # hexo-blog-encrypt
   abstract: Here's something encrypted, password is required to continue reading.
   prompt: Hey, password is required here.
-  tags: 
+  tags:
   - {name: encryptAsDiary, password: passwordA}
   - {name: encryptAsTips, password: passwordB}
   template: <div id="hexo-blog-encrypt" data-wpm="{{hbeWrongPassMessage}}" data-whm="{{hbeWrongHashMessage}}"><div class="hbe-input-container"><input type="password" id="hbePass" placeholder="{{hbePrompt}}" /><label>{{hbePrompt}}</label><div class="bottom-line"></div></div><script id="hbeData" type="hbeData" data-hmacdigest="{{hbeHmacDigest}}">{{hbeEncryptedData}}</script></div>
@@ -102,6 +102,28 @@ encrypt: # hexo-blog-encrypt
 ### Config priority
 
 post's front matter > `_config.yml` (in the root directory) > default
+
+### Encrypt TOC
+
+If you has a post with TOC, you should change the code of template. Use the default theme 'landscape' as an example:
+
++ You should find the article.ejs file which is located in hexo/themes/landscape/layout/_partial/article.ejs.
++ Find the code like <% post.content %>, which is usually at line 30.
++ Replace the <% post.content %> with the following code block:
+
+```
+<% if(post.toc == true){ %>
+  <div id="toc-div" class="toc-article" <% if (post.encrypt == true) { %>style="display:none" <% } %>>
+    <strong class="toc-title">Index</strong>
+      <% if (post.encrypt == true) { %>
+        <%- toc(post.origin, {list_number: true}) %>
+      <% } else { %>
+        <%- toc(post.content, {list_number: true}) %>
+      <% } %>
+  </div>
+<% } %>
+<%- post.content %>
+```
 
 ## License
 
