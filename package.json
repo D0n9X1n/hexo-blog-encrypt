@@ -34,7 +34,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint --ext .js ./"
   },
-  "version": "3.0.0",
+  "version": "3.0.1",
   "devDependencies": {
     "eslint": "^6.2.2"
   }

@@ -73,7 +73,7 @@ tags:
 date: 2016-03-30 21:12:21
 password: mikemessi
 abstract: Here's something encrypted, password is required to continue reading.
-prompt: Hey, password is required here.
+message: Hey, password is required here.
 wrong_pass_message: Oh, this is an invalid password. Check and try again, please.
 wrong_hash_message: Oh, these decrypted content cannot be verified, but you can still have a look.
 ---
@@ -89,11 +89,11 @@ wrong_hash_message: Oh, these decrypted content cannot be verified, but you can 
 # Security
 encrypt: # hexo-blog-encrypt
   abstract: Here's something encrypted, password is required to continue reading.
-  prompt: Hey, password is required here.
+  message: Hey, password is required here.
   tags:
   - {name: encryptAsDiary, password: passwordA}
   - {name: encryptAsTips, password: passwordB}
-  template: <div id="hexo-blog-encrypt" data-wpm="{{hbeWrongPassMessage}}" data-whm="{{hbeWrongHashMessage}}"><div class="hbe-input-container"><input type="password" id="hbePass" placeholder="{{hbePrompt}}" /><label>{{hbePrompt}}</label><div class="bottom-line"></div></div><script id="hbeData" type="hbeData" data-hmacdigest="{{hbeHmacDigest}}">{{hbeEncryptedData}}</script></div>
+  template: <div id="hexo-blog-encrypt" data-wpm="{{hbeWrongPassMessage}}" data-whm="{{hbeWrongHashMessage}}"><div class="hbe-input-container"><input type="password" id="hbePass" placeholder="{{hbeMessage}}" /><label>{{hbeMessage}}</label><div class="bottom-line"></div></div><script id="hbeData" type="hbeData" data-hmacdigest="{{hbeHmacDigest}}">{{hbeEncryptedData}}</script></div>
   wrong_pass_message: Oh, this is an invalid password. Check and try again, please.
   wrong_hash_message: Oh, these decrypted content cannot be verified, but you can still have a look.
 
