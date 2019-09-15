@@ -107,7 +107,7 @@ hexo.extend.filter.register('after_post_render', (data) => {
   log.info(`hexo-blog-encrypt: encrypting "${data.title.trim()}".`);
 
   const key = crypto.pbkdf2Sync(password, keySalt, 1024, 256/8, 'sha256');
-  const iv = crypto.pbkdf2Sync(password, ivSalt, 512, 512, 'sha256');
+  const iv = crypto.pbkdf2Sync(password, ivSalt, 512, 16, 'sha256');
 
   const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
   const hmac = crypto.createHmac('sha256', key);
