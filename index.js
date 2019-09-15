@@ -24,6 +24,10 @@ hexo.extend.filter.register('after_post_render', (data) => {
 
   let password = data.password;
 
+  if (hexo.config.encrypt === undefined) {
+    hexo.config.encrypt = [];
+  }
+
   if(('encrypt' in hexo.config) && ('tags' in hexo.config.encrypt)){
     hexo.config.encrypt.tags.forEach((tagObj) => {
       tagEncryptName.push(tagObj.name);
@@ -48,10 +52,8 @@ hexo.extend.filter.register('after_post_render', (data) => {
   // make sure toc can work.
   data.origin = data.content;
 
-  // Let's rock n roll
-  const config = Object.assign(defaultConfig, hexo.config.encrypt, data);
-
-  // --- Begin --- Remove in the next version please
+  // ------------
+  // Remove in v3.1.0
   const deprecatedConfigs = [
     'default_template',
     'default_abstract',
@@ -59,21 +61,25 @@ hexo.extend.filter.register('after_post_render', (data) => {
     'default_decryption_error',
     'default_no_content_error',
   ];
-  const defaultConfigs = [
+  const configKeys = [
     'template',
     'abstract',
     'message',
     'wrong_pass_message',
     'wrong_hash_message',
-  ]
+  ];
+
   deprecatedConfigs.forEach((key, index) => {
-    if(key in config){
-      log.warn(`hexo-blog-encrypt: "${key}" is DEPRECATED, please change to newer API: "${defaultConfigs[index]}"`);
-      config[defaultConfigs[index]] = config[key];
+    if(key in hexo.config.encrypt) {
+      log.warn(`hexo-blog-encrypt: "${key}" is DEPRECATED, please change to newer API: "${configKeys[index]}"`);
+      hexo.config.encrypt[configKeys[index]] = hexo.config.encrypt[key];
     }
   });
+  // ------------
 
-  // --- End --- Remove in the next version please
+  // Let's rock n roll
+  const config = Object.assign(defaultConfig, hexo.config.encrypt, data);
+
   log.info(`hexo-blog-encrypt: encrypting "${data.title.trim()}" with password "${password}".`);
 
   data.content = data.content.trim();
