@@ -30,7 +30,7 @@
 
 ## 在线演示
 
-- 点击 [Demo Page](https://mhexo.github.io/example-site/2018/06/25/encrypt-test/), **所有的密码都是 `hello`**.
+- 点击 [Demo Page](https://mhexo.github.io/), **所有的密码都是 `hello`**.
 
 ## 安装
 

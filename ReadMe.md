@@ -32,7 +32,7 @@
 
 ## Online demo
 
-- See [Demo Page](https://mhexo.github.io/example-site/2018/06/25/encrypt-test/), **all passwords are `hello`**.
+- See [Demo Page](https://mhexo.github.io/), **all passwords are `hello`**.
 
 ## Install
 
