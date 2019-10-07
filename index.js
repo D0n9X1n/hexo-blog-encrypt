@@ -80,8 +80,6 @@ hexo.extend.filter.register('after_post_render', (data) => {
   // Let's rock n roll
   const config = Object.assign(defaultConfig, hexo.config.encrypt, data);
 
-  log.info(`hexo-blog-encrypt: encrypting "${data.title.trim()}" with password "${password}".`);
-
   data.content = data.content.trim();
 
   const key = crypto.pbkdf2Sync(password, keySalt, 1024, 32, 'sha256');
