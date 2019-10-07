@@ -99,7 +99,9 @@ hexo.extend.filter.register('after_post_render', (data) => {
     .replace(/{{hbeHmacDigest}}/g, hmacDigest)
     .replace(/{{hbeWrongPassMessage}}/g, config.wrong_pass_message)
     .replace(/{{hbeWrongHashMessage}}/g, config.wrong_hash_message)
-    .replace(/{{hbeMessage}}/g, config.message);
+    .replace(/{{hbeMessage}}/g, config.message)
+    .replace(/{{hbeAbstract}}/g, config.abstract);
+  
   data.content += `<script src="${hexo.config.root}lib/blog-encrypt.js"></script><link href="${hexo.config.root}css/blog-encrypt.css" rel="stylesheet" type="text/css">`;
   data.excerpt = data.more = config.abstract;
 
