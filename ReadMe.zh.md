@@ -4,6 +4,12 @@
 [![Build Status](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/badges/build.png?b=master)](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/build-status/master)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/?branch=master)
 
+#### 提 issue 之前，请务必提供复现方式，log，配置信息等必要信息。良好的 issue 可以节省双方的时间。
+*请严格按照模版要求，不明确的 issue 将直接关闭。*
+** 参考 issue: **
+> + [Issue 83](https://github.com/MikeCoder/hexo-blog-encrypt/issues/83)
+> + [Issue 68](https://github.com/MikeCoder/hexo-blog-encrypt/issues/68)
+
 ## 这是个啥
 
 - ~~首先, 这是 Hexo 生态圈中 **最好的** 博客加密插件~~
