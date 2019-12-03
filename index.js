@@ -83,6 +83,7 @@ hexo.extend.filter.register('after_post_render', (data) => {
   log.info(`hexo-blog-encrypt: encrypting "${data.title.trim()}" with password "${password}".`);
 
   data.content = data.content.trim();
+  data.encrypt = true;
 
   const key = crypto.pbkdf2Sync(password, keySalt, 1024, 32, 'sha256');
   const iv = crypto.pbkdf2Sync(password, ivSalt, 512, 16, 'sha256');
@@ -148,4 +149,3 @@ function textToArray(s) {
 
   return new Uint8Array(ba);
 }
-
