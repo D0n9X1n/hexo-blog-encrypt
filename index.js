@@ -105,7 +105,7 @@ hexo.extend.filter.register('after_post_render', (data) => {
   data.excerpt = data.more = config.abstract;
 
   return data;
-})
+}, 1000);
 
 hexo.extend.generator.register('hexo-blog-encrypt', () => [
   {
