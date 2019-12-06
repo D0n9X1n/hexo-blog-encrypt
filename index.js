@@ -43,7 +43,7 @@ hexo.extend.filter.register('after_post_render', (data) => {
     });
   }
 
-  if(password === undefined){
+  if(password == undefined){
     return data;
   }
 
