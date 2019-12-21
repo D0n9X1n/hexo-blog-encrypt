@@ -103,6 +103,30 @@ encrypt: # hexo-blog-encrypt
 
 post's front matter > `_config.yml` (in the root directory) > default
 
+### About Callback
+In some blogs, some elements may not be displayed normally after decryption. This is a known issue. The current solution is to check the code in your blog to learn which functions are called when the onload event occurs.
+Then write these code at the end of your post. For example:
+
+```
+---
+title: Callback Test
+date: 2019-12-21 11:54:07
+tags:
+    - Encrypted
+---
+
+This is a blog to test Callback functions. You just need to add code at the last of your post like following:
+
+It will be called after the blog decrypted.
+
+<script>
+    // add script tag and code at the last of your post
+    alert("Hello World");
+</script>
+```
+
+Demo: [Callback Example](https://mhexo.github.io/2019/12/21/CallbackTest/).
+
 ### Encrypt TOC
 
 If you has a post with TOC, you should change the code of template. Use the default theme 'landscape' as an example:

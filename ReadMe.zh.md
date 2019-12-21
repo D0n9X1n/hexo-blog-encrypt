@@ -109,6 +109,28 @@ encrypt: # hexo-blog-encrypt
 
 文章信息头 > `_config.yml` (站点根目录下的) > 默认配置
 
+### 关于 Callback 函数
+在部分博客中, 解密后部分元素可能无法正常显示或者表现, 这属于已知问题. 目前的解决办法是通过自行查阅自己的博客中的代码, 了解到在 onload 事件发生时调用了哪些函数, 并将这些函数挑选后写入到博客内容中. 如:
+
+```
+---
+title: Callback Test
+date: 2019-12-21 11:54:07
+tags:
+    - Encrypted
+---
+
+This is a blog to test Callback functions. You just need to add code at the last of your post like following:
+
+It will be called after the blog decrypted.
+
+<script>
+    // 添加一个 script tag 与代码在文章末尾.
+    alert("Hello World");
+</script>
+```
+
+例子在: [Callback 例子](https://mhexo.github.io/2019/12/21/CallbackTest/).
 
 ### 对 TOC 进行加密
 
