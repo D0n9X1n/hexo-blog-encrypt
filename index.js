@@ -23,6 +23,7 @@ hexo.extend.filter.register('after_post_render', (data) => {
   const tagEncryptPass = [];
 
   let password = data.password;
+  let tagUsed = false;
 
   if (hexo.config.encrypt === undefined) {
     hexo.config.encrypt = [];
@@ -39,6 +40,7 @@ hexo.extend.filter.register('after_post_render', (data) => {
     data.tags.forEach((cTag, index) => {
       if(tagEncryptName.includes(cTag.name)){
         password = password || tagEncryptPass[index];
+        tagUsed = cTag.name;
       }
     });
   }
@@ -80,7 +82,11 @@ hexo.extend.filter.register('after_post_render', (data) => {
   // Let's rock n roll
   const config = Object.assign(defaultConfig, hexo.config.encrypt, data);
 
-  log.info(`hexo-blog-encrypt: encrypting "${data.title.trim()}" with password "${password}".`);
+  if (tagUsed === false) {
+    log.info(`hexo-blog-encrypt: encrypting "${data.title.trim()}" based on the password configured in Front-matter.`);
+  } else {
+    log.info(`hexo-blog-encrypt: encrypting "${data.title.trim()}" based on Tag: "${tagUsed}".`);
+  }
 
   data.content = data.content.trim();
   data.encrypt = true;
