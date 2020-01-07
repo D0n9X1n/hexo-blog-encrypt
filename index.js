@@ -19,8 +19,7 @@ const keySalt = textToArray('hexo-blog-encrypt的作者们都是大帅比!');
 const ivSalt = textToArray('hexo-blog-encrypt是地表最强Hexo加密插件!');
 
 hexo.extend.filter.register('after_post_render', (data) => {
-  const tagEncryptName = [];
-  const tagEncryptPass = [];
+  const tagEncryptPairs = [];
 
   let password = data.password;
   let tagUsed = false;
@@ -31,16 +30,15 @@ hexo.extend.filter.register('after_post_render', (data) => {
 
   if(('encrypt' in hexo.config) && ('tags' in hexo.config.encrypt)){
     hexo.config.encrypt.tags.forEach((tagObj) => {
-      tagEncryptName.push(tagObj.name);
-      tagEncryptPass.push(tagObj.password);
+      tagEncryptPairs[tagObj.name] = tagObj.password;
     });
   }
 
   if (data.tags) {
-    data.tags.forEach((cTag, index) => {
-      if(tagEncryptName.includes(cTag.name)){
-        password = password || tagEncryptPass[index];
-        tagUsed = cTag.name;
+    data.tags.forEach((cTag) => {
+      if (tagEncryptPairs.hasOwnProperty(cTag.name)) {
+        tagUsed = password ? tagUsed : cTag.name;
+        password = password || tagEncryptPairs[cTag.name];
       }
     });
   }
