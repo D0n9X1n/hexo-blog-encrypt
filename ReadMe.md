@@ -99,6 +99,24 @@ encrypt: # hexo-blog-encrypt
 
 ```
 
+#### To disable tag encryption
+
+Just let the `password` property in front matter to `""`.
+
+Example:
+
+```
+---
+title: Callback Test
+date: 2019-12-21 11:54:07
+tags:
+    - A Tag should be encrypted
+password: ""
+---
+
+Use a "" to diable tag encryption.
+```
+
 ### Config priority
 
 post's front matter > `_config.yml` (in the root directory) > default

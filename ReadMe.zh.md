@@ -105,6 +105,24 @@ encrypt: # hexo-blog-encrypt
 
 ```
 
+#### 对博文禁用 Tag 加密 
+
+只需要将博文头部的 `password` 设置为 `""` 即可取消 Tag 加密.
+
+Example:
+
+```
+---
+title: Callback Test
+date: 2019-12-21 11:54:07
+tags:
+    - A Tag should be encrypted
+password: ""
+---
+
+Use a "" to diable tag encryption.
+```
+
 ### 配置优先级
 
 文章信息头 > `_config.yml` (站点根目录下的) > 默认配置

@@ -24,6 +24,11 @@ hexo.extend.filter.register('after_post_render', (data) => {
   let password = data.password;
   let tagUsed = false;
 
+  // use a empty password to disable category encryption
+  if (password === "") {
+    return data;
+  }
+
   if (hexo.config.encrypt === undefined) {
     hexo.config.encrypt = [];
   }
