@@ -10,17 +10,17 @@
 
 - ~~First of all, the **BEST** post encryption plugin in the universe for hexo.(But what about the other plugins?)~~
 
-- It is for who wrote a post, but don't want everyone to read. Thus, password is required in certain pages to access these encrypted posts.
+- It is for those who write a post, but don't want everyone to read it. Thus, password is required in certain pages to access these encrypted posts.
 
-- It is simple on wordpress, emlog or other blog system, except hexo. :(
+- Encryption is simple on wordpress, emlog or other blog systems, except hexo. :(
 
 - So it's "hexo-blog-encrypt"'s time.
 
 ## Features
 
-- Once you enter the correct password, you can get the access to read encrypted posts, and the password is remembered at local. Press the button once, and the stored password will be erased. If there're scripts in the post, they will be executed once the post is decrypted.
+- Once you enter the correct password, you can get the access to encrypted posts, and the password is remembered locally. Press the button again, and the stored password will be erased. If there're scripts in the post, they will be executed once the post is decrypted.
 
-- Support preseted tag-specified password.
+- Support preset tag-specified password.
 
 - All functions are provided by the native APIs. We use [Crypto](https://nodejs.org/dist/latest-v12.x/docs/api/crypto.html) in Node.js, and use [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) in Browsers.
 
@@ -54,7 +54,7 @@ password: mikemessi
 
 ```
 
-- Then use `hexo clean && hexo g && hexo s` to see your encrypted post at local.
+- Then use `hexo clean && hexo g && hexo s` to see your encrypted post locally.
 
 ## Password Priority
 
@@ -101,7 +101,7 @@ encrypt: # hexo-blog-encrypt
 
 #### To disable tag encryption
 
-Just let the `password` property in front matter to `""`.
+Just set the `password` property in front matter to `""`.
 
 Example:
 
@@ -147,9 +147,9 @@ Demo: [Callback Example](https://mhexo.github.io/2019/12/21/CallbackTest/).
 
 ### Encrypt TOC
 
-If you has a post with TOC, you should change the code of template. Use the default theme 'landscape' as an example:
+If you has a post with TOC, you should change the code of template. Take the default theme 'landscape' as an example:
 
-+ You should find the `article.ejs` file located in `hexo/themes/landscape/layout/_partial/article.ejs`.
++ You should find the `article.ejs` file located at `hexo/themes/landscape/layout/_partial/article.ejs`.
 + Find the code like <% post.content %>, which is usually at line 30.
 + Replace the <% post.content %> with the following code block:
 
