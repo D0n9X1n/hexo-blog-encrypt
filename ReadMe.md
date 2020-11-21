@@ -26,9 +26,9 @@
 
 - [PBKDF2](https://tools.ietf.org/html/rfc2898), [SHA256](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf) is used to derive keys, We use [AES256-CBC](https://csrc.nist.gov/publications/detail/sp/800-38a/final) to encrypt and decrypt data, we also use [HMAC](https://csrc.nist.gov/csrc/media/publications/fips/198/1/final/documents/fips-198-1_final.pdf) to verify message authentication codes to make sure the posts are decrypted well and not modified.
 
-- Promise is widely used to make sure our main procedures are asynchronous, so that the process have little chances to be block, and the experience will be more fluent.
+- Promise is widely used to make sure our main procedures are asynchronous, so that there is little chance for the process to be blocked, and the experience will be more fluent.
 
-- Outdatad browsers may not work well. In such case, please upgrade your browser.
+- Outdated browsers may not work well. In such case, please upgrade your browser.
 
 ## Online demo
 
@@ -114,7 +114,7 @@ tags:
 password: ""
 ---
 
-Use a "" to diable tag encryption.
+Use a "" to disable tag encryption.
 ```
 
 ### Config priority
@@ -133,12 +133,12 @@ tags:
     - Encrypted
 ---
 
-This is a blog to test Callback functions. You just need to add code at the last of your post like following:
+This is a blog to test Callback functions. You just need to add code at the end of your post as follows:
 
-It will be called after the blog decrypted.
+It will be called after the blog is decrypted.
 
 <script>
-    // add script tag and code at the last of your post
+    // add script tag and code at the end of your post
     alert("Hello World");
 </script>
 ```
@@ -149,7 +149,7 @@ Demo: [Callback Example](https://mhexo.github.io/2019/12/21/CallbackTest/).
 
 If you has a post with TOC, you should change the code of template. Use the default theme 'landscape' as an example:
 
-+ You should find the article.ejs file which is located in hexo/themes/landscape/layout/_partial/article.ejs.
++ You should find the `article.ejs` file located in `hexo/themes/landscape/layout/_partial/article.ejs`.
 + Find the code like <% post.content %>, which is usually at line 30.
 + Replace the <% post.content %> with the following code block:
 
