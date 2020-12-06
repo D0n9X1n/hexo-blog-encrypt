@@ -85,7 +85,6 @@ wrong_hash_message: Oh, these decrypted content cannot be verified, but you can 
 #### Example
 
 ```yaml
-
 # Security
 encrypt: # hexo-blog-encrypt
   abstract: Here's something encrypted, password is required to continue reading.
@@ -166,6 +165,17 @@ If you has a post with TOC, you should change the code of template. Take the def
 <% } %>
 <%- post.content %>
 ```
+
+### Disable logging
+If you want to disable the logging, you can add a silent property in `_config.yml` and set it to true.
+
+```yaml
+# Security
+encrypt: # hexo-blog-encrypt
+  silent: true
+```
+
+This would disable the logging like `INFO  hexo-blog-encrypt: encrypting "{Blog Name}" based on Tag: "EncryptedTag".`.
 
 ## License
 

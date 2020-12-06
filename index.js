@@ -4,8 +4,8 @@
 
 const crypto = require('crypto');
 const fs = require('hexo-fs');
-const log = require('hexo-log')({ 'debug': false, 'slient': false });
 const path = require('path');
+const log = require('hexo-log')({ 'debug': false, 'slient': false });
 
 const defaultConfig = {
   'abstract': 'Here\'s something encrypted, password is required to continue reading.',
@@ -17,6 +17,9 @@ const defaultConfig = {
 
 const keySalt = textToArray('hexo-blog-encrypt的作者们都是大帅比!');
 const ivSalt = textToArray('hexo-blog-encrypt是地表最强Hexo加密插件!');
+
+// disable log
+var silent = false;
 
 hexo.extend.filter.register('after_post_render', (data) => {
   const tagEncryptPairs = [];
@@ -32,6 +35,8 @@ hexo.extend.filter.register('after_post_render', (data) => {
   if (hexo.config.encrypt === undefined) {
     hexo.config.encrypt = [];
   }
+
+  silent = hexo.config.encrypt.silent;
 
   if(('encrypt' in hexo.config) && ('tags' in hexo.config.encrypt)){
     hexo.config.encrypt.tags.forEach((tagObj) => {
@@ -57,38 +62,13 @@ hexo.extend.filter.register('after_post_render', (data) => {
   // make sure toc can work.
   data.origin = data.content;
 
-  // ------------
-  // Remove in v3.1.0
-  const deprecatedConfigs = [
-    'default_template',
-    'default_abstract',
-    'default_message',
-    'default_decryption_error',
-    'default_no_content_error',
-  ];
-  const configKeys = [
-    'template',
-    'abstract',
-    'message',
-    'wrong_pass_message',
-    'wrong_hash_message',
-  ];
-
-  deprecatedConfigs.forEach((key, index) => {
-    if(key in hexo.config.encrypt) {
-      log.warn(`hexo-blog-encrypt: "${key}" is DEPRECATED, please change to newer API: "${configKeys[index]}"`);
-      hexo.config.encrypt[configKeys[index]] = hexo.config.encrypt[key];
-    }
-  });
-  // ------------
-
   // Let's rock n roll
   const config = Object.assign(defaultConfig, hexo.config.encrypt, data);
 
   if (tagUsed === false) {
-    log.info(`hexo-blog-encrypt: encrypting "${data.title.trim()}" based on the password configured in Front-matter.`);
+    dlog('info', `hexo-blog-encrypt: encrypting "${data.title.trim()}" based on the password configured in Front-matter.`);
   } else {
-    log.info(`hexo-blog-encrypt: encrypting "${data.title.trim()}" based on Tag: "${tagUsed}".`);
+    dlog('info', `hexo-blog-encrypt: encrypting "${data.title.trim()}" based on Tag: "${tagUsed}".`);
   }
 
   data.content = data.content.trim();
@@ -126,6 +106,23 @@ hexo.extend.generator.register('hexo-blog-encrypt', () => [
     'path': 'lib/blog-encrypt.js',
   },
 ]);
+
+// log function
+function dlog(level, x) {
+  switch (level) {
+    case 'warn':
+      log.warn(x);
+      break;
+
+    case 'info':
+    default:
+      if (silent) {
+        return;
+      }
+
+      log.info(x);
+  }
+}
 
 // Utils functions
 function textToArray(s) {

@@ -172,6 +172,18 @@ It will be called after the blog decrypted.
 <%- post.content %>
 ```
 
+### 禁用 Log
+If you want to disable the logging, you can add a silent property in `_config.yml` and set it to true.
+如果你想要禁止使用 Log, 你可以在 `_config.yml` 中增加一个 silent 属性, 并将其设置为 true.
+
+```yaml
+# Security
+encrypt: # hexo-blog-encrypt
+  silent: true
+```
+
+这样就会禁止如 `INFO  hexo-blog-encrypt: encrypting "{Blog Name}" based on Tag: "EncryptedTag".` 的日志.
+
 ## 许可
 
 看看 [LICENSE](./LICENSE).
