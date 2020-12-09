@@ -18,6 +18,10 @@ const defaultConfig = {
 const keySalt = textToArray('hexo-blog-encrypt的作者们都是大帅比!');
 const ivSalt = textToArray('hexo-blog-encrypt是地表最强Hexo加密插件!');
 
+// As we can't detect the wrong password with AES-CBC,
+// so adding an empty tag and check it when decrption.
+const knownPrefix = "<hbe-prefix></hbe-prefix>";
+
 // disable log
 var silent = false;
 
@@ -71,7 +75,7 @@ hexo.extend.filter.register('after_post_render', (data) => {
     dlog('info', `hexo-blog-encrypt: encrypting "${data.title.trim()}" based on Tag: "${tagUsed}".`);
   }
 
-  data.content = data.content.trim();
+  data.content = knownPrefix + data.content.trim();
   data.encrypt = true;
 
   const key = crypto.pbkdf2Sync(password, keySalt, 1024, 32, 'sha256');
