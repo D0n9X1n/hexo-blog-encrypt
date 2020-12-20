@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="zh" class="no-js">
+  <head>
+    <link rel="stylesheet" type="text/css" href="./hexo-encrypt.css">
+  </head>
+  <body>
+    <div id="hexo-blog-encrypt" class="hbe-input-container" data-wpm="{{hbeWrongPassMessage}}" data-whm="{{hbeWrongHashMessage}}" >
+      <span class="hbe-input hbe-input-Wave">
+        <input class="hbe-input-field hbe-input-field-Wave" type="password" id="hbePass">
+        <label class="hbe-input-label hbe-input-label-Wave" for="hbePass">
+          <span class="hbe-input-label-content hbe-input-label-content-Wave">{{hbeMessage}}</span>
+        </label>
+        <svg class="graphic graphic-Wave" width="300%" height="100%" viewBox="0 0 1200 60" preserveAspectRatio="none" >
+          <path d="M0,56.5c0,0,298.666,0,399.333,0C448.336,56.5,513.994,46,597,46c77.327,0,135,10.5,200.999,10.5c95.996,0,402.001,0,402.001,0"></path>
+        </svg>
+      </span>
+      <script id="hbeData" type="hbeData" data-hmacdigest="{{hbeHmacDigest}}">{{hbeEncryptedData}}</script>
+    </div>
+  </body>
+</html>

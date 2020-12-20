@@ -28,6 +28,8 @@
 
 - Promise is widely used to make sure our main procedures are asynchronous, so that there is little chance for the process to be blocked, and the experience will be more fluent.
 
+- Template theme supported, you can use [`default`, `xray`] to set up your template theme, more themes are coming soon.
+
 - Outdated browsers may not work well. In such case, please upgrade your browser.
 
 ## Online demo
@@ -49,7 +51,7 @@
 ---
 title: Hello World
 date: 2016-03-30 21:18:02
-password: mikemessi
+password: hello
 ---
 
 ```
@@ -92,7 +94,6 @@ encrypt: # hexo-blog-encrypt
   tags:
   - {name: encryptAsDiary, password: passwordA}
   - {name: encryptAsTips, password: passwordB}
-  template: <div id="hexo-blog-encrypt" data-wpm="{{hbeWrongPassMessage}}" data-whm="{{hbeWrongHashMessage}}"><div class="hbe-input-container"><input type="password" id="hbePass" placeholder="{{hbeMessage}}" /><label>{{hbeMessage}}</label><div class="bottom-line"></div></div><script id="hbeData" type="hbeData" data-hmacdigest="{{hbeHmacDigest}}">{{hbeEncryptedData}}</script></div>
   wrong_pass_message: Oh, this is an invalid password. Check and try again, please.
   wrong_hash_message: Oh, these decrypted content cannot be verified, but you can still have a look.
 
@@ -176,6 +177,41 @@ encrypt: # hexo-blog-encrypt
 ```
 
 This would disable the logging like `INFO  hexo-blog-encrypt: encrypting "{Blog Name}" based on Tag: "EncryptedTag".`.
+
+### Encrypt Theme
+Previously, we use `template` to let users modify their own themes. Turn out that it's not a simple way. So, we are adding this feature here.
+
+You can simply use `theme` in `_config.yml` or in header like
+
+#### In post's front matter
+
+```markdown
+---
+title: Theme test
+date: 2019-12-21 11:54:07
+tags:
+    - A Tag should be encrypted
+theme: xray
+password: ""
+---
+```
+
+#### In `_config.yml`
+
+```yaml
+# Security
+encrypt: # hexo-blog-encrypt
+  abstract: Here's something encrypted, password is required to continue reading.
+  message: Hey, password is required here.
+  tags:
+  - {name: encryptAsDiary, password: passwordA}
+  - {name: encryptAsTips, password: passwordB}
+  theme: xray
+  wrong_pass_message: Oh, this is an invalid password. Check and try again, please.
+  wrong_hash_message: Oh, these decrypted content cannot be verified, but you can still have a look.
+
+```
+
 
 ## License
 
