@@ -8,10 +8,10 @@
 
 .hbe-container{
 	margin: 0 auto;
-	text-align: center;
 	overflow: hidden;
 }
 .hbe-content {
+	text-align: center;
 	font-size: 150%;
 	padding: 1em 0;
 }
@@ -277,7 +277,7 @@
 	opacity: 1;
 	-webkit-transition: opacity 0s 0.4s;
 	transition: opacity 0s 0.4s;
-} 
+}
 
 .hbe-input-field-up:focus + .hbe-input-label-up::before,
 .input--filled .hbe-input-label-up::before {
@@ -334,7 +334,7 @@
 	transition: transform 0.7s, stroke 0.7s;
 	-webkit-transition-timing-function: cubic-bezier(0, 0.25, 0.5, 1);
 	transition-timing-function: cubic-bezier(0, 0.25, 0.5, 1);
-} 
+}
 
 .hbe-input-field-wave:focus + .hbe-input-label-wave,
 .input--filled .hbe-input-label-wave {
@@ -463,7 +463,7 @@
 	transition: transform 0.7s, stroke 0.7s;
 	-webkit-transition-timing-function: cubic-bezier(0, 0.25, 0.5, 1);
 	transition-timing-function: cubic-bezier(0, 0.25, 0.5, 1);
-} 
+}
 
 .hbe-input-field-xray:focus + .hbe-input-label-xray,
 .input--filled .hbe-input-label-xray {
@@ -660,7 +660,7 @@
 	transition: transform 0.7s, fill 0.7s;
 	-webkit-transition-timing-function: cubic-bezier(0, 0.25, 0.5, 1);
 	transition-timing-function: cubic-bezier(0, 0.25, 0.5, 1);
-} 
+}
 
 .hbe-input-field-surge:focus,
 .input--filled .hbe-input-field-surge {
