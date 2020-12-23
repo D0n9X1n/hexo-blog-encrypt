@@ -28,7 +28,7 @@
 
 - Promise is widely used to make sure our main procedures are asynchronous, so that there is little chance for the process to be blocked, and the experience will be more fluent.
 
-- Template theme supported, you can use [`default`, `xray`] to set up your template theme, more themes are coming soon.
+- Template theme supported, you can use [`default`, `blink`, `flip`, `shrink`, `surge`, `up`, `wave`, `xray`] to set up your template theme, and [CHECK ONLINE](https://mhexo.github.io/tags/ThemeTests/).
 
 - Outdated browsers may not work well. In such case, please upgrade your browser.
 
@@ -147,7 +147,7 @@ Demo: [Callback Example](https://mhexo.github.io/2019/12/21/CallbackTest/).
 
 ### Encrypt TOC
 
-If you has a post with TOC, you should change the code of template. Take the default theme 'landscape' as an example:
+If you has a post with TOC, you should change the code of your template. Take the default theme 'landscape' as an example:
 
 + You should find the `article.ejs` file located at `hexo/themes/landscape/layout/_partial/article.ejs`.
 + Find the code like <% post.content %>, which is usually at line 30.
@@ -179,9 +179,9 @@ encrypt: # hexo-blog-encrypt
 This would disable the logging like `INFO  hexo-blog-encrypt: encrypting "{Blog Name}" based on Tag: "EncryptedTag".`.
 
 ### Encrypt Theme
-Previously, we use `template` to let users modify their own themes. Turn out that it's not a simple way. So, we are adding this feature here.
+Previously, we use `template` to let users modify their own themes. Turn out that it's not a simple way. So, we are introducing this feature here.
 
-You can simply use `theme` in `_config.yml` or in header like
+You can simply use `theme` in `_config.yml` or in header like:
 
 #### In post's front matter
 
@@ -192,11 +192,13 @@ date: 2019-12-21 11:54:07
 tags:
     - A Tag should be encrypted
 theme: xray
-password: ""
+password: "hello"
 ---
 ```
 
 #### In `_config.yml`
+
+This would be a default one.
 
 ```yaml
 # Security
@@ -211,6 +213,17 @@ encrypt: # hexo-blog-encrypt
   wrong_hash_message: Oh, these decrypted content cannot be verified, but you can still have a look.
 
 ```
+
+Check them online, and PICK one:
+
++ [default](https://mhexo.github.io/2020/12/23/Theme-Test-Default/)
++ [blink](https://mhexo.github.io/2020/12/23/Theme-Test-Blink/)
++ [shrink](https://mhexo.github.io/2020/12/23/Theme-Test-Shrink/)
++ [flip](https://mhexo.github.io/2020/12/23/Theme-Test-Flip/)
++ [up](https://mhexo.github.io/2020/12/23/Theme-Test-Up/)
++ [surge](https://mhexo.github.io/2020/12/23/Theme-Test-Surge/)
++ [wave](https://mhexo.github.io/2020/12/23/Theme-Test-Wave/)
++ [xray](https://mhexo.github.io/2020/12/23/Theme-Test-Xray/)
 
 
 ## License

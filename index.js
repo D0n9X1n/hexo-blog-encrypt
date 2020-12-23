@@ -73,7 +73,7 @@ hexo.extend.filter.register('after_post_render', (data) => {
 
   // read theme from file
   if (config.template != "") {
-    dlog('warn', 'Looks like you use a deprecated property "template" to set up template, consider to use "theme"? See https://github.com/D0n9X1n/hexo-blog-encrypt#template-theme');
+    dlog('warn', 'Looks like you use a deprecated property "template" to set up template, consider to use "theme"? See https://github.com/D0n9X1n/hexo-blog-encrypt#encrypt-theme');
   }
 
   let template = fs.readFileSync(path.resolve(__dirname, `./lib/hbe.${config.theme}.html`)).toString();

@@ -229,6 +229,18 @@ encrypt: # hexo-blog-encrypt
 
 ```
 
+你可以在线挑选你喜欢的主题,并应用到你的博客中:
+
++ [default](https://mhexo.github.io/2020/12/23/Theme-Test-Default/)
++ [blink](https://mhexo.github.io/2020/12/23/Theme-Test-Blink/)
++ [shrink](https://mhexo.github.io/2020/12/23/Theme-Test-Shrink/)
++ [flip](https://mhexo.github.io/2020/12/23/Theme-Test-Flip/)
++ [up](https://mhexo.github.io/2020/12/23/Theme-Test-Up/)
++ [surge](https://mhexo.github.io/2020/12/23/Theme-Test-Surge/)
++ [wave](https://mhexo.github.io/2020/12/23/Theme-Test-Wave/)
++ [xray](https://mhexo.github.io/2020/12/23/Theme-Test-Xray/)
+
+
 ## 许可
 
 看看 [LICENSE](./LICENSE).
