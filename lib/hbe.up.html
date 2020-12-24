@@ -1,22 +1,11 @@
-<!DOCTYPE html>
-<html class="no-js" lang="zh">
-    <head>
-        <link rel="stylesheet" type="text/css" href="./hbe.style.css">
-        <!--[if IE]>
-            <script src="http://cdn.bootcss.com/html5shiv/3.7.3/html5shiv.min.js"></script>
-        <![endif]-->
-    </head>
-    <body>
-        <div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="{{hbeWrongPassMessage}}" data-whm="{{hbeWrongHashMessage}}">
-            <script id="hbeData" type="hbeData" data-hmacdigest="{{hbeHmacDigest}}">{{hbeEncryptedData}}</script>
-            <div class="hbe hbe-content">
-                <div class="hbe hbe-input hbe-input-up">
-                    <input class="hbe hbe-input-field hbe-input-field-up" type="password" id="hbePass">
-                    <label class="hbe hbe-input-label hbe-input-label-up" for="hbePass">
-                        <span class="hbe hbe-input-label-content hbe-input-label-content-up">{{hbeMessage}}</span>
-                    </label>
-                </div>
-            </div>
-        </div>
-    </body>
-</html>
+<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="{{hbeWrongPassMessage}}" data-whm="{{hbeWrongHashMessage}}">
+  <script id="hbeData" type="hbeData" data-hmacdigest="{{hbeHmacDigest}}">{{hbeEncryptedData}}</script>
+  <div class="hbe hbe-content">
+    <div class="hbe hbe-input hbe-input-up">
+      <input class="hbe hbe-input-field hbe-input-field-up" type="password" id="hbePass">
+      <label class="hbe hbe-input-label hbe-input-label-up" for="hbePass">
+        <span class="hbe hbe-input-label-content hbe-input-label-content-up">{{hbeMessage}}</span>
+      </label>
+    </div>
+  </div>
+</div>
