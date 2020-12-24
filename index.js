@@ -10,9 +10,10 @@ const log = require('hexo-log')({ 'debug': false, 'slient': false });
 const defaultConfig = {
   'abstract': 'Here\'s something encrypted, password is required to continue reading.',
   'message': 'Hey, password is required here.',
-  'template': fs.readFileSync(path.resolve(__dirname, './lib/template.html')).toString(),
+  'theme': 'default',
   'wrong_pass_message': 'Oh, this is an invalid password. Check and try again, please.',
   'wrong_hash_message': 'OOPS, these decrypted content may changed, but you can still have a look.',
+  'silent': false,
 };
 
 const keySalt = textToArray('hexo-blog-encrypt的作者们都是大帅比!');
@@ -24,6 +25,7 @@ const knownPrefix = "<hbe-prefix></hbe-prefix>";
 
 // disable log
 var silent = false;
+var theme = 'default';
 
 hexo.extend.filter.register('after_post_render', (data) => {
   const tagEncryptPairs = [];
@@ -39,8 +41,6 @@ hexo.extend.filter.register('after_post_render', (data) => {
   if (hexo.config.encrypt === undefined) {
     hexo.config.encrypt = [];
   }
-
-  silent = hexo.config.encrypt.silent;
 
   if(('encrypt' in hexo.config) && ('tags' in hexo.config.encrypt)){
     hexo.config.encrypt.tags.forEach((tagObj) => {
@@ -68,6 +68,15 @@ hexo.extend.filter.register('after_post_render', (data) => {
 
   // Let's rock n roll
   const config = Object.assign(defaultConfig, hexo.config.encrypt, data);
+  silent = config.silent;
+  theme = config.theme;
+
+  // read theme from file
+  if (config.template != "") {
+    dlog('warn', 'Looks like you use a deprecated property "template" to set up template, consider to use "theme"? See https://github.com/D0n9X1n/hexo-blog-encrypt#encrypt-theme');
+  }
+
+  let template = fs.readFileSync(path.resolve(__dirname, `./lib/hbe.${config.theme}.html`)).toString();
 
   if (tagUsed === false) {
     dlog('info', `hexo-blog-encrypt: encrypting "${data.title.trim()}" based on the password configured in Front-matter.`);
@@ -89,12 +98,12 @@ hexo.extend.filter.register('after_post_render', (data) => {
   encryptedData += cipher.final('hex');
   const hmacDigest = hmac.digest('hex');
 
-  data.content = config.template.replace(/{{hbeEncryptedData}}/g, encryptedData)
+  data.content = template.replace(/{{hbeEncryptedData}}/g, encryptedData)
     .replace(/{{hbeHmacDigest}}/g, hmacDigest)
     .replace(/{{hbeWrongPassMessage}}/g, config.wrong_pass_message)
     .replace(/{{hbeWrongHashMessage}}/g, config.wrong_hash_message)
     .replace(/{{hbeMessage}}/g, config.message);
-  data.content += `<script src="${hexo.config.root}lib/blog-encrypt.js"></script><link href="${hexo.config.root}css/blog-encrypt.css" rel="stylesheet" type="text/css">`;
+  data.content += `<script src="${hexo.config.root}lib/hbe.js"></script><link href="${hexo.config.root}css/hbe.style.css" rel="stylesheet" type="text/css">`;
   data.excerpt = data.more = config.abstract;
 
   return data;
@@ -102,12 +111,12 @@ hexo.extend.filter.register('after_post_render', (data) => {
 
 hexo.extend.generator.register('hexo-blog-encrypt', () => [
   {
-    'data': () => fs.createReadStream(path.resolve(__dirname, './lib/blog-encrypt.css')),
-    'path': 'css/blog-encrypt.css',
+    'data': () => fs.createReadStream(path.resolve(__dirname, `./lib/hbe.style.css`)),
+    'path': `css/hbe.style.css`,
   },
   {
-    'data': () => fs.createReadStream(path.resolve(__dirname, './lib/blog-encrypt.js')),
-    'path': 'lib/blog-encrypt.js',
+    'data': () => fs.createReadStream(path.resolve(__dirname, './lib/hbe.js')),
+    'path': 'lib/hbe.js',
   },
 ]);
 

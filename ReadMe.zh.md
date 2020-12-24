@@ -34,6 +34,8 @@
 
 - 我们广泛地使用 Promise 来进行异步操作, 以此确保线程不被杜塞.
 
+- 加密页面多主题支持, 现在已经支持的主题有 [`default`, `xray`], 更多的主题正在开发中.
+
 - 过时的浏览器将不能正常显示, 因此, 请升级您的浏览器.
 
 ## 在线演示
@@ -55,7 +57,7 @@
 ---
 title: Hello World
 date: 2016-03-30 21:18:02
-password: mikemessi
+password: hello
 ---
 
 ```
@@ -99,13 +101,12 @@ encrypt: # hexo-blog-encrypt
   tags:
   - {name: tagName, password: 密码A}
   - {name: tagName, password: 密码B}
-  template: <div id="hexo-blog-encrypt" data-wpm="{{hbeWrongPassMessage}}" data-whm="{{hbeWrongHashMessage}}"><div class="hbe-input-container"><input type="password" id="hbePass" placeholder="{{hbeMessage}}" /><label>{{hbeMessage}}</label><div class="bottom-line"></div></div><script id="hbeData" type="hbeData" data-hmacdigest="{{hbeHmacDigest}}">{{hbeEncryptedData}}</script></div>
   wrong_pass_message: 抱歉, 这个密码看着不太对, 请再试试.
   wrong_hash_message: 抱歉, 这个文章不能被校验, 不过您还是能看看解密后的内容.
 
 ```
 
-#### 对博文禁用 Tag 加密 
+#### 对博文禁用 Tag 加密
 
 只需要将博文头部的 `password` 设置为 `""` 即可取消 Tag 加密.
 
@@ -183,6 +184,62 @@ encrypt: # hexo-blog-encrypt
 ```
 
 这样就会禁止如 `INFO  hexo-blog-encrypt: encrypting "{Blog Name}" based on Tag: "EncryptedTag".` 的日志.
+
+### 加密主题
+
+之前, 我们尝试使用 `template` 关键字来让用户能修改自己的主题. 后来发现真不是一个好主意. 所以我们现在引入了主题: `theme` 关键字.
+
+你可以简单的使用 `theme` 在 `_config.yml` 里或者文章头, 如下:
+
+### 文章信息头
+
+```markdown
+
+---
+title: Hello World
+tags:
+- 作为日记加密
+date: 2016-03-30 21:12:21
+password: mikemessi
+abstract: 有东西被加密了, 请输入密码查看.
+message: 您好, 这里需要密码.
+theme: xray
+wrong_pass_message: 抱歉, 这个密码看着不太对, 请再试试.
+wrong_hash_message: 抱歉, 这个文章不能被校验, 不过您还是能看看解密后的内容.
+---
+
+```
+
+### 在 `_config.yml`
+
+#### 示例
+
+```yaml
+
+# Security
+encrypt: # hexo-blog-encrypt
+  abstract: 有东西被加密了, 请输入密码查看.
+  message: 您好, 这里需要密码.
+  tags:
+  - {name: tagName, password: 密码A}
+  - {name: tagName, password: 密码B}
+  theme: xray
+  wrong_pass_message: 抱歉, 这个密码看着不太对, 请再试试.
+  wrong_hash_message: 抱歉, 这个文章不能被校验, 不过您还是能看看解密后的内容.
+
+```
+
+你可以在线挑选你喜欢的主题,并应用到你的博客中:
+
++ [default](https://mhexo.github.io/2020/12/23/Theme-Test-Default/)
++ [blink](https://mhexo.github.io/2020/12/23/Theme-Test-Blink/)
++ [shrink](https://mhexo.github.io/2020/12/23/Theme-Test-Shrink/)
++ [flip](https://mhexo.github.io/2020/12/23/Theme-Test-Flip/)
++ [up](https://mhexo.github.io/2020/12/23/Theme-Test-Up/)
++ [surge](https://mhexo.github.io/2020/12/23/Theme-Test-Surge/)
++ [wave](https://mhexo.github.io/2020/12/23/Theme-Test-Wave/)
++ [xray](https://mhexo.github.io/2020/12/23/Theme-Test-Xray/)
+
 
 ## 许可
 

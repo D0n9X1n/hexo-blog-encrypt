@@ -28,6 +28,8 @@
 
 - Promise is widely used to make sure our main procedures are asynchronous, so that there is little chance for the process to be blocked, and the experience will be more fluent.
 
+- Template theme supported, you can use [`default`, `blink`, `flip`, `shrink`, `surge`, `up`, `wave`, `xray`] to set up your template theme, and [CHECK ONLINE](https://mhexo.github.io/tags/ThemeTests/).
+
 - Outdated browsers may not work well. In such case, please upgrade your browser.
 
 ## Online demo
@@ -49,7 +51,7 @@
 ---
 title: Hello World
 date: 2016-03-30 21:18:02
-password: mikemessi
+password: hello
 ---
 
 ```
@@ -92,7 +94,6 @@ encrypt: # hexo-blog-encrypt
   tags:
   - {name: encryptAsDiary, password: passwordA}
   - {name: encryptAsTips, password: passwordB}
-  template: <div id="hexo-blog-encrypt" data-wpm="{{hbeWrongPassMessage}}" data-whm="{{hbeWrongHashMessage}}"><div class="hbe-input-container"><input type="password" id="hbePass" placeholder="{{hbeMessage}}" /><label>{{hbeMessage}}</label><div class="bottom-line"></div></div><script id="hbeData" type="hbeData" data-hmacdigest="{{hbeHmacDigest}}">{{hbeEncryptedData}}</script></div>
   wrong_pass_message: Oh, this is an invalid password. Check and try again, please.
   wrong_hash_message: Oh, these decrypted content cannot be verified, but you can still have a look.
 
@@ -146,7 +147,7 @@ Demo: [Callback Example](https://mhexo.github.io/2019/12/21/CallbackTest/).
 
 ### Encrypt TOC
 
-If you has a post with TOC, you should change the code of template. Take the default theme 'landscape' as an example:
+If you has a post with TOC, you should change the code of your template. Take the default theme 'landscape' as an example:
 
 + You should find the `article.ejs` file located at `hexo/themes/landscape/layout/_partial/article.ejs`.
 + Find the code like <% post.content %>, which is usually at line 30.
@@ -176,6 +177,54 @@ encrypt: # hexo-blog-encrypt
 ```
 
 This would disable the logging like `INFO  hexo-blog-encrypt: encrypting "{Blog Name}" based on Tag: "EncryptedTag".`.
+
+### Encrypt Theme
+Previously, we use `template` to let users modify their own themes. Turn out that it's not a simple way. So, we are introducing this feature here.
+
+You can simply use `theme` in `_config.yml` or in header like:
+
+#### In post's front matter
+
+```markdown
+---
+title: Theme test
+date: 2019-12-21 11:54:07
+tags:
+    - A Tag should be encrypted
+theme: xray
+password: "hello"
+---
+```
+
+#### In `_config.yml`
+
+This would be a default one.
+
+```yaml
+# Security
+encrypt: # hexo-blog-encrypt
+  abstract: Here's something encrypted, password is required to continue reading.
+  message: Hey, password is required here.
+  tags:
+  - {name: encryptAsDiary, password: passwordA}
+  - {name: encryptAsTips, password: passwordB}
+  theme: xray
+  wrong_pass_message: Oh, this is an invalid password. Check and try again, please.
+  wrong_hash_message: Oh, these decrypted content cannot be verified, but you can still have a look.
+
+```
+
+Check them online, and PICK one:
+
++ [default](https://mhexo.github.io/2020/12/23/Theme-Test-Default/)
++ [blink](https://mhexo.github.io/2020/12/23/Theme-Test-Blink/)
++ [shrink](https://mhexo.github.io/2020/12/23/Theme-Test-Shrink/)
++ [flip](https://mhexo.github.io/2020/12/23/Theme-Test-Flip/)
++ [up](https://mhexo.github.io/2020/12/23/Theme-Test-Up/)
++ [surge](https://mhexo.github.io/2020/12/23/Theme-Test-Surge/)
++ [wave](https://mhexo.github.io/2020/12/23/Theme-Test-Wave/)
++ [xray](https://mhexo.github.io/2020/12/23/Theme-Test-Xray/)
+
 
 ## License
 
