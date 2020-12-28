@@ -21,8 +21,8 @@
 	z-index: 1;
 	display: inline-block;
 	margin: 1em;
-	width: 60%;
-	min-width: 50em;
+	width: 80%;
+	min-width: 400px;
 	vertical-align: top;
 }
 
@@ -231,7 +231,7 @@
 	opacity: 0;
 	padding: 0.35em;
 	z-index: 100;
-	color: #236482;
+	color: #837482;
 }
 
 .hbe-input-label-up {
