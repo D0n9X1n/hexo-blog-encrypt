@@ -25,6 +25,7 @@ const knownPrefix = "<hbe-prefix></hbe-prefix>";
 
 // disable log
 var silent = false;
+// use default theme
 var theme = 'default';
 
 hexo.extend.filter.register('after_post_render', (data) => {
@@ -69,19 +70,20 @@ hexo.extend.filter.register('after_post_render', (data) => {
   // Let's rock n roll
   const config = Object.assign(defaultConfig, hexo.config.encrypt, data);
   silent = config.silent;
-  theme = config.theme;
+  theme = config.theme.trim().toLowerCase();
 
-  // read theme from file
+  // deprecate the template keyword
   if (config.template != "") {
     dlog('warn', 'Looks like you use a deprecated property "template" to set up template, consider to use "theme"? See https://github.com/D0n9X1n/hexo-blog-encrypt#encrypt-theme');
   }
 
-  let template = fs.readFileSync(path.resolve(__dirname, `./lib/hbe.${config.theme}.html`)).toString();
+  // read theme from file
+  let template = fs.readFileSync(path.resolve(__dirname, `./lib/hbe.${theme}.html`)).toString();
 
   if (tagUsed === false) {
-    dlog('info', `hexo-blog-encrypt: encrypting "${data.title.trim()}" based on the password configured in Front-matter.`);
+    dlog('info', `hexo-blog-encrypt: encrypting "${data.title.trim()}" based on the password configured in Front-matter with theme: ${theme}.`);
   } else {
-    dlog('info', `hexo-blog-encrypt: encrypting "${data.title.trim()}" based on Tag: "${tagUsed}".`);
+    dlog('info', `hexo-blog-encrypt: encrypting "${data.title.trim()}" based on Tag: "${tagUsed}" with theme ${theme}.`);
   }
 
   data.content = knownPrefix + data.content.trim();
