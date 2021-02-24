@@ -73,7 +73,7 @@ hexo.extend.filter.register('after_post_render', (data) => {
   theme = config.theme.trim().toLowerCase();
 
   // deprecate the template keyword
-  if (config.template != "") {
+  if (config.template) {
     dlog('warn', 'Looks like you use a deprecated property "template" to set up template, consider to use "theme"? See https://github.com/D0n9X1n/hexo-blog-encrypt#encrypt-theme');
   }
 
