@@ -24,7 +24,7 @@
 
 ## 特性
 
-- 一旦你输入了正确的密码, 它将会被存储在本地浏览器的 localStorage中. 按个按钮, 密码将会被清空. 若博客中又脚本, 它将会被正确地执行.
+- 一旦你输入了正确的密码, 它将会被存储在本地浏览器的 localStorage中. 按个按钮, 密码将会被清空. 若博客中有脚本, 它将会被正确地执行.
 
 - 支持按标签加密.
 
@@ -32,7 +32,7 @@
 
 - [PBKDF2](https://tools.ietf.org/html/rfc2898), [SHA256](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf) 被用于分发密钥, [AES256-CBC](https://csrc.nist.gov/publications/detail/sp/800-38a/final) 被用于加解密, 我们还使用 [HMAC](https://csrc.nist.gov/csrc/media/publications/fips/198/1/final/documents/fips-198-1_final.pdf) 来验证密文的来源, 并确保其未被篡改.
 
-- 我们广泛地使用 Promise 来进行异步操作, 以此确保线程不被杜塞.
+- 我们广泛地使用 Promise 来进行异步操作, 以此确保线程不被阻塞.
 
 - 加密页面多主题支持, 现在已经支持的主题有 [`default`, `xray`], 更多的主题正在开发中.
 
