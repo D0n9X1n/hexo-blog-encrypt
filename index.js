@@ -3,9 +3,9 @@
 'use strict';
 
 const crypto = require('crypto');
-const fs = require('hexo-fs');
+const fs = require('fs');
 const path = require('path');
-const log = require('hexo-log')({ 'debug': false, 'slient': false });
+const log = hexo.log;
 
 const defaultConfig = {
   'abstract': 'Here\'s something encrypted, password is required to continue reading.',
