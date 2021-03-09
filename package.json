@@ -5,10 +5,6 @@
   "bugs": {
     "url": "https://github.com/D0n9X1n/hexo-blog-encrypt/issues"
   },
-  "dependencies": {
-    "hexo-fs": "^1.0.2",
-    "hexo-log": "^0.2.0"
-  },
   "description": "Yet, just another blog encrypt plugin for hexo.",
   "homepage": "https://github.com/D0n9X1n/hexo-blog-encrypt#readme",
   "keywords": [
@@ -25,7 +21,6 @@
     }
   ],
   "name": "hexo-blog-encrypt",
-  "optionalDependencies": {},
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/D0n9X1n/hexo-blog-encrypt.git"
