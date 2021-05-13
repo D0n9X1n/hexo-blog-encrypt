@@ -143,7 +143,7 @@ It will be called after the blog is decrypted.
 </script>
 ```
 
-Demo: [Callback Example](https://mhexo.github.io/2019/12/21/CallbackTest/).
+Demo: [Callback Example](https://mhexo.github.io/2020/12/06/Callback-Test/).
 
 ### Encrypt TOC
 
