@@ -149,7 +149,7 @@ It will be called after the blog decrypted.
 </script>
 ```
 
-例子在: [Callback 例子](https://mhexo.github.io/2019/12/21/CallbackTest/).
+例子在: [Callback 例子](https://mhexo.github.io/2020/12/06/Callback-Test/).
 
 ### 对 TOC 进行加密
 
