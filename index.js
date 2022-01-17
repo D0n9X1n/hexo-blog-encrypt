@@ -104,6 +104,7 @@ hexo.extend.filter.register('after_post_render', (data) => {
     .replace(/{{hbeHmacDigest}}/g, hmacDigest)
     .replace(/{{hbeWrongPassMessage}}/g, config.wrong_pass_message)
     .replace(/{{hbeWrongHashMessage}}/g, config.wrong_hash_message)
+    .replace(/{{hbeAbstract}}/g, config.abstract)
     .replace(/{{hbeMessage}}/g, config.message);
   data.content += `<script data-pjax src="${hexo.config.root}lib/hbe.js"></script><link href="${hexo.config.root}css/hbe.style.css" rel="stylesheet" type="text/css">`;
   data.excerpt = data.more = config.abstract;
