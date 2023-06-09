@@ -145,6 +145,15 @@ It will be called after the blog is decrypted.
 
 Demo: [Callback Example](https://mhexo.github.io/2020/12/06/Callback-Test/).
 
+### After Decrypt Event
+Thanks to @[f-dong](https://github.com/f-dong), we now will trigger a event named `hexo-blog-decrypt`, so you can add a call back to listen to that event.
+
+```
+// trigger event
+var event = new Event('hexo-blog-decrypt');
+window.dispatchEvent(event);
+```
+
 ### Encrypt TOC
 
 If you has a post with TOC, you should change the code of your template. Take the default theme 'landscape' as an example:

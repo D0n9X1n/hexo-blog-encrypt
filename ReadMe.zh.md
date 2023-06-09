@@ -151,6 +151,15 @@ It will be called after the blog decrypted.
 
 例子在: [Callback 例子](https://mhexo.github.io/2020/12/06/Callback-Test/).
 
+### 解密后的触发事件
+感谢 @[f-dong](https://github.com/f-dong), 我们现在会在解密完成后触发一个 `hexo-blog-decrypt` 事件, 你们可以编写 callback 来监听该事件.
+
+```
+// trigger event
+var event = new Event('hexo-blog-decrypt');
+window.dispatchEvent(event);
+```
+
 ### 对 TOC 进行加密
 
 如果你有一篇文章使用了 TOC，你需要修改模板的部分代码。这里用 landscape 作为例子：
