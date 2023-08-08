@@ -1,5 +1,7 @@
 <div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="{{hbeWrongPassMessage}}" data-whm="{{hbeWrongHashMessage}}">
-  <script id="hbeData" type="hbeData" data-hmacdigest="{{hbeHmacDigest}}">{{hbeEncryptedData}}</script>
+  <script id="hbeData" type="hbeData" data-hmacdigest="{{hbeHmacDigest}}" data-keysalt="{{hbeKeySalt}}" data-ivsalt="{{hbeIvSalt}}">
+    {{hbeEncryptedData}}
+  </script>
   <div class="hbe hbe-content">
     <div class="hbe hbe-input hbe-input-up">
       <input class="hbe hbe-input-field hbe-input-field-up" type="password" id="hbePass">

@@ -16,8 +16,8 @@ const defaultConfig = {
   'silent': false,
 };
 
-const keySalt = textToArray('hexo-blog-encrypt的作者们都是大帅比!');
-const ivSalt = textToArray('hexo-blog-encrypt是地表最强Hexo加密插件!');
+const keySalt = crypto.randomBytes(32);
+const ivSalt = crypto.randomBytes(32);
 
 // As we can't detect the wrong password with AES-CBC,
 // so adding an empty tag and check it when decrption.
@@ -104,7 +104,9 @@ hexo.extend.filter.register('after_post_render', (data) => {
     .replace(/{{hbeHmacDigest}}/g, hmacDigest)
     .replace(/{{hbeWrongPassMessage}}/g, config.wrong_pass_message)
     .replace(/{{hbeWrongHashMessage}}/g, config.wrong_hash_message)
-    .replace(/{{hbeMessage}}/g, config.message);
+    .replace(/{{hbeMessage}}/g, config.message)
+    .replace(/{{hbeKeySalt}}/g, keySalt.toString('hex'))
+    .replace(/{{hbeIvSalt}}/g, ivSalt.toString('hex'));
   data.content += `<script data-pjax src="${hexo.config.root}lib/hbe.js"></script><link href="${hexo.config.root}css/hbe.style.css" rel="stylesheet" type="text/css">`;
   data.excerpt = data.more = config.abstract;
 
