@@ -20,3 +20,14 @@
 - Suggest your change as a new [issue] using the label `enhancement` **BEFORE** you start writing code.
 
 Thanks for contributing! :heart:
+
+## Branch protection rollout
+
+This repository uses a staged rollout for the new `Tests` CI check. To enable required checks safely:
+
+1. Merge `.github/workflows/test.yml` to `master`.
+2. Wait for **3 consecutive green PR runs** of the `Tests` workflow on subsequent PRs.
+3. Settings → Branches → Branch protection rules → require status check `Tests`.
+4. Require PR review via CODEOWNERS (see `.github/CODEOWNERS`).
+
+This protects against initial-rollout flakes blocking merges.
