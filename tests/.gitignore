@@ -1,0 +1,4 @@
+fixtures/hexo-site/node_modules/
+fixtures/hexo-site/public/
+fixtures/hexo-site/db.json
+fixtures/hexo-site/.deploy_git/

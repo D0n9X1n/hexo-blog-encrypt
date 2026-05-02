@@ -1,0 +1,18 @@
+{
+  "name": "hexo-blog-encrypt-fixture",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Hexo fixture site used by hexo-blog-encrypt E2E tests. Not published.",
+  "scripts": {
+    "hexo": "hexo"
+  },
+  "hexo": {
+    "version": "7.3.0"
+  },
+  "dependencies": {
+    "hexo": "^7",
+    "hexo-blog-encrypt": "file:../../..",
+    "hexo-renderer-ejs": "^2",
+    "hexo-renderer-marked": "^7"
+  }
+}
