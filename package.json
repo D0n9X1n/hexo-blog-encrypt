@@ -26,11 +26,18 @@
     "url": "git+ssh://git@github.com/D0n9X1n/hexo-blog-encrypt.git"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npm run lint && npm run test:server && npm run test:e2e",
+    "test:server": "c8 --reporter=text --reporter=lcov --include=index.js node --test tests/server/ tests/docs.test.js",
+    "test:e2e": "cd tests/fixtures/hexo-site && (test -d node_modules || npm install --no-audit --no-fund) && cd ../../.. && playwright install --with-deps chromium && playwright test --config tests/e2e/playwright.config.js",
+    "test:docs": "node --test tests/docs.test.js",
     "lint": "eslint --ext .js ./"
   },
   "version": "3.1.9",
   "devDependencies": {
-    "eslint": "^6.2.2"
+    "@playwright/test": "^1.45",
+    "c8": "^10",
+    "eslint": "^6.2.2",
+    "hexo": "^7",
+    "hexo-renderer-marked": "^7"
   }
 }
