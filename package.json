@@ -27,7 +27,7 @@
   },
   "scripts": {
     "test": "npm run lint && npm run test:server && npm run test:e2e",
-    "test:server": "c8 --reporter=text --reporter=lcov --include=index.js node --test tests/server/*.test.js tests/docs.test.js",
+    "test:server": "node tests/helpers/install-fixture.js && c8 --reporter=text --reporter=lcov --include=index.js node --test tests/server/*.test.js tests/docs.test.js",
     "test:e2e": "cd tests/fixtures/hexo-site && (test -d node_modules || npm install --no-audit --no-fund) && cd ../../.. && playwright install --with-deps chromium && playwright test --config tests/e2e/playwright.config.js",
     "test:docs": "node --test tests/docs.test.js",
     "lint": "eslint --ext .js ./"

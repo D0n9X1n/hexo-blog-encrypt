@@ -1,6 +1,5 @@
 'use strict';
 
-const fs = require('fs');
 const path = require('path');
 const { execFile } = require('node:child_process');
 const { promisify } = require('node:util');
@@ -11,6 +10,7 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const DEFAULT_FIXTURE = path.join(REPO_ROOT, 'tests', 'fixtures', 'hexo-site');
 
 const { buildSite: _unused, discoverThemes, materializePosts } = require('./buildSite');
+const { ensureFixtureInstalled } = require('./ensureFixtureInstalled');
 void _unused;
 
 /**
@@ -24,24 +24,6 @@ void _unused;
  * @property {string} publicDir - absolute path to the generated `public/`
  *   directory of the fixture site.
  */
-
-/**
- * Run `npm install --no-audit --no-fund` in the fixture directory if its
- * `node_modules/` is not yet present. This matches the behavior of the
- * `test:e2e` script in the root `package.json` and lets the test-kit be
- * used straight from a fresh clone.
- *
- * @param {string} fixtureDir - absolute path to the Hexo fixture site
- * @returns {Promise<void>}
- */
-async function ensureFixtureInstalled(fixtureDir) {
-  const nm = path.join(fixtureDir, 'node_modules');
-  if (fs.existsSync(nm)) return;
-  await execFileP('npm', ['install', '--no-audit', '--no-fund'], {
-    cwd: fixtureDir,
-    env: process.env,
-  });
-}
 
 /**
  * Run `hexo clean && hexo generate` against the fixture site, returning

@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { ensureFixtureInstalled } = require('./ensureFixtureInstalled');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const DEFAULT_FIXTURE = path.join(REPO_ROOT, 'tests', 'fixtures', 'hexo-site');
@@ -67,9 +68,9 @@ function materializePosts(fixtureDir, themes) {
  *
  * Loads `hexo` from the fixture's own `node_modules/` (via
  * `require.resolve('hexo', { paths: [fixtureDir] })`) so test boot mirrors
- * what real plugin users exercise. Callers must ensure the fixture's
- * dependencies are installed beforehand (e.g. by running
- * `generateSite()`, which lazy-installs them on first use).
+ * what real plugin users exercise. The fixture's dependencies are
+ * lazy-installed on first call (no-op when `node_modules/` already
+ * exists), so this function works from a fresh clone with no setup.
  *
  * @param {BuildSiteOptions} [opts]
  * @returns {Promise<import('hexo')>} an initialized + loaded Hexo instance
@@ -77,6 +78,7 @@ function materializePosts(fixtureDir, themes) {
  */
 async function buildSite(opts) {
   const fixtureDir = (opts && opts.cwd) || DEFAULT_FIXTURE;
+  await ensureFixtureInstalled(fixtureDir);
   const themes = discoverThemes();
   materializePosts(fixtureDir, themes);
 
