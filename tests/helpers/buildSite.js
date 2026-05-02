@@ -16,17 +16,18 @@ const POSTS_REL = path.join('source', '_posts');
  */
 
 /**
- * Discover the list of theme names shipped by this plugin by globbing
- * `lib/hbe.*.html`. The wildcard segment is the theme name (e.g.
- * `lib/hbe.default.html` → `default`). Uses Node 20+'s built-in
- * `fs.globSync`, so no external glob dependency is required.
+ * Discover the list of theme names shipped by this plugin by listing
+ * `lib/` and matching `hbe.<theme>.html`. Uses `fs.readdirSync` (universal
+ * since Node 0.x), so the test-kit runs on any Node version the project
+ * supports.
  *
  * @returns {string[]} sorted list of theme names
  */
 function discoverThemes() {
-  const matches = fs.globSync('lib/hbe.*.html', { cwd: REPO_ROOT });
-  const themes = matches
-    .map((rel) => path.basename(rel))
+  const libDir = path.join(REPO_ROOT, 'lib');
+  const entries = fs.readdirSync(libDir);
+  const themes = entries
+    .filter((name) => /^hbe\..+\.html$/.test(name))
     .map((name) => name.replace(/^hbe\./, '').replace(/\.html$/, ''))
     .filter((name) => name && name !== 'js' && name !== 'style');
   return Array.from(new Set(themes)).sort();
