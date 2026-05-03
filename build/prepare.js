@@ -13,10 +13,10 @@
 // with `ENOENT: lib/hbe.bundle.js`.
 //
 // We only build when:
-//   1) `build/build.js` is present (i.e., we're not in a published
-//      tarball install where this script could not have shipped anyway).
-//   2) `lib/hbe.bundle.js` is MISSING or older than the newest source
-//      file under `src/browser/` (skip the rebuild on no-op installs).
+//   • `build/build.js` is present (i.e., we're not in a published
+//     tarball install where this script could not have shipped anyway).
+// We rebuild unconditionally — mtime-based skips proved unreliable across
+// filesystems and git checkouts.
 //
 // Failures are surfaced loudly: a half-built install is worse than a
 // failed one.
@@ -27,26 +27,14 @@ const { spawnSync } = require('node:child_process');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const BUILD_SCRIPT = path.join(REPO_ROOT, 'build', 'build.js');
-const BUNDLE = path.join(REPO_ROOT, 'lib', 'hbe.bundle.js');
-const SRC_DIR = path.join(REPO_ROOT, 'src', 'browser');
-
-function newestMtime(dir) {
-  let newest = 0;
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const full = path.join(dir, entry.name);
-    const stat = entry.isDirectory()
-      ? newestMtime(full)
-      : fs.statSync(full).mtimeMs;
-    if (stat > newest) newest = stat;
-  }
-  return newest;
-}
 
 function shouldBuild() {
-  if (!fs.existsSync(BUILD_SCRIPT)) return false;
-  if (!fs.existsSync(BUNDLE)) return true;
-  if (!fs.existsSync(SRC_DIR)) return false;
-  return newestMtime(SRC_DIR) > fs.statSync(BUNDLE).mtimeMs;
+  // Always rebuild when the build script is present (i.e., this is a dev /
+  // git install, not a published-tarball install). mtime-based skips proved
+  // unreliable across filesystems with coarse-grained timestamps and across
+  // git checkouts that normalize file mtimes; release safety beats the few
+  // wasted seconds of a redundant build.
+  return fs.existsSync(BUILD_SCRIPT);
 }
 
 if (shouldBuild()) {

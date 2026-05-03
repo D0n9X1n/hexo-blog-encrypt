@@ -28,7 +28,7 @@
   "name": "hexo-blog-encrypt",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/D0n9X1n/hexo-blog-encrypt.git"
+    "url": "git+https://github.com/D0n9X1n/hexo-blog-encrypt.git"
   },
   "scripts": {
     "build": "node build/build.js",
@@ -44,6 +44,9 @@
   "version": "4.0.0",
   "engines": {
     "node": ">=18"
+  },
+  "peerDependencies": {
+    "hexo": ">=5"
   },
   "devDependencies": {
     "@playwright/test": "^1.45",

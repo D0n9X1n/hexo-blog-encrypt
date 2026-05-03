@@ -26,11 +26,16 @@ permissions:
   contents: read
   id-token: write   # needed for `npm publish --provenance`
 
+# Never cancel a half-completed publish — let any in-flight job finish.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   publish:
     name: Publish ${{ github.ref_name }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -62,8 +67,20 @@ jobs:
             exit 1
           fi
 
-      - name: Build browser bundle
-        run: npm run build
+      - name: Verify CHANGELOG has dated entry for this version
+        run: |
+          TAG_VERSION=${GITHUB_REF_NAME#v}
+          if ! grep -qE "^## \[${TAG_VERSION}\] — [0-9]{4}-[0-9]{2}-[0-9]{2}" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md is missing a dated entry for ${TAG_VERSION} (still 'Unreleased'?)"
+            exit 1
+          fi
+
+      - name: Verify demo references published package, not file:..
+        run: |
+          if grep -q '"hexo-blog-encrypt": *"file:' demo/package.json; then
+            echo "::error::demo/package.json still references 'file:..' — revert to a semver range before tagging"
+            exit 1
+          fi
 
       - name: Run full test suite (lint + server + e2e)
         run: npm test
