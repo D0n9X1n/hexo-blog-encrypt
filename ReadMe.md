@@ -38,6 +38,39 @@
 
 - See [Demo Page](https://d0n9x1n.github.io/hexo-blog-encrypt/), **all passwords are `hello`**.
 
+## Browser support
+
+The runtime uses Web Crypto (`crypto.subtle`), which requires a **secure
+context** (HTTPS or `http://localhost`). Verified:
+
+| Browser | Minimum | Notes |
+| --- | --- | --- |
+| Chromium / Edge | 92+ | Tested in CI via Playwright |
+| Firefox | 90+ | |
+| Safari (macOS / iOS) | 14+ | Manual smoke at release time |
+
+If your site is served over plain HTTP from a non-localhost host,
+decryption will silently fail (`crypto.subtle` is `undefined`). Always
+use HTTPS in production.
+
+## Upgrading from v3
+
+v4 changed the wire format (AES-GCM, per-post salt + nonce). Existing
+encrypted output cannot be read by v4 and vice versa, so:
+
+1. Upgrade the plugin: `npm install --save hexo-blog-encrypt@^4`.
+2. Rebuild from source: `hexo clean && hexo generate`.
+3. Purge your CDN if you use one (the post HTML changes byte-for-byte
+   on every build by design — fresh nonce per encryption — but the
+   runtime asset URL `lib/hbe.<hash>.js` is content-hashed and only
+   changes when the bundle changes).
+4. Optional: drop `wrong_hash_message` from your config and front-matter
+   (deprecated in v4, removed in v5).
+
+No source `.md` files are touched. See [CHANGELOG.md](./CHANGELOG.md)
+for the full breaking-changes list and the new `decryptButton` /
+`autoSave` / `kdf.iterations` options.
+
 ## Install
 
 - `npm install --save hexo-blog-encrypt`

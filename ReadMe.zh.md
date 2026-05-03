@@ -44,6 +44,36 @@
 
 - 点击 [Demo Page](https://d0n9x1n.github.io/hexo-blog-encrypt/), **所有的密码都是 `hello`**.
 
+## 浏览器支持
+
+运行时使用 Web Crypto (`crypto.subtle`), 因此需要 **安全上下文**
+(HTTPS 或 `http://localhost`). 已验证:
+
+| 浏览器 | 最低版本 | 备注 |
+| --- | --- | --- |
+| Chromium / Edge | 92+ | CI 中通过 Playwright 自动测试 |
+| Firefox | 90+ | |
+| Safari (macOS / iOS) | 14+ | 发版前手动冒烟 |
+
+如果站点是通过非 localhost 的纯 HTTP 提供, 解密会静默失败
+(`crypto.subtle` 为 `undefined`). 生产环境请始终使用 HTTPS.
+
+## 从 v3 升级
+
+v4 修改了密文格式 (AES-GCM, 每篇文章独立 salt + 每次加密独立 nonce).
+v3 加密的产物在 v4 下无法解密, 反之亦然. 升级步骤:
+
+1. 升级插件: `npm install --save hexo-blog-encrypt@^4`.
+2. 重新生成: `hexo clean && hexo generate`.
+3. 如果使用 CDN, 请清空缓存 (按设计, 每次构建文章 HTML 都会变化 —
+   每次加密都使用新的 nonce — 但运行时资源 `lib/hbe.<hash>.js`
+   是按内容 hash 命名的, 只有 bundle 改变时 URL 才会变).
+4. 可选: 从 `_config.yml` 与 front-matter 中删除 `wrong_hash_message`
+   (v4 起废弃, v5 中删除).
+
+不会触碰任何源 `.md` 文件. 完整的 break 列表与新增的 `decryptButton` /
+`autoSave` / `kdf.iterations` 等配置请见 [CHANGELOG.md](./CHANGELOG.md).
+
 ## 安装
 
 - `npm install --save hexo-blog-encrypt`
