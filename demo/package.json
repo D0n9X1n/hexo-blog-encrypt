@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "hexo": "^7",
-    "hexo-blog-encrypt": "file:..",
+    "hexo-blog-encrypt": "^4.0.0",
     "hexo-generator-archive": "^2",
     "hexo-generator-category": "^2",
     "hexo-generator-index": "^4",
