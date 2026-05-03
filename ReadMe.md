@@ -1,10 +1,11 @@
 # hexo-blog-encrypt
 
-![GitHub release (latest SemVer including pre-releases)](https://img.shields.io/github/v/release/D0n9x1n/hexo-blog-encrypt?include_prereleases)
+[![GitHub release](https://img.shields.io/github/v/release/D0n9X1n/hexo-blog-encrypt?include_prereleases&logo=github&label=release&color=brightgreen)](https://github.com/D0n9X1n/hexo-blog-encrypt/releases)
+[![npm](https://img.shields.io/npm/v/hexo-blog-encrypt?logo=npm&color=brightgreen)](https://www.npmjs.com/package/hexo-blog-encrypt)
+[![npm downloads](https://img.shields.io/npm/dm/hexo-blog-encrypt?logo=npm&label=downloads)](https://www.npmjs.com/package/hexo-blog-encrypt)
+[![License](https://img.shields.io/npm/l/hexo-blog-encrypt?color=brightgreen)](./LICENSE)
 [![Tests](https://github.com/D0n9X1n/hexo-blog-encrypt/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/D0n9X1n/hexo-blog-encrypt/actions/workflows/test.yml)
-[![Live Demo](https://img.shields.io/badge/demo-online-brightgreen)](https://d0n9x1n.github.io/hexo-blog-encrypt/)
-[![Build Status](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/badges/build.png?b=master)](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/build-status/master)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/?branch=master)
+[![Live Demo](https://img.shields.io/badge/demo-online-brightgreen?logo=github)](https://d0n9x1n.github.io/hexo-blog-encrypt/)
 
 [中文说明](./ReadMe.zh.md)
 
@@ -52,6 +53,46 @@ context** (HTTPS or `http://localhost`). Verified:
 If your site is served over plain HTTP from a non-localhost host,
 decryption will silently fail (`crypto.subtle` is `undefined`). Always
 use HTTPS in production.
+
+## Why upgrade from v3?
+
+v4 isn't a cosmetic refresh — it closes real security gaps and fixes UX
+problems v3 had. The headline reasons:
+
+- **Stronger crypto.** **AES-256-GCM** with a built-in authentication
+  tag replaces v3's AES-CBC + separate HMAC. One primitive, one auth
+  path, hardware-accelerated, and immune to a class of CBC
+  padding-oracle and HMAC-comparison bugs.
+- **Per-post salt + nonce.** v3 used the same salt for every post, so
+  the same password derived the same key everywhere. v4 derives an
+  independent key per post — an attacker can't amortize one password's
+  PBKDF2 work across other posts that share the password.
+- **Stronger KDF defaults.** v3 used **1,024** PBKDF2-SHA256 iterations
+  — far below current recommendations and easily amortized across many
+  guesses on modern hardware. v4 defaults to **250,000** (≈ 240× more
+  work per guess) and recommends 600,000+ (OWASP 2023). Tunable per
+  post via `kdf.iterations`.
+- **Privacy by default.** v3 always cached decrypted posts in
+  `localStorage`, so anyone with subsequent device access could
+  re-read them. v4 defaults to `autoSave: false`; you opt in per post
+  or globally.
+- **Inline error messages.** v3 fired a `window.alert()` dialog on a
+  wrong password — disruptive, especially on mobile. v4 shows the
+  error inline next to the password field (`role="alert"`).
+- **Optional click-to-decrypt button.** Discoverable for visitors who
+  don't realise Enter submits the form. Label is configurable.
+- **Smaller bundle.** Drops the bundled CryptoJS dependency in
+  favour of the browser's native Web Crypto API. The shipped browser
+  bundle is ≈ 6 KB minified.
+- **Tested.** Server suite at 100 % line / branch / function coverage
+  + Playwright e2e across all 8 themes. v3 had effectively zero
+  automated tests; v4 is regression-guarded on every push.
+
+If you care about offline password guessing against your generated
+HTML, or about shared-device exposure of cached keys — upgrade.
+
+The deeper rationale per change lives on the wiki:
+[Migration v3 → v4](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki/Migration-v3-to-v4).
 
 ## Upgrading from v3
 

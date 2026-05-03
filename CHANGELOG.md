@@ -135,9 +135,33 @@ caching of the bundle remains effective.
 
 ### Tests
 
-* 143 server tests; 100 % statements / branches / functions / lines.
-* 39 e2e tests across 8 themes + 7 global UX/regression specs.
+* Server suite at 100 % statements / branches / functions / lines.
+* Playwright e2e suite covers every shipped theme (per-theme:
+  right-password, wrong-password, autosave-default reload) plus
+  global UX / regression specs (decrypt button, autosave reload,
+  legacy event listener, stale format, tampered ciphertext, tag-only
+  encryption, decryption-callback hook firing inline `<script>`).
 * CI matrix: lint + server + 4 e2e shards on every push.
+
+### Documentation
+
+* Both READMEs gained a "Why upgrade from v3" section above the
+  procedural upgrade steps (security + UX rationale: AES-256-GCM,
+  per-post salt, KDF iteration jump, autoSave default flip, inline
+  errors, click-to-decrypt button, smaller bundle, regression-tested
+  on every push).
+* Badges trimmed and refreshed: dropped two stale Scrutinizer badges
+  (pointing at the unmaintained `MikeCoder/hexo-blog-encrypt` legacy
+  fork); added npm version, npm monthly downloads, license MIT;
+  release + npm-version badges forced to green to match the rest.
+* New comprehensive [GitHub Wiki](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki):
+  12 pages (Getting Started, Configuration Reference, Themes,
+  Callbacks & MathJax, Tag-Based Encryption, Migration v3 → v4,
+  Security Model, Browser Support, FAQ, Troubleshooting + Home + Sidebar).
+* New live demos: `/demo/callback/` (decryption hook fires
+  `window.alert(...)` from inline script in the encrypted body),
+  `/demo/mathjax/` (MathJax 3 loaded from CDN inside the encrypted
+  body, auto-typesets on decrypt). Both have e2e regression coverage.
 
 ---
 

@@ -1,10 +1,11 @@
 # hexo-blog-encrypt
 
-![GitHub release (latest SemVer including pre-releases)](https://img.shields.io/github/v/release/D0n9x1n/hexo-blog-encrypt?include_prereleases)
+[![GitHub release](https://img.shields.io/github/v/release/D0n9X1n/hexo-blog-encrypt?include_prereleases&logo=github&label=release&color=brightgreen)](https://github.com/D0n9X1n/hexo-blog-encrypt/releases)
+[![npm](https://img.shields.io/npm/v/hexo-blog-encrypt?logo=npm&color=brightgreen)](https://www.npmjs.com/package/hexo-blog-encrypt)
+[![npm downloads](https://img.shields.io/npm/dm/hexo-blog-encrypt?logo=npm&label=downloads)](https://www.npmjs.com/package/hexo-blog-encrypt)
+[![License](https://img.shields.io/npm/l/hexo-blog-encrypt?color=brightgreen)](./LICENSE)
 [![Tests](https://github.com/D0n9X1n/hexo-blog-encrypt/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/D0n9X1n/hexo-blog-encrypt/actions/workflows/test.yml)
-[![Live Demo](https://img.shields.io/badge/demo-online-brightgreen)](https://d0n9x1n.github.io/hexo-blog-encrypt/)
-[![Build Status](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/badges/build.png?b=master)](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/build-status/master)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/?branch=master)
+[![Live Demo](https://img.shields.io/badge/demo-online-brightgreen?logo=github)](https://d0n9x1n.github.io/hexo-blog-encrypt/)
 
 #### 提 issue 之前，请务必提供复现方式，log，配置信息等必要信息。良好的 issue 可以节省双方的时间。
 *请严格按照模版要求，不明确的 issue 将直接关闭。*
@@ -57,6 +58,37 @@
 
 如果站点是通过非 localhost 的纯 HTTP 提供, 解密会静默失败
 (`crypto.subtle` 为 `undefined`). 生产环境请始终使用 HTTPS.
+
+## 为什么要从 v3 升级
+
+v4 不是表面的刷新, 而是真正修复了 v3 的安全短板与 UX 痛点. 主要原因:
+
+- **更强的密码学.** **AES-256-GCM** 自带的 auth tag 取代了 v3 的
+  AES-CBC + 独立 HMAC. 单一原语、单一鉴权路径、硬件加速, 并且免疫一类
+  CBC padding-oracle 与 HMAC 比较 bug.
+- **每篇独立 salt + nonce.** v3 所有文章共用同一个 salt — 同样的密码
+  到处派生出同样的密钥. v4 每篇独立派生密钥 — 攻击者无法把对一个密码
+  的 PBKDF2 计算结果, 复用到其它使用相同密码的文章上.
+- **更强的 KDF 默认值.** v3 默认仅 **1,024** 轮 PBKDF2-SHA256 — 远低于
+  现代推荐值, 在现代硬件上很容易被批量爆破均摊. v4 默认 **250,000**
+  轮 (≈ 240× 单次工作量), 推荐 ≥ 600,000 (OWASP 2023). 可通过
+  `kdf.iterations` 按文章覆盖.
+- **隐私默认关闭.** v3 总是把解密后的密钥缓存到 `localStorage`, 共享
+  设备的下一个用户可以直接重看. v4 默认 `autoSave: false`, 你按需开启
+  (按文章或全局).
+- **行内错误提示.** v3 用 `window.alert()` 弹窗提示密码错 — 移动端
+  尤其打断流程. v4 直接把错误显示在密码框旁边 (`role="alert"`).
+- **可选的"解密"按钮.** 让不知道按 Enter 的访客也能用. 文案可配置.
+- **更小.** 抛弃了打包的 CryptoJS 依赖, 改用浏览器原生 Web Crypto
+  API. 浏览器端 bundle ≈ 6 KB (minified).
+- **有测试.** 服务端套件 100% 行 / 分支 / 函数覆盖 + Playwright e2e
+  覆盖全部 8 个主题. v3 几乎没有自动化测试; v4 每次推送都跑回归.
+
+如果你在意有人能拉到你生成的 HTML 后做离线密码爆破, 或者在意共用
+设备上缓存密钥被偷看 — 请升级.
+
+每条变化更深入的"为什么", 见 wiki:
+[Migration v3 → v4](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki/Migration-v3-to-v4).
 
 ## 从 v3 升级
 
