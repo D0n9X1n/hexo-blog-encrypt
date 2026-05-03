@@ -69,3 +69,61 @@ test('encrypt() opts.iterations is honoured (interop with manual derivation)', (
     'default-iter decrypt of custom-iter ciphertext must fail'
   );
 });
+
+test('decrypt() rejects salt that is not a 32-byte Buffer', () => {
+  const { nonce, ciphertext } = encrypt(PLAINTEXT, PASSWORD);
+  assert.throws(
+    () => decrypt('not-a-buffer', nonce, ciphertext, PASSWORD),
+    /salt must be a 32-byte Buffer/
+  );
+  assert.throws(
+    () => decrypt(Buffer.alloc(31), nonce, ciphertext, PASSWORD),
+    /salt must be a 32-byte Buffer/
+  );
+});
+
+test('decrypt() rejects nonce that is not a 12-byte Buffer', () => {
+  const { salt, ciphertext } = encrypt(PLAINTEXT, PASSWORD);
+  assert.throws(
+    () => decrypt(salt, 'not-a-buffer', ciphertext, PASSWORD),
+    /nonce must be a 12-byte Buffer/
+  );
+  assert.throws(
+    () => decrypt(salt, Buffer.alloc(13), ciphertext, PASSWORD),
+    /nonce must be a 12-byte Buffer/
+  );
+});
+
+test('decrypt() rejects ciphertext shorter than the 16-byte auth tag', () => {
+  const { salt, nonce } = encrypt(PLAINTEXT, PASSWORD);
+  assert.throws(
+    () => decrypt(salt, nonce, 'not-a-buffer', PASSWORD),
+    /ciphertext must be a Buffer of length/
+  );
+  assert.throws(
+    () => decrypt(salt, nonce, Buffer.alloc(15), PASSWORD),
+    /ciphertext must be a Buffer of length/
+  );
+});
+
+test('encrypt() accepts a numeric password (coerces via String())', () => {
+  const out = encrypt(PLAINTEXT, 12345);
+  const recovered = decrypt(out.salt, out.nonce, out.ciphertext, '12345');
+  assert.equal(recovered, PLAINTEXT);
+});
+
+test('decrypt() honours opts.iterations (truthy branch of iters ternary)', () => {
+  const customIters = 300000;
+  const out = encrypt(PLAINTEXT, PASSWORD, { iterations: customIters });
+  const recovered = decrypt(out.salt, out.nonce, out.ciphertext, PASSWORD, { iterations: customIters });
+  assert.equal(recovered, PLAINTEXT);
+});
+
+test('decrypt() ignores invalid opts.iterations (falls back to default)', () => {
+  // Encrypt with default iters; decrypt with falsy opts.iterations forms
+  // (negative, non-integer, non-numeric) should still succeed via DEFAULT.
+  const out = encrypt(PLAINTEXT, PASSWORD);
+  assert.equal(decrypt(out.salt, out.nonce, out.ciphertext, PASSWORD, { iterations: -5 }), PLAINTEXT);
+  assert.equal(decrypt(out.salt, out.nonce, out.ciphertext, PASSWORD, { iterations: 'bogus' }), PLAINTEXT);
+  assert.equal(decrypt(out.salt, out.nonce, out.ciphertext, PASSWORD, {}), PLAINTEXT);
+});

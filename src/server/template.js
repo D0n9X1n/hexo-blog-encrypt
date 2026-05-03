@@ -90,7 +90,8 @@ function discoverThemes(templateDir) {
 function createRenderer(args) {
   const templateDir = args && args.templateDir;
   if (!templateDir) throw new Error('createRenderer requires templateDir');
-  const log = (args && args.logger) || { warn: () => {}, info: () => {}, debug: () => {} };
+  // Only `warn` is ever called from this module (unknown-theme fallback).
+  const log = (args && args.logger) || { warn: () => {} };
 
   const themes = discoverThemes(templateDir);
   const cache = new Map();

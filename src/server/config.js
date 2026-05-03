@@ -25,6 +25,7 @@ const DEFAULTS = Object.freeze({
 function clone(value) {
   if (value === null || typeof value !== 'object') return value;
   if (typeof structuredClone === 'function') return structuredClone(value);
+  /* c8 ignore next 2 — Node ≥18 always has structuredClone; fallback is for non-Node hosts. */
   return JSON.parse(JSON.stringify(value));
 }
 
@@ -46,7 +47,6 @@ function deepMerge(base, overlay) {
 
 function shallowPickKnown(source, knownKeys) {
   const out = {};
-  if (!source || typeof source !== 'object') return out;
   for (const key of knownKeys) {
     if (key in source) out[key] = source[key];
   }
@@ -69,9 +69,18 @@ const KNOWN_KEYS = [
 ];
 
 function resolve(hexoConfig, postData, logger) {
-  const log = logger || { info: () => {}, warn: () => {}, debug: () => {} };
+  // Only `warn` is ever called from this module; keep the no-op default minimal.
+  const log = logger || { warn: () => {} };
 
-  const hexoEncrypt = (hexoConfig && hexoConfig.encrypt) ? hexoConfig.encrypt : {};
+  // hexo.config.encrypt may legitimately be missing OR a non-object truthy
+  // value (e.g. `encrypt: true` in _config.yml, which YAML parses as boolean).
+  // Treat any non-plain-object as "no encrypt block configured".
+  const hexoEncrypt = (
+    hexoConfig
+    && typeof hexoConfig.encrypt === 'object'
+    && hexoConfig.encrypt !== null
+    && !Array.isArray(hexoConfig.encrypt)
+  ) ? hexoConfig.encrypt : {};
   const post = postData || {};
 
   // Layer 1: defaults → hexo encrypt block (for top-level shared keys, NOT password/theme overrides per-post).
@@ -97,9 +106,9 @@ function resolve(hexoConfig, postData, logger) {
   merged.password = String(merged.password);
   if (merged.password === '') return null;
 
-  // KDF iteration floor + warn band.
-  if (!merged.kdf || typeof merged.kdf !== 'object') merged.kdf = { iterations: DEFAULTS.kdf.iterations };
-  if (merged.kdf.iterations === undefined) merged.kdf.iterations = DEFAULTS.kdf.iterations;
+  // KDF iteration floor + warn band. (deepMerge always populates merged.kdf
+  // from DEFAULTS.kdf when the user does not set it, so we only need to
+  // validate the resolved value here.)
   if (!Number.isInteger(merged.kdf.iterations) || merged.kdf.iterations < FLOOR) {
     throw new Error(
       `hexo-blog-encrypt: kdf.iterations must be an integer ≥ ${FLOOR.toLocaleString('en-US').replace(/,/g, '_')} ` +

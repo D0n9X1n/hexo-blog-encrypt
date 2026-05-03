@@ -12,11 +12,13 @@ const { buildSite, discoverThemes } = require('../helpers/buildSite.js');
 const THEMES = discoverThemes();
 
 const REQUIRED_DATA_ATTRS = [
-  'data-wpm',
-  'data-whm',
-  'data-hmacdigest',
-  'data-keysalt',
-  'data-ivsalt',
+  'data-hbe-format=',
+  'data-wpm=',
+  'data-whm=',
+  'data-salt=',
+  'data-nonce=',
+  'data-kdf-iterations=',
+  'data-auto-save=',
 ];
 
 // Wave 4 v4 SHELL contract: every theme must wrap input + button in a form

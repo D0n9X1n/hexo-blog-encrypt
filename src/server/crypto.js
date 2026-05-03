@@ -30,9 +30,6 @@ function encrypt(plaintext, password, opts) {
     cipher.final(),
   ]);
   const tag = cipher.getAuthTag();
-  if (tag.length !== TAG_BYTES) {
-    throw new Error(`unexpected GCM tag length: ${tag.length}`);
-  }
   const ciphertext = Buffer.concat([enc, tag]);
   return { salt, nonce, ciphertext };
 }

@@ -1,5 +1,12 @@
-<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="{{hbeWrongPassMessage}}" data-whm="{{hbeWrongHashMessage}}">
-  <script id="hbeData" type="hbeData" data-hmacdigest="{{hbeHmacDigest}}" data-keysalt="{{hbeKeySalt}}" data-ivsalt="{{hbeIvSalt}}">
+<div class="hbe hbe-container" id="hexo-blog-encrypt"
+     data-hbe-format="{{hbeFormat}}"
+     data-wpm="{{hbeWrongPassMessage}}"
+     data-whm="{{hbeWrongHashMessage}}"
+     data-salt="{{hbeSalt}}"
+     data-nonce="{{hbeNonce}}"
+     data-kdf-iterations="{{hbeKdfIterations}}"
+     data-auto-save="{{hbeAutoSave}}">
+  <script id="hbeData" type="hbeData">
     {{hbeEncryptedData}}
   </script>
   <div class="hbe hbe-content">
@@ -13,7 +20,7 @@
         <path d="M0,56.5c0,0,298.666,0,399.333,0C448.336,56.5,513.994,46,597,46c77.327,0,135,10.5,200.999,10.5c95.996,0,402.001,0,402.001,0"></path>
       </svg>
     </div>
-      <button class="hbe hbe-button" type="submit">Decrypt</button>
+      <button class="hbe hbe-button" type="submit">{{hbeButtonText}}</button>
       <div class="hbe hbe-error" role="alert" aria-live="polite"></div>
     </form>
   </div>

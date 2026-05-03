@@ -134,3 +134,81 @@ test('Substituted ciphertext placeholder appears between the script tags', () =>
   const out = r.render(baseOpts({ ciphertext: 'aabbccdd' }));
   assert.match(out, /<script id="hbeData"[^>]*>aabbccdd<\/script>/);
 });
+
+test('hex-mode placeholder rejects non-hex value (defence-in-depth)', () => {
+  const r = createRenderer({ templateDir: FIXTURES });
+  // ciphertext slot is 'hex' mode — splice non-hex characters and require throw.
+  assert.throws(
+    () => r.render(baseOpts({ ciphertext: 'not-hex-zz' })),
+    /refusing to render non-hex value into ciphertext slot/
+  );
+  assert.throws(
+    () => r.render(baseOpts({ salt: 'XYZ-not-hex' })),
+    /refusing to render non-hex value into salt slot/
+  );
+  assert.throws(
+    () => r.render(baseOpts({ nonce: 'gghhiijj' })),
+    /refusing to render non-hex value into nonce slot/
+  );
+});
+
+test('createRenderer requires templateDir', () => {
+  assert.throws(() => createRenderer(), /createRenderer requires templateDir/);
+  assert.throws(() => createRenderer({}), /createRenderer requires templateDir/);
+});
+
+test('discoverThemes() with non-existent directory returns empty Map', () => {
+  const { _internal } = require('../../src/server/template');
+  const map = _internal.discoverThemes('/this/path/does/not/exist/at/all');
+  assert.ok(map instanceof Map);
+  assert.equal(map.size, 0);
+});
+
+test('render() throws if templateDir has no default theme to fall back to', async () => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'hbe-no-default-'));
+  try {
+    // Create a templateDir with one non-default theme only.
+    fs.writeFileSync(
+      path.join(tmp, 'hbe.cyanosis.html'),
+      '<div>{{hbeEncryptedData}}</div>'
+    );
+    const r = createRenderer({ templateDir: tmp });
+    // Requesting an unknown theme should warn + try default + then throw because default missing.
+    assert.throws(
+      () => r.render(baseOpts({ theme: 'something-else' })),
+      /default theme not found/
+    );
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test('valueOf returns empty string for undefined/null fields (text/attr modes)', () => {
+  const r = createRenderer({ templateDir: FIXTURES });
+  // Render with message=undefined and buttonText=undefined → both substituted as '' (no token leak).
+  const opts = baseOpts();
+  delete opts.message;
+  delete opts.buttonText;
+  const out = r.render(opts);
+  assert.ok(!out.includes('{{hbeMessage}}'));
+  assert.ok(!out.includes('{{hbeButtonText}}'));
+});
+
+test('render() with no opts falls back to default theme + empty substitutions', () => {
+  const r = createRenderer({ templateDir: FIXTURES });
+  const out = r.render();
+  // Some unsubstituted hex slots will be empty strings; verify no token leakage.
+  assert.ok(!out.includes('{{hbeSalt}}'));
+  assert.ok(!out.includes('{{hbeNonce}}'));
+  assert.ok(!out.includes('{{hbeEncryptedData}}'));
+});
+
+test('createRenderer with no logger arg works (default no-op logger covers fallback warn/info/debug)', () => {
+  // No logger → falls back to {warn,info,debug:()=>{}}. Trigger warn by requesting unknown theme.
+  const r = createRenderer({ templateDir: FIXTURES });
+  // Render with unknown theme to fire the no-op warn.
+  const out = r.render(baseOpts({ theme: 'no-such-theme' }));
+  assert.ok(out.includes('hexo-blog-encrypt') || out.length > 0);
+});

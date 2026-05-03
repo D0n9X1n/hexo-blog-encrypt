@@ -23,11 +23,13 @@ const themes = fs.existsSync(THEMES_FILE)
   : discoverThemes();
 
 const REQUIRED_DATA_ATTRS = [
+  'data-hbe-format',
   'data-wpm',
   'data-whm',
-  'data-hmacdigest',
-  'data-keysalt',
-  'data-ivsalt',
+  'data-salt',
+  'data-nonce',
+  'data-kdf-iterations',
+  'data-auto-save',
 ];
 
 // Wave 4 v4 SHELL contract: form + button + role=alert error region.

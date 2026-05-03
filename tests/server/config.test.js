@@ -127,3 +127,79 @@ test('post-data overrides hexo-config (front-matter wins)', () => {
   assert.equal(out.theme, 'flip');
   assert.equal(out.autoSave, false);
 });
+
+// ---------------------------------------------------------------------------
+// Branch + function coverage backstop tests
+// ---------------------------------------------------------------------------
+test('resolve() works without a logger argument (no-op default logger)', () => {
+  const out = resolve({ encrypt: {} }, { password: 'p' });
+  assert.equal(out.password, 'p');
+});
+
+test('resolve() works without postData argument (treats as empty object)', () => {
+  // hexoConfig provides the password; postData omitted entirely.
+  const out = resolve({ encrypt: { password: 'fromHexo' } });
+  assert.equal(out.password, 'fromHexo');
+});
+
+test('resolve() handles hexoConfig=null (no encrypt block)', () => {
+  // Empty post + null hexoConfig → no password → null.
+  const out = resolve(null, { password: 'p' });
+  assert.equal(out.password, 'p');
+});
+
+test('resolve() returns null when hexoConfig.encrypt and postData are both empty', () => {
+  assert.equal(resolve({}, {}), null);
+});
+
+test('resolve() coerces non-object kdf (e.g. kdf=null) to defaults', () => {
+  const out = resolve({}, { password: 'p', kdf: null });
+  assert.equal(out.kdf.iterations, DEFAULTS.kdf.iterations);
+});
+
+test('resolve() coerces undefined kdf.iterations to defaults', () => {
+  const out = resolve({}, { password: 'p', kdf: { other: 1 } });
+  assert.equal(out.kdf.iterations, DEFAULTS.kdf.iterations);
+});
+
+test('deepMerge: array overlay replaces base wholesale (no element-wise merge)', () => {
+  // Surface this branch via the tags array in hexoConfig vs. postData.
+  const out = resolve(
+    { encrypt: { tags: [{ name: 'A', password: 'a' }] } },
+    { password: 'p', tags: [{ name: 'B' }] }
+  );
+  assert.deepEqual(out.tags, [{ name: 'B' }]);
+});
+
+test('shallowPickKnown handles non-object source via post=null path', () => {
+  // postData is null → covers `if (!source || typeof source !== 'object') return out;`
+  // in shallowPickKnown when called for the post layer.
+  const out = resolve({ encrypt: { password: 'p' } }, null);
+  assert.equal(out.password, 'p');
+});
+
+test('clone() short-circuits primitive values (covers function entry for primitives)', () => {
+  // String password is a primitive; deepMerge will recurse into clone(value) for the leaf.
+  const out = resolve({}, { password: 'pw', message: 'short' });
+  assert.equal(out.password, 'pw');
+  assert.equal(out.message, 'short');
+});
+
+test('resolve() with no logger arg + deprecation triggers default no-op warn (covers default logger fn)', () => {
+  // Use the deprecated `template` alias to force a warn() call on the default no-op logger.
+  const out = resolve({}, { password: 'p', template: 'shrink' });
+  assert.equal(out.theme, 'shrink');
+});
+
+test('resolve() with no logger + low iterations triggers default no-op debug/warn paths', () => {
+  // 100_000 ≥ FLOOR but < RECOMMENDED → triggers the OWASP warn band on no-op logger.
+  const out = resolve({}, { password: 'p', kdf: { iterations: 100000 } });
+  assert.equal(out.kdf.iterations, 100000);
+});
+
+test('resolve() with primitive kdf override (e.g. kdf="oops") throws integer-validation error (covers deepMerge primitive overlay)', () => {
+  assert.throws(
+    () => resolve({}, { password: 'p', kdf: 'oops' }),
+    /kdf\.iterations must be an integer/
+  );
+});

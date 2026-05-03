@@ -3,102 +3,75 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const { buildSite } = require('../helpers/buildSite.js');
 
-// Wire-format constants pinned by the plugin contract. These values are the
-// public coupling between the server (index.js) and the in-browser decryptor
-// (lib/hbe.js); they MUST NOT drift. Re-stating them here (instead of importing
-// from the SUT) makes any accidental change in index.js fail loudly here.
-const KNOWN_PREFIX = '<hbe-prefix></hbe-prefix>';
+// v4 wire-format constants pinned by the plugin contract. Re-stated here
+// (instead of imported) so any drift in src/server/* fails loudly.
 const SECRET_NEEDLE = 'THE SECRET IS BUTTERFLY';
 const DEFAULT_MESSAGE = 'Hey, password is required here.';
 const DEFAULT_ABSTRACT =
   "Here's something encrypted, password is required to continue reading.";
-const PBKDF2_KEY_ITERS = 1024;
-const PBKDF2_KEY_BYTES = 32;
-const PBKDF2_IV_ITERS = 512;
-const PBKDF2_IV_BYTES = 16;
-const PBKDF2_HASH = 'sha256';
-const CIPHER = 'aes-256-cbc';
+const PBKDF2_ITERS = 250000;
+const KEY_BYTES = 32;
+const SALT_HEX = 64;       // 32 bytes
+const NONCE_HEX = 24;      // 12 bytes
+const HASH = 'sha256';
+const CIPHER_NAME = 'aes-256-gcm';
+const TAG_BYTES = 16;
+const FORMAT_VERSION = '4';
 
-// All five `data-*` attributes that must appear on the rendered wrapper for
-// the browser-side hbe.js to be able to derive the key and verify the HMAC.
-// (See lib/hbe.default.html and lib/hbe.js dataset reads.)
 const REQUIRED_DATA_ATTRS = [
+  'data-hbe-format=',
   'data-wpm=',
   'data-whm=',
-  'data-hmacdigest=',
-  'data-keysalt=',
-  'data-ivsalt=',
+  'data-salt=',
+  'data-nonce=',
+  'data-kdf-iterations=',
+  'data-auto-save=',
 ];
 
-// All seven placeholder tokens the server replaces (index.js:103-109). After
-// rendering, none of these substrings may remain in the output.
 const PLACEHOLDER_PREFIX = '{{hbe';
 
-// Independent re-implementation of the server's encryption, used purely to
-// DECRYPT the rendered ciphertext from a Node-side test. Keeping it in this
-// test file (rather than tests/helpers/) ensures it does not become a "shared
-// secret" with the SUT — if the server algorithm drifts in index.js, this
-// helper will fail to decrypt and surface the regression. Mirrors index.js
-// lines 92-101 (encrypt) and the in-browser hbe.js verification path
-// (HMAC-SHA256 over plaintext, knownPrefix sentinel check).
-function decryptHbe({ password, keySaltHex, ivSaltHex, ciphertextHex, hmacDigestHex }) {
-  const keySalt = Buffer.from(keySaltHex, 'hex');
-  const ivSalt = Buffer.from(ivSaltHex, 'hex');
-  const key = crypto.pbkdf2Sync(password, keySalt, PBKDF2_KEY_ITERS, PBKDF2_KEY_BYTES, PBKDF2_HASH);
-  const iv = crypto.pbkdf2Sync(password, ivSalt, PBKDF2_IV_ITERS, PBKDF2_IV_BYTES, PBKDF2_HASH);
-  const decipher = crypto.createDecipheriv(CIPHER, key, iv);
-  let plaintext;
-  try {
-    plaintext = decipher.update(ciphertextHex, 'hex', 'utf8') + decipher.final('utf8');
-  } catch (err) {
-    const wrapped = new Error('decrypt failed (likely wrong password): ' + err.message);
-    wrapped.cause = err;
-    throw wrapped;
-  }
-  const hmac = crypto.createHmac(PBKDF2_HASH, key);
-  hmac.update(plaintext, 'utf8');
-  if (hmac.digest('hex') !== hmacDigestHex) {
-    throw new Error('HMAC mismatch (wrong password or tampered ciphertext)');
-  }
-  if (!plaintext.startsWith(KNOWN_PREFIX)) {
-    throw new Error('decrypted content missing known prefix sentinel');
-  }
-  return plaintext;
+const REPO_ROOT = path.resolve(__dirname, '..', '..');
+const BUNDLE_PATH = path.join(REPO_ROOT, 'lib', 'hbe.js');
+
+// Independent v4 GCM round-trip: catches algorithm drift in src/server/crypto.js
+// without sharing code with the SUT.
+function decryptHbeV4({ password, saltHex, nonceHex, ciphertextHex, iterations }) {
+  const iter = iterations || PBKDF2_ITERS;
+  const salt = Buffer.from(saltHex, 'hex');
+  const nonce = Buffer.from(nonceHex, 'hex');
+  const blob = Buffer.from(ciphertextHex, 'hex');
+  if (blob.length < TAG_BYTES) throw new Error('ciphertext shorter than auth tag');
+  const tag = blob.subarray(blob.length - TAG_BYTES);
+  const ct = blob.subarray(0, blob.length - TAG_BYTES);
+  const key = crypto.pbkdf2Sync(password, salt, iter, KEY_BYTES, HASH);
+  const decipher = crypto.createDecipheriv(CIPHER_NAME, key, nonce);
+  decipher.setAuthTag(tag);
+  return Buffer.concat([decipher.update(ct), decipher.final()]).toString('utf8');
 }
 
-// Pull the wire-format payload out of a rendered hbe wrapper. Tolerates
-// arbitrary attribute order on the <script id="hbeData"> element and any
-// surrounding whitespace inside the script body.
 function extractPayload(html) {
   const m = (re) => {
     const r = html.match(re);
-    if (!r) {
-      throw new Error('payload missing field; regex=' + re);
-    }
+    if (!r) throw new Error('payload missing field; regex=' + re);
     return r[1];
   };
   return {
-    keySaltHex: m(/data-keysalt="([0-9a-f]+)"/i),
-    ivSaltHex: m(/data-ivsalt="([0-9a-f]+)"/i),
-    hmacDigestHex: m(/data-hmacdigest="([0-9a-f]+)"/i),
+    saltHex: m(/data-salt="([0-9a-f]+)"/i),
+    nonceHex: m(/data-nonce="([0-9a-f]+)"/i),
     ciphertextHex: m(/<script id="hbeData"[^>]*>([\s\S]*?)<\/script>/i).trim(),
+    formatVersion: m(/data-hbe-format="([^"]*)"/i),
+    kdfIterations: m(/data-kdf-iterations="([^"]*)"/i),
+    autoSave: m(/data-auto-save="([^"]*)"/i),
+    wpm: m(/data-wpm="([^"]*)"/i),
+    whm: m(/data-whm="([^"]*)"/i),
   };
 }
 
-// Build a synthetic post-data object that the plugin's after_post_render
-// filter will see exactly the same as a real Hexo post. We invoke the filter
-// directly via `hexo.execFilter()` instead of materializing files on disk,
-// which gives perfect cross-test isolation: zero filesystem writes under
-// `tests/fixtures/`, no chance of contaminating sibling test files (T5/T6
-// boot the same fixture in parallel).
-//
-// Every test sets `theme:'default'`, `silent:false`, `template:undefined`
-// explicitly in `data` so they win over `defaultConfig` (which the plugin
-// MUTATES via `Object.assign(defaultConfig, ...)` on each successful encrypt
-// — a known plugin behavior we work around rather than fix).
 function makeSyntheticData(overrides) {
   return Object.assign(
     {
@@ -125,7 +98,7 @@ after(async () => {
 });
 
 // ---------------------------------------------------------------------------
-// Criterion 3 — no password, no matching tag → bypass encryption entirely
+// Criterion 3 — bypass when no password and no matching tag
 // ---------------------------------------------------------------------------
 test('criterion 3: post without password and without matching tag is left untouched', async () => {
   hexo.config.encrypt = {};
@@ -138,17 +111,13 @@ test('criterion 3: post without password and without matching tag is left untouc
   const before = data.content;
   await hexo.execFilter('after_post_render', data, { context: hexo });
 
-  assert.equal(data.encrypt, undefined,
-    'data.encrypt must remain undefined when no password resolution applies');
-  assert.equal(data.content, before,
-    'data.content must be untouched (filter must early-return)');
-  assert.ok(!data.content.includes('data-hmacdigest='),
-    'plain post must NOT carry hbe wrapper attributes');
+  assert.equal(data.encrypt, undefined);
+  assert.equal(data.content, before);
+  assert.ok(!data.content.includes('data-salt='));
 });
 
 // ---------------------------------------------------------------------------
-// Criterion 4 — front-matter password === "" disables encryption even when a
-// matching configured tag is present (early return at index.js:38-40)
+// Criterion 4 — empty FM password disables even with matching tag
 // ---------------------------------------------------------------------------
 test('criterion 4: empty-string front-matter password disables encryption even with matching tag', async () => {
   hexo.config.encrypt = { tags: [{ name: 'Secret', password: 'tagpass' }] };
@@ -156,24 +125,19 @@ test('criterion 4: empty-string front-matter password disables encryption even w
     title: 'empty-password',
     password: '',
     tags: [{ name: 'Secret' }],
-    content: '<p>this should remain in the clear</p>',
   });
 
   const before = data.content;
   await hexo.execFilter('after_post_render', data, { context: hexo });
 
-  assert.equal(data.encrypt, undefined,
-    'empty password must short-circuit encryption (index.js:38)');
-  assert.equal(data.content, before,
-    'data.content must be untouched');
-  assert.ok(!data.content.includes('data-hmacdigest='),
-    'no hbe wrapper attributes when encryption is disabled');
+  assert.equal(data.encrypt, undefined);
+  assert.equal(data.content, before);
 });
 
 // ---------------------------------------------------------------------------
-// Criterion 5 — front-matter password "hello" → full encryption pipeline
+// Criterion 5 — full pipeline emits all v4 wire-format pieces
 // ---------------------------------------------------------------------------
-test('criterion 5: front-matter password produces a fully-rendered hbe wrapper', async () => {
+test('criterion 5: front-matter password produces a fully-rendered v4 hbe wrapper', async () => {
   hexo.config.encrypt = {};
   const data = makeSyntheticData({
     title: 'fm-password',
@@ -183,41 +147,28 @@ test('criterion 5: front-matter password produces a fully-rendered hbe wrapper',
   const original = data.content;
   await hexo.execFilter('after_post_render', data, { context: hexo });
 
-  assert.equal(data.encrypt, true, 'data.encrypt must be set to true');
-  assert.ok(data.origin, 'data.origin must be truthy (set at index.js:68)');
-  assert.equal(data.origin, original,
-    'data.origin must equal the pre-filter content');
-  assert.ok(data.origin.includes(SECRET_NEEDLE),
-    'data.origin must contain the original plaintext secret');
-
-  // Excerpt + more get the configured abstract (index.js:111).
-  assert.equal(data.excerpt, data.more,
-    'data.excerpt must equal data.more (both set on the same line)');
-  assert.equal(data.more, DEFAULT_ABSTRACT,
-    'data.more must equal config.abstract default');
+  assert.equal(data.encrypt, true);
+  assert.equal(data.origin, original);
+  assert.ok(data.origin.includes(SECRET_NEEDLE));
+  assert.equal(data.excerpt, data.more);
+  assert.equal(data.more, DEFAULT_ABSTRACT);
 
   for (const attr of REQUIRED_DATA_ATTRS) {
     assert.ok(data.content.includes(attr),
       `rendered content must contain ${attr}`);
   }
-  assert.ok(data.content.includes(DEFAULT_MESSAGE),
-    'rendered content must contain the configured message');
+  assert.ok(data.content.includes(DEFAULT_MESSAGE));
 
   const scriptMatch = data.content.match(/<script id="hbeData"[^>]*>([\s\S]*?)<\/script>/i);
-  assert.ok(scriptMatch, 'rendered content must contain a <script id="hbeData"> block');
-  assert.ok(scriptMatch[1].trim().length > 0,
-    'the <script id="hbeData"> block must contain a non-empty ciphertext payload');
+  assert.ok(scriptMatch);
+  assert.ok(scriptMatch[1].trim().length > 0);
 
   assert.equal(data.content.indexOf(PLACEHOLDER_PREFIX), -1,
-    `no "${PLACEHOLDER_PREFIX}*" placeholder may remain in the rendered output ` +
-      '(proves all 7 substitutions completed)');
+    `no "${PLACEHOLDER_PREFIX}*" placeholder may remain`);
 });
 
 // ---------------------------------------------------------------------------
-// Criterion 6 — tag-only encryption (no front-matter password) decrypts with
-// the configured tag password. This is the headline server↔browser contract:
-// salts and ciphertext extracted from the wire must round-trip with the
-// password the user would type in the browser.
+// Criterion 6 — tag-only encryption decrypts with the configured tag password
 // ---------------------------------------------------------------------------
 test('criterion 6: tag-only encryption produces ciphertext decryptable with the tag password', async () => {
   hexo.config.encrypt = { tags: [{ name: 'Secret', password: 'tagpass' }] };
@@ -228,21 +179,15 @@ test('criterion 6: tag-only encryption produces ciphertext decryptable with the 
   delete data.password;
 
   await hexo.execFilter('after_post_render', data, { context: hexo });
-
-  assert.equal(data.encrypt, true, 'tag-driven encryption must set data.encrypt');
+  assert.equal(data.encrypt, true);
 
   const payload = extractPayload(data.content);
-  const plaintext = decryptHbe({ password: 'tagpass', ...payload });
-  assert.ok(plaintext.startsWith(KNOWN_PREFIX),
-    'decrypted plaintext must start with the known-prefix sentinel');
-  assert.ok(plaintext.includes(SECRET_NEEDLE),
-    'decrypted plaintext must contain the original secret');
+  const plaintext = decryptHbeV4({ password: 'tagpass', ...payload });
+  assert.ok(plaintext.includes(SECRET_NEEDLE));
 });
 
 // ---------------------------------------------------------------------------
-// Criterion 7 — front-matter password takes precedence over a tag password.
-// Decryption with the front-matter password succeeds; decryption with the
-// tag password fails (HMAC mismatch / padding error / missing prefix).
+// Criterion 7 — front-matter wins over tag
 // ---------------------------------------------------------------------------
 test('criterion 7: front-matter password wins over tag password', async () => {
   hexo.config.encrypt = { tags: [{ name: 'Secret', password: 'tagpass' }] };
@@ -253,35 +198,17 @@ test('criterion 7: front-matter password wins over tag password', async () => {
   });
 
   await hexo.execFilter('after_post_render', data, { context: hexo });
-
-  assert.equal(data.encrypt, true, 'encryption must run');
+  assert.equal(data.encrypt, true);
 
   const payload = extractPayload(data.content);
+  const ok = decryptHbeV4({ password: 'fmpass', ...payload });
+  assert.ok(ok.includes(SECRET_NEEDLE));
 
-  // Front-matter password decrypts successfully.
-  const ok = decryptHbe({ password: 'fmpass', ...payload });
-  assert.ok(ok.includes(SECRET_NEEDLE),
-    'front-matter password must decrypt successfully');
-
-  // Tag password must FAIL — either AES padding error, HMAC mismatch, or
-  // missing known-prefix sentinel. Any of these signals "wrong password".
-  assert.throws(
-    () => decryptHbe({ password: 'tagpass', ...payload }),
-    (err) =>
-      err instanceof Error &&
-      /decrypt failed|HMAC mismatch|known prefix/i.test(err.message),
-    'tag password must NOT decrypt when front-matter password takes precedence'
-  );
+  assert.throws(() => decryptHbeV4({ password: 'tagpass', ...payload }));
 });
 
 // ---------------------------------------------------------------------------
-// Criterion 9 — `silent` config gates `log.info` (line 84/86) but never
-// `log.warn` (line 77, deprecated `template` property). We monkey-patch the
-// hexo.log methods after boot, then trigger the filter twice with different
-// silent settings. The deprecated-`template` property is set in
-// hexo.config.encrypt to make log.warn fire on every encrypt path. The
-// per-post `theme:'default'` keeps the encryption path itself reachable
-// (avoids ENOENT from fs.readFileSync at index.js:81).
+// Criterion 9 — silent gates info but not warn
 // ---------------------------------------------------------------------------
 test('criterion 9: silent suppresses info logs but not warn logs', async () => {
   const originalInfo = hexo.log.info;
@@ -292,10 +219,9 @@ test('criterion 9: silent suppresses info logs but not warn logs', async () => {
   hexo.log.warn = () => { warnCount++; };
 
   try {
-    // --- Phase A: silent: true ------------------------------------------------
+    // Silent
     hexo.config.encrypt = { template: 'deprecated-value', silent: true };
-    infoCount = 0;
-    warnCount = 0;
+    infoCount = 0; warnCount = 0;
     const dataSilent = makeSyntheticData({
       title: 'silent-true',
       password: 'pw',
@@ -303,18 +229,13 @@ test('criterion 9: silent suppresses info logs but not warn logs', async () => {
       template: 'deprecated-value',
     });
     await hexo.execFilter('after_post_render', dataSilent, { context: hexo });
-    assert.equal(dataSilent.encrypt, true,
-      'sanity: encryption path actually ran in silent:true phase');
-    assert.equal(infoCount, 0,
-      'silent:true must produce zero log.info calls');
-    assert.ok(warnCount >= 1,
-      'silent:true must still produce at least one log.warn call ' +
-        '(deprecated `template` property)');
+    assert.equal(dataSilent.encrypt, true);
+    assert.equal(infoCount, 0, 'silent must suppress info');
+    assert.ok(warnCount >= 1, 'silent must NOT suppress warn (deprecated template)');
 
-    // --- Phase B: silent: false -----------------------------------------------
+    // Loud
     hexo.config.encrypt = { template: 'deprecated-value', silent: false };
-    infoCount = 0;
-    warnCount = 0;
+    infoCount = 0; warnCount = 0;
     const dataLoud = makeSyntheticData({
       title: 'silent-false',
       password: 'pw',
@@ -322,14 +243,462 @@ test('criterion 9: silent suppresses info logs but not warn logs', async () => {
       template: 'deprecated-value',
     });
     await hexo.execFilter('after_post_render', dataLoud, { context: hexo });
-    assert.equal(dataLoud.encrypt, true,
-      'sanity: encryption path actually ran in silent:false phase');
-    assert.ok(infoCount >= 1,
-      'silent:false must produce at least one log.info call');
-    assert.ok(warnCount >= 1,
-      'silent:false must produce at least one log.warn call');
+    assert.equal(dataLoud.encrypt, true);
+    assert.ok(infoCount >= 1);
+    assert.ok(warnCount >= 1);
   } finally {
     hexo.log.info = originalInfo;
     hexo.log.warn = originalWarn;
   }
+});
+
+// ---------------------------------------------------------------------------
+// v4 NEW: per-post salt — same password, two posts → different salts/ciphertext
+// ---------------------------------------------------------------------------
+test('per-post salt: two posts with the same password produce different salts AND ciphertexts', async () => {
+  hexo.config.encrypt = {};
+  const a = makeSyntheticData({ title: 'a', password: 'shared', content: '<p>same</p>' });
+  const b = makeSyntheticData({ title: 'b', password: 'shared', content: '<p>same</p>' });
+
+  await hexo.execFilter('after_post_render', a, { context: hexo });
+  await hexo.execFilter('after_post_render', b, { context: hexo });
+
+  const pa = extractPayload(a.content);
+  const pb = extractPayload(b.content);
+  assert.notEqual(pa.saltHex, pb.saltHex, 'per-post salt must differ');
+  assert.notEqual(pa.ciphertextHex, pb.ciphertextHex, 'ciphertext must differ');
+});
+
+// ---------------------------------------------------------------------------
+// v4 NEW: per-encryption nonce — same content built twice → different nonce/ciphertext
+// ---------------------------------------------------------------------------
+test('per-encryption nonce: same post built twice produces different nonces and ciphertexts', async () => {
+  hexo.config.encrypt = {};
+  const opts = { title: 'same', password: 'p', content: '<p>same</p>' };
+  const r1 = makeSyntheticData(opts);
+  const r2 = makeSyntheticData(opts);
+
+  await hexo.execFilter('after_post_render', r1, { context: hexo });
+  await hexo.execFilter('after_post_render', r2, { context: hexo });
+
+  const p1 = extractPayload(r1.content);
+  const p2 = extractPayload(r2.content);
+  assert.notEqual(p1.nonceHex, p2.nonceHex, 'nonce must differ');
+  assert.notEqual(p1.ciphertextHex, p2.ciphertextHex, 'ciphertext must differ');
+});
+
+// ---------------------------------------------------------------------------
+// v4 NEW: salt and nonce hex lengths
+// ---------------------------------------------------------------------------
+test('salt = exactly 64 hex chars (32 bytes), nonce = exactly 24 hex chars (12 bytes)', async () => {
+  hexo.config.encrypt = {};
+  const data = makeSyntheticData({ title: 'sizes', password: 'p' });
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  const p = extractPayload(data.content);
+  assert.equal(p.saltHex.length, SALT_HEX);
+  assert.equal(p.nonceHex.length, NONCE_HEX);
+});
+
+// ---------------------------------------------------------------------------
+// v4 NEW: numeric password from YAML still works
+// ---------------------------------------------------------------------------
+test('numeric password from YAML (password: 12345) still works', async () => {
+  hexo.config.encrypt = {};
+  const data = makeSyntheticData({ title: 'numeric', password: 12345 });
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  assert.equal(data.encrypt, true);
+  const p = extractPayload(data.content);
+  const pt = decryptHbeV4({ password: '12345', ...p });
+  assert.ok(pt.includes(SECRET_NEEDLE));
+});
+
+// ---------------------------------------------------------------------------
+// v4 NEW: filter idempotence — re-running the filter is a strict no-op
+// (achieved via a per-instance Symbol marker on `data`, NOT `data.encrypt`
+// or `data.origin`, both of which collide with legitimate user FM signals).
+// ---------------------------------------------------------------------------
+test('filter idempotence: re-running the filter does NOT re-encrypt the wrapper', async () => {
+  hexo.config.encrypt = {};
+  const data = makeSyntheticData({ title: 'idem', password: 'p' });
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  assert.equal(data.encrypt, true);
+
+  const snapshot = {
+    content: data.content,
+    encrypt: data.encrypt,
+    origin: data.origin,
+  };
+
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  // Only assert what THIS filter is responsible for. Hexo's own
+  // `after_post_render` filters can mutate `excerpt`/`more` independently
+  // on each pass, which is fine. The contract is: don't re-wrap content,
+  // don't lose origin, don't flip encrypt off.
+  assert.equal(data.content, snapshot.content,
+    'wrapper content must not be re-wrapped');
+  assert.equal(data.encrypt, snapshot.encrypt);
+  assert.equal(data.origin, snapshot.origin);
+  // And the result must still parse as a single v4 wrapper (no nested ones).
+  const wrappers = data.content.match(/data-hbe-format=/g) || [];
+  assert.equal(wrappers.length, 1,
+    `expected exactly 1 v4 wrapper after re-run, got ${wrappers.length}`);
+});
+
+// ---------------------------------------------------------------------------
+// Idempotence-marker regression tests (cross-model audit fixes)
+// ---------------------------------------------------------------------------
+test('idempotence marker: user FM "encrypt: true" with password STILL encrypts', async () => {
+  hexo.config.encrypt = {};
+  const data = makeSyntheticData({ title: 'fm-encrypt-flag', password: 'p' });
+  // The fixture template already sets encrypt: true; assert it explicitly here
+  // so the regression is visible.
+  data.encrypt = true;
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  assert.equal(data.encrypt, true);
+  assert.match(data.content, /class="hbe hbe-container"/);
+  assert.match(data.content, /data-hbe-format="4"/);
+});
+
+test('idempotence marker: user FM "origin: <anything>" does NOT skip encryption', async () => {
+  hexo.config.encrypt = {};
+  const data = makeSyntheticData({ title: 'fm-origin-set', password: 'p' });
+  // Some users / unrelated plugins set `origin` on `data`. Our marker must
+  // NOT collide with that — encryption must still proceed.
+  data.origin = 'some unrelated value set by another plugin';
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  assert.equal(data.encrypt, true);
+  assert.match(data.content, /class="hbe hbe-container"/);
+  // After a real encryption pass, `origin` is overwritten to the pre-encryption
+  // plaintext (legacy theme contract).
+  assert.ok(data.origin.includes(SECRET_NEEDLE),
+    'origin must reflect the real plaintext after our pass, not the user-set sentinel');
+});
+
+test('idempotence marker: an external filter that pre-sets data.origin is NOT mistaken for our pass', async () => {
+  hexo.config.encrypt = {};
+  const data = makeSyntheticData({ title: 'pre-origin', password: 'p' });
+  data.origin = data.content; // simulate another plugin setting origin === content
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  assert.equal(data.encrypt, true);
+  assert.match(data.content, /data-hbe-format="4"/);
+});
+
+// ---------------------------------------------------------------------------
+// v4 NEW: theme allowlist fallback
+// ---------------------------------------------------------------------------
+test("theme allowlist fallback: theme 'nonexistent' renders default + warn logged", async () => {
+  hexo.config.encrypt = {};
+  const originalWarn = hexo.log.warn;
+  let warnMessages = [];
+  hexo.log.warn = (m) => { warnMessages.push(m); };
+  try {
+    const data = makeSyntheticData({
+      title: 'fallback-theme',
+      password: 'p',
+      theme: 'nonexistent',
+    });
+    await hexo.execFilter('after_post_render', data, { context: hexo });
+    assert.equal(data.encrypt, true);
+    // Should have warned about fallback theme
+    assert.ok(
+      warnMessages.some((m) => /nonexistent|allowlist|fallback|default/i.test(String(m))),
+      `expected a fallback warning; got: ${JSON.stringify(warnMessages)}`
+    );
+    // Should still render default theme markup (hbe-input-default class).
+    assert.ok(/hbe-input-default/.test(data.content),
+      'fallback should render default theme markup');
+  } finally {
+    hexo.log.warn = originalWarn;
+  }
+});
+
+// ---------------------------------------------------------------------------
+// v4 NEW: HTML-escape XSS in attribute context
+// ---------------------------------------------------------------------------
+test('HTML-escape XSS in attribute context: malicious wrong_pass_message is escaped', async () => {
+  hexo.config.encrypt = { wrong_pass_message: '"><script>alert(1)</script>' };
+  const data = makeSyntheticData({ title: 'xss-attr', password: 'p' });
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  assert.equal(data.encrypt, true);
+  // Raw injection attempt must not appear unescaped in the wpm attr.
+  assert.ok(!data.content.includes('"><script>alert(1)</script>'),
+    'unescaped XSS payload must not appear in output');
+  // Properly escaped sequences must appear instead.
+  assert.ok(/data-wpm="[^"]*&quot;[^"]*&lt;script&gt;[^"]*"/i.test(data.content),
+    'wpm attr value must be HTML-escaped');
+});
+
+// ---------------------------------------------------------------------------
+// v4 NEW: root-prefix variants for wrapper script src
+// ---------------------------------------------------------------------------
+const rootCases = [
+  { input: '/', expected: '/' },
+  { input: '/blog/', expected: '/blog/' },
+  { input: '/blog', expected: '/blog/' },
+];
+for (const { input, expected } of rootCases) {
+  test(`root prefix variant ${JSON.stringify(input)} produces script src starting with ${JSON.stringify(expected)}lib/`, async () => {
+    const originalRoot = hexo.config.root;
+    hexo.config.root = input;
+    hexo.config.encrypt = {};
+    try {
+      const data = makeSyntheticData({ title: `root-${expected}`, password: 'p' });
+      await hexo.execFilter('after_post_render', data, { context: hexo });
+      const m = data.content.match(/<script[^>]*src="([^"]+)"/);
+      assert.ok(m);
+      assert.ok(m[1].startsWith(expected + 'lib/hbe.'),
+        `expected src to start with ${expected}lib/hbe.; got ${m[1]}`);
+      assert.ok(/lib\/hbe\.[0-9a-f]{10}\.js$/.test(m[1]),
+        `expected hashed bundle filename; got ${m[1]}`);
+    } finally {
+      hexo.config.root = originalRoot;
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// v4 NEW: wrapper script src embeds the SAME hash as generator emits
+// ---------------------------------------------------------------------------
+test('wrapper script src hash matches the SHA-256(bundle) hash the generator emits', async () => {
+  hexo.config.encrypt = {};
+  hexo.config.root = '/';
+  const data = makeSyntheticData({ title: 'hash-match', password: 'p' });
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  const m = data.content.match(/<script[^>]*src="\/lib\/hbe\.([0-9a-f]+)\.js"/);
+  assert.ok(m, 'expected hashed script src');
+  const wrapperHash = m[1];
+  const expectedHash = crypto.createHash('sha256')
+    .update(fs.readFileSync(BUNDLE_PATH))
+    .digest('hex')
+    .slice(0, 10);
+  assert.equal(wrapperHash, expectedHash);
+});
+
+// ---------------------------------------------------------------------------
+// v4 NEW: data-kdf-iterations matches the resolved iteration count
+// ---------------------------------------------------------------------------
+test('data-kdf-iterations equals resolved kdf.iterations (default 250000) as string', async () => {
+  hexo.config.encrypt = {};
+  const data = makeSyntheticData({ title: 'kdf-default', password: 'p' });
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  const p = extractPayload(data.content);
+  assert.equal(p.kdfIterations, String(PBKDF2_ITERS));
+});
+
+test('data-kdf-iterations honours user-set kdf.iterations (and matches server-side PBKDF2 count)', async () => {
+  hexo.config.encrypt = {};
+  const data = makeSyntheticData({
+    title: 'kdf-custom',
+    password: 'p',
+    kdf: { iterations: 600000 },
+  });
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  const p = extractPayload(data.content);
+  assert.equal(p.kdfIterations, '600000');
+  // And decrypt with 600000 iterations (server-side count must match).
+  const pt = decryptHbeV4({ password: 'p', iterations: 600000, ...p });
+  assert.ok(pt.includes(SECRET_NEEDLE));
+});
+
+// ---------------------------------------------------------------------------
+// v4 NEW: data-auto-save matches resolved autoSave value
+// ---------------------------------------------------------------------------
+test('data-auto-save defaults to "false"', async () => {
+  hexo.config.encrypt = {};
+  const data = makeSyntheticData({ title: 'as-default', password: 'p' });
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  const p = extractPayload(data.content);
+  assert.equal(p.autoSave, 'false');
+});
+
+test('data-auto-save reflects autoSave: true when user opts in', async () => {
+  hexo.config.encrypt = { autoSave: true };
+  const data = makeSyntheticData({ title: 'as-on', password: 'p' });
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  const p = extractPayload(data.content);
+  assert.equal(p.autoSave, 'true');
+});
+
+// ---------------------------------------------------------------------------
+// v4 NEW: data-whm defaulting (whm := wpm when user did not set whm)
+// ---------------------------------------------------------------------------
+test('data-whm equals data-wpm when user did not set wrong_hash_message', async () => {
+  hexo.config.encrypt = {};
+  const data = makeSyntheticData({ title: 'whm-default', password: 'p' });
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  const p = extractPayload(data.content);
+  assert.equal(p.whm, p.wpm);
+});
+
+test('data-whm differs from data-wpm when user explicitly sets wrong_hash_message', async () => {
+  hexo.config.encrypt = { wrong_hash_message: 'custom-hash-msg' };
+  const data = makeSyntheticData({ title: 'whm-set', password: 'p' });
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  const p = extractPayload(data.content);
+  assert.equal(p.whm, 'custom-hash-msg');
+  assert.notEqual(p.whm, p.wpm);
+});
+
+// ---------------------------------------------------------------------------
+// v4 NEW: format-version pin
+// ---------------------------------------------------------------------------
+test('data-hbe-format equals "4"', async () => {
+  hexo.config.encrypt = {};
+  const data = makeSyntheticData({ title: 'fmt', password: 'p' });
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  const p = extractPayload(data.content);
+  assert.equal(p.formatVersion, FORMAT_VERSION);
+});
+
+// ---------------------------------------------------------------------------
+// resolveTagPassword branch coverage: post has tags, none match
+// ---------------------------------------------------------------------------
+test('post with tags but none matching configured encrypt.tags is left untouched', async () => {
+  hexo.config.encrypt = { tags: [{ name: 'Secret', password: 'tagpass' }] };
+  const data = makeSyntheticData({
+    title: 'no-tag-match',
+    content: '<p>plain</p>',
+    tags: [{ name: 'PublicNotes' }, { name: 'Misc' }],
+  });
+  delete data.password;
+
+  const before = data.content;
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+
+  assert.equal(data.encrypt, undefined);
+  assert.equal(data.content, before);
+});
+
+// ---------------------------------------------------------------------------
+// cfg === null guard: tag config has empty password (resolve() returns null)
+// ---------------------------------------------------------------------------
+test('matching tag with empty-string password is bypassed (cfg null guard)', async () => {
+  hexo.config.encrypt = { tags: [{ name: 'Secret', password: '' }] };
+  const data = makeSyntheticData({
+    title: 'tag-empty-pw',
+    content: '<p>plain</p>',
+    tags: [{ name: 'Secret' }],
+  });
+  delete data.password;
+
+  const before = data.content;
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+
+  assert.equal(data.encrypt, undefined);
+  assert.equal(data.content, before);
+});
+
+// ---------------------------------------------------------------------------
+// register() argument validation
+// ---------------------------------------------------------------------------
+test('register(undefined) throws a clear error', () => {
+  const { register } = require('../../src/server');
+  assert.throws(() => register(), /hexo instance is required/);
+});
+
+// ---------------------------------------------------------------------------
+// Branch coverage backstop: data.title not a string → "(untitled)"
+// ---------------------------------------------------------------------------
+test('post without a string title renders without crashing (uses "(untitled)" log label)', async () => {
+  hexo.config.encrypt = {};
+  const data = makeSyntheticData({ password: 'p' });
+  delete data.title;
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  assert.equal(data.encrypt, true);
+});
+
+// ---------------------------------------------------------------------------
+// Branch: empty data.content → still encrypts (covers `data.content || ''`)
+// ---------------------------------------------------------------------------
+test('post with empty content still encrypts (empty plaintext)', async () => {
+  hexo.config.encrypt = {};
+  const data = makeSyntheticData({ title: 'empty', password: 'p', content: '' });
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  assert.equal(data.encrypt, true);
+  assert.match(data.content, /class="hbe hbe-container"/);
+});
+
+// ---------------------------------------------------------------------------
+// Branch: decryptButton.show=false hides the button label
+// ---------------------------------------------------------------------------
+test('decryptButton.show=false renders an empty button-text slot', async () => {
+  hexo.config.encrypt = { decryptButton: { show: false, text: 'Custom' } };
+  const data = makeSyntheticData({ title: 'no-btn', password: 'p' });
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  // The button element is still present in markup; only its text is empty.
+  assert.match(data.content, /<button class="hbe hbe-button"[^>]*>\s*<\/button>/);
+});
+
+// ---------------------------------------------------------------------------
+// Branch: decryptButton with non-string text falls back to 'Decrypt'
+// ---------------------------------------------------------------------------
+test('decryptButton with non-string text falls back to default "Decrypt"', async () => {
+  hexo.config.encrypt = { decryptButton: { show: true, text: 12345 } };
+  const data = makeSyntheticData({ title: 'numeric-btn', password: 'p' });
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  assert.match(data.content, /<button class="hbe hbe-button"[^>]*>Decrypt<\/button>/);
+});
+
+// ---------------------------------------------------------------------------
+// Branch: cfg.theme falsy → falls back to 'default'
+// ---------------------------------------------------------------------------
+test('post with theme="" front-matter falls back to default theme', async () => {
+  hexo.config.encrypt = {};
+  const data = makeSyntheticData({ title: 'no-theme', password: 'p', theme: '' });
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  assert.equal(data.encrypt, true);
+});
+
+// ---------------------------------------------------------------------------
+// Branch: data.content === undefined → coerced to '' (covers `== null` truthy)
+// ---------------------------------------------------------------------------
+test('post with undefined content still encrypts (empty plaintext)', async () => {
+  hexo.config.encrypt = {};
+  const data = makeSyntheticData({ title: 'undef-content', password: 'p' });
+  delete data.content;
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  assert.equal(data.encrypt, true);
+});
+
+// ---------------------------------------------------------------------------
+// Branch: hexo.config.root is non-string (e.g. undefined) → falls back to '/'
+// ---------------------------------------------------------------------------
+test('non-string hexo.config.root falls back to "/" prefix', async () => {
+  hexo.config.encrypt = {};
+  const originalRoot = hexo.config.root;
+  hexo.config.root = undefined;
+  try {
+    const data = makeSyntheticData({ title: 'no-root', password: 'p' });
+    await hexo.execFilter('after_post_render', data, { context: hexo });
+    assert.match(data.content, /<script data-pjax src="\/lib\/hbe\.[0-9a-f]{10}\.js"><\/script>/);
+  } finally {
+    hexo.config.root = originalRoot;
+  }
+});
+
+// ---------------------------------------------------------------------------
+// hexo.config.encrypt as a primitive (e.g. YAML `encrypt: true`) is treated
+// as "no encrypt block configured" — must NOT crash with cryptic TypeError.
+// ---------------------------------------------------------------------------
+test('hexo.config.encrypt = true (YAML boolean) does not crash; uses defaults', async () => {
+  hexo.config.encrypt = true;
+  const data = makeSyntheticData({ title: 'yaml-bool', password: 'p' });
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  // Defaults applied; encryption proceeds because FM password is present.
+  assert.equal(data.encrypt, true);
+  assert.match(data.content, /data-hbe-format="4"/);
+});
+
+test('hexo.config.encrypt = "string" (malformed config) does not crash; uses defaults', async () => {
+  hexo.config.encrypt = 'oops-i-meant-a-map';
+  const data = makeSyntheticData({ title: 'yaml-str', password: 'p' });
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  assert.equal(data.encrypt, true);
+});
+
+test('hexo.config.encrypt = ["array"] (malformed) does not crash; uses defaults', async () => {
+  hexo.config.encrypt = ['nope'];
+  const data = makeSyntheticData({ title: 'yaml-arr', password: 'p' });
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  assert.equal(data.encrypt, true);
 });
