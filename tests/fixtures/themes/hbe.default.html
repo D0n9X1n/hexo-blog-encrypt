@@ -1,0 +1,16 @@
+<div id="hexo-blog-encrypt"
+     data-hbe-format="{{hbeFormat}}"
+     data-wpm="{{hbeWrongPassMessage}}"
+     data-whm="{{hbeWrongHashMessage}}"
+     data-kdf-iterations="{{hbeKdfIterations}}"
+     data-auto-save="{{hbeAutoSave}}">
+  <p class="hbe-message">{{hbeMessage}}</p>
+  <form id="hbeForm">
+    <input type="password" id="hbePass" autocomplete="off" />
+    <button class="hbe-button" type="submit">{{hbeButtonText}}</button>
+  </form>
+  <div class="hbe-error" role="alert" aria-live="polite"></div>
+  <script id="hbeData" type="hbeData"
+          data-salt="{{hbeSalt}}"
+          data-nonce="{{hbeNonce}}">{{hbeEncryptedData}}</script>
+</div>
