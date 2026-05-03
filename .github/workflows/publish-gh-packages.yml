@@ -1,0 +1,142 @@
+# Publishes hexo-blog-encrypt to GitHub Packages (npm.pkg.github.com)
+# as the SCOPED package `@d0n9x1n/hexo-blog-encrypt`. This is a mirror of
+# the canonical npmjs.com publish — its sole purpose is to populate the
+# repo's "Packages" sidebar on github.com so the project's release
+# distribution is discoverable from the repository page.
+#
+# Canonical install for end users remains:
+#   npm install hexo-blog-encrypt           # from registry.npmjs.org
+#
+# Optional install from the GitHub Packages mirror (requires a GITHUB_TOKEN
+# with read:packages):
+#   npm install @d0n9x1n/hexo-blog-encrypt --registry=https://npm.pkg.github.com
+#
+# Triggers:
+#   - Tag push (`v*`):   automatic, runs in parallel with release.yml
+#   - workflow_dispatch: manual backfill for an already-pushed tag
+#                        (e.g. `gh workflow run publish-gh-packages.yml \
+#                                  --ref master -f tag=v4.0.0`)
+#
+# Auth:
+#   GITHUB_TOKEN provided automatically by Actions, scoped via the
+#   `permissions: packages: write` block below. No long-lived secrets.
+#
+# Idempotency:
+#   The job skips publish if the version already exists on GitHub Packages,
+#   so re-running this workflow for an already-published tag is a no-op.
+
+name: Publish to GitHub Packages
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Git tag to publish (e.g. v4.0.0). Defaults to current ref.'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+  id-token: write   # required for `npm publish --provenance`
+  packages: write   # required to push to npm.pkg.github.com
+
+# Never cancel a half-completed publish — let any in-flight job finish.
+concurrency:
+  group: gh-packages-${{ github.ref }}-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish ${{ inputs.tag || github.ref_name }} to GitHub Packages
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Resolve ref + version
+        id: ref
+        run: |
+          if [ -n "${{ inputs.tag }}" ]; then
+            REF="${{ inputs.tag }}"
+          else
+            REF="${{ github.ref }}"
+          fi
+          VERSION="${REF#refs/tags/}"
+          VERSION="${VERSION#v}"
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Publishing ref=$REF version=$VERSION"
+
+      - name: Checkout ${{ steps.ref.outputs.ref }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.ref.outputs.ref }}
+
+      - name: Setup Node.js 20 (GitHub Packages registry, scope @d0n9x1n)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@d0n9x1n'
+
+      - name: Upgrade npm to a version that supports OIDC + provenance
+        # Node 20 ships with npm 10.x; provenance attestations need >= 11.5.1.
+        run: npm install -g npm@^11
+
+      - name: Cache npm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node20-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node20-
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Verify package.json version matches tag
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if [ "$PKG_VERSION" != "${{ steps.ref.outputs.version }}" ]; then
+            echo "::error::package.json version ($PKG_VERSION) does not match tag (${{ steps.ref.outputs.version }})"
+            exit 1
+          fi
+
+      - name: Skip if @d0n9x1n/hexo-blog-encrypt@${{ steps.ref.outputs.version }} already exists
+        id: skip
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if npm view "@d0n9x1n/hexo-blog-encrypt@${{ steps.ref.outputs.version }}" version > /dev/null 2>&1; then
+            echo "Already published to GitHub Packages; skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Not yet published; will publish."
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Rewrite package.json name to scoped form
+        if: steps.skip.outputs.skip != 'true'
+        # We must publish under @d0n9x1n/hexo-blog-encrypt because GitHub
+        # Packages npm requires the package scope to match the repo owner.
+        # We mutate package.json in-place — this is fine because the runner
+        # is ephemeral and we never push this change back to git.
+        run: |
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.name = '@d0n9x1n/hexo-blog-encrypt';
+            pkg.publishConfig = {
+              registry: 'https://npm.pkg.github.com',
+              access: 'public',
+            };
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+
+      - name: Publish to GitHub Packages (with provenance)
+        if: steps.skip.outputs.skip != 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm publish --provenance --access public
