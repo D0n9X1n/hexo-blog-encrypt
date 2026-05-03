@@ -30,6 +30,17 @@ const REQUIRED_DATA_ATTRS = [
   'data-ivsalt',
 ];
 
+// Wave 4 v4 SHELL contract: form + button + role=alert error region.
+// Wire-format attribute swap deferred to Wave 6 (filter rewrite lands the
+// substitution at the same time, so `npm test` stays green at every commit).
+const REQUIRED_SHELL_SLOTS = [
+  /id=["']hbeForm["']/,
+  /id=["']hbePass["']/,
+  /class=["'][^"']*\bhbe-button\b[^"']*["']/,
+  /class=["'][^"']*\bhbe-error\b[^"']*["']/,
+  /role=["']alert["']/,
+];
+
 for (const theme of themes) {
   test(`theme contract: ${theme}`, async ({ request }) => {
     const res = await request.get(`/encrypted-${theme}/`);
@@ -42,6 +53,13 @@ for (const theme of themes) {
         html,
         `${attr} missing from /encrypted-${theme}/ wrapper HTML`
       ).toContain(attr + '=');
+    }
+
+    for (const slotPattern of REQUIRED_SHELL_SLOTS) {
+      expect(
+        slotPattern.test(html),
+        `theme '${theme}' missing v4 shell slot matching ${slotPattern}`
+      ).toBe(true);
     }
 
     expect(

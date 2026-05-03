@@ -19,6 +19,20 @@ const REQUIRED_DATA_ATTRS = [
   'data-ivsalt',
 ];
 
+// Wave 4 v4 SHELL contract: every theme must wrap input + button in a form
+// (so Enter and click both submit), expose a button slot for click-to-decrypt,
+// and provide a [role="alert"] error region (so the browser shows wrong-password
+// inline, never via alert()). The v4 wire-format attribute swap is deferred
+// to Wave 6 — Wave 4 is structural-only so the existing v3 build pipeline keeps
+// `npm test` green.
+const REQUIRED_SHELL_SLOTS = [
+  /id=["']hbeForm["']/,
+  /id=["']hbePass["']/,
+  /class=["'][^"']*\bhbe-button\b[^"']*["']/,
+  /class=["'][^"']*\bhbe-error\b[^"']*["']/,
+  /role=["']alert["']/,
+];
+
 let hexo;
 let postsBySlug;
 let configuredMessage;
@@ -70,6 +84,13 @@ for (const theme of THEMES) {
       assert.ok(
         content.includes(attr),
         `theme '${theme}' content is missing required attribute '${attr}'`,
+      );
+    }
+
+    for (const slotPattern of REQUIRED_SHELL_SLOTS) {
+      assert.ok(
+        slotPattern.test(content),
+        `theme '${theme}' content is missing required v4 shell slot matching ${slotPattern}`,
       );
     }
 
