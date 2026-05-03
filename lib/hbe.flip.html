@@ -1,13 +1,24 @@
-<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="{{hbeWrongPassMessage}}" data-whm="{{hbeWrongHashMessage}}">
-  <script id="hbeData" type="hbeData" data-hmacdigest="{{hbeHmacDigest}}" data-keysalt="{{hbeKeySalt}}" data-ivsalt="{{hbeIvSalt}}">
+<div class="hbe hbe-container" id="hexo-blog-encrypt"
+     data-hbe-format="{{hbeFormat}}"
+     data-wpm="{{hbeWrongPassMessage}}"
+     data-whm="{{hbeWrongHashMessage}}"
+     data-salt="{{hbeSalt}}"
+     data-nonce="{{hbeNonce}}"
+     data-kdf-iterations="{{hbeKdfIterations}}"
+     data-auto-save="{{hbeAutoSave}}">
+  <script id="hbeData" type="hbeData">
     {{hbeEncryptedData}}
   </script>
   <div class="hbe hbe-content">
-    <div class="hbe hbe-input hbe-input-flip">
+    <form id="hbeForm" class="hbe hbe-form" onsubmit="return false">
+      <div class="hbe hbe-input hbe-input-flip">
       <input class="hbe hbe-input-field hbe-input-field-flip" type="password" id="hbePass">
       <label class="hbe hbe-input-label hbe-input-label-flip" for="hbePass">
         <span class="hbe hbe-input-label-content hbe-input-label-content-flip" data-content="{{hbeMessage}}">{{hbeMessage}}</span>
       </label>
     </div>
+      <button class="hbe hbe-button" type="submit">{{hbeButtonText}}</button>
+      <div class="hbe hbe-error" role="alert" aria-live="polite"></div>
+    </form>
   </div>
 </div>

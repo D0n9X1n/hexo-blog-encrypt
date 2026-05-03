@@ -12,20 +12,33 @@ const codeowners = path.join(repoRoot, '.github', 'CODEOWNERS');
 const prTemplate = path.join(repoRoot, '.github', 'PULL_REQUEST_TEMPLATE.md');
 
 const REQUIRED_PLACEHOLDERS = [
-  '{{hbeEncryptedData}}',
-  '{{hbeHmacDigest}}',
+  '{{hbeFormat}}',
   '{{hbeWrongPassMessage}}',
   '{{hbeWrongHashMessage}}',
+  '{{hbeKdfIterations}}',
+  '{{hbeAutoSave}}',
   '{{hbeMessage}}',
-  '{{hbeKeySalt}}',
-  '{{hbeIvSalt}}'
+  '{{hbeButtonText}}',
+  '{{hbeSalt}}',
+  '{{hbeNonce}}',
+  '{{hbeEncryptedData}}'
+];
+
+const REQUIRED_DATA_ATTR_NAMES = [
+  'data-hbe-format',
+  'data-wpm',
+  'data-whm',
+  'data-salt',
+  'data-nonce',
+  'data-kdf-iterations',
+  'data-auto-save'
 ];
 
 function read(file) {
   return fs.readFileSync(file, 'utf8');
 }
 
-test('docs/THEMES.md exists and encodes the one-file theme drop contract', () => {
+test('docs/THEMES.md exists and encodes the v4 one-file theme drop contract', () => {
   assert.ok(fs.existsSync(themesDoc), 'docs/THEMES.md must exist');
   const body = read(themesDoc);
   assert.ok(
@@ -40,6 +53,25 @@ test('docs/THEMES.md exists and encodes the one-file theme drop contract', () =>
     assert.ok(
       body.includes(placeholder),
       `docs/THEMES.md must list placeholder ${placeholder}`
+    );
+  }
+  for (const attrName of REQUIRED_DATA_ATTR_NAMES) {
+    assert.ok(
+      body.includes(attrName),
+      `docs/THEMES.md must reference v4 data attribute "${attrName}"`
+    );
+  }
+  // The v3 IIFE was removed in v4; the doc must NOT advertise it as the
+  // browser-side asset path or theme authors will follow a dead link.
+  assert.ok(
+    !/`lib\/hbe\.js`/.test(body),
+    'docs/THEMES.md must not reference the deleted v3 `lib/hbe.js` asset'
+  );
+  // Likewise the v3-only HMAC/CBC placeholders must not be re-introduced.
+  for (const stale of ['{{hbeHmacDigest}}', '{{hbeKeySalt}}', '{{hbeIvSalt}}']) {
+    assert.ok(
+      !body.includes(stale),
+      `docs/THEMES.md must not reference removed v3 placeholder ${stale}`
     );
   }
 });
@@ -103,4 +135,103 @@ test('.github/PULL_REQUEST_TEMPLATE.md adds an `npm run test` checklist item', (
     /-\s+\[\s?\]\s+.*`npm run test`/.test(body),
     'PR template must contain a checklist line referencing `npm run test`'
   );
+});
+
+test('Both READMEs explain WHY to upgrade from v3 BEFORE explaining HOW', () => {
+  // The "Upgrading from v3" section is the procedural how-to. The
+  // "why upgrade" section motivates the upgrade with concrete, named
+  // benefits (security + UX) so a reader can decide whether the rebuild
+  // is worth their time. Order matters: motivation precedes mechanics.
+  for (const readme of ['ReadMe.md', 'ReadMe.zh.md']) {
+    const body = read(path.join(repoRoot, readme));
+
+    const whyMatch = body.search(
+      /^##\s+(?:Why upgrade(?: from v3)?\??|为什么.*升级|为什么要升级.*v3)\s*$/m
+    );
+    const howMatch = body.search(/^##\s+(?:Upgrading from v3|从\s*v3\s*升级)\s*$/m);
+
+    assert.ok(
+      whyMatch >= 0,
+      `${readme} must contain a "Why upgrade from v3" section explaining benefits`
+    );
+    assert.ok(
+      howMatch >= 0,
+      `${readme} must contain an "Upgrading from v3" procedural section`
+    );
+    assert.ok(
+      whyMatch < howMatch,
+      `${readme}: the "Why upgrade" section must appear BEFORE the "Upgrading from v3" steps`
+    );
+
+    // The why-section must call out at least the four headline reasons
+    // (auth-encryption upgrade, per-post salt, stronger KDF, privacy
+    // default) so we don't accidentally publish a vague paragraph that
+    // satisfies the heading check without saying anything substantive.
+    const sectionEnd = body.indexOf('\n## ', whyMatch + 1);
+    const whySection = body.slice(whyMatch, sectionEnd > 0 ? sectionEnd : body.length);
+
+    const required = [
+      /AES[- ]?256[- ]?GCM|AES-GCM/i,            // auth-encryption upgrade
+      /salt/i,                                    // per-post salt
+      /PBKDF2|iteration|600[_,]?000|250[_,]?000/i, // stronger KDF defaults
+      /autoSave|localStorage/i                    // privacy-default flip
+    ];
+    for (const re of required) {
+      assert.ok(
+        re.test(whySection),
+        `${readme} "Why upgrade" section must mention ${re} (regex)`
+      );
+    }
+  }
+});
+
+test('Both READMEs use only valid, this-repo badges (no stale legacy-fork pointers)', () => {
+  // The README header lists badges. Every badge must:
+  //   (1) point at THIS repository or this npm package — not the
+  //       upstream legacy `MikeCoder/hexo-blog-encrypt` fork that
+  //       hasn't been rebuilt since 2023; and
+  //   (2) actually exist as a render-able shield (shields.io URL or
+  //       a GitHub workflow badge SVG).
+  // Concretely we forbid the two stale Scrutinizer badges and require
+  // the four core "always-green" badges (release / npm / license /
+  // Tests workflow). This test fails closed if any future contributor
+  // re-adds the dead badges or drops a core one.
+  const FORBIDDEN_BADGE_HOSTS = [
+    'scrutinizer-ci.com',
+    'MikeCoder/hexo-blog-encrypt'
+  ];
+  const REQUIRED_BADGE_PATTERNS = [
+    /img\.shields\.io\/github\/v\/release\/D0n9X1n\/hexo-blog-encrypt/, // release
+    /img\.shields\.io\/npm\/v\/hexo-blog-encrypt/,                       // npm version
+    /img\.shields\.io\/npm\/(?:l|dm)\/hexo-blog-encrypt/,                // license / downloads (npm)
+    /actions\/workflows\/test\.yml\/badge\.svg/,                         // CI workflow badge
+    /badge\/demo-online-brightgreen/                                     // live-demo static badge
+  ];
+  for (const readme of ['ReadMe.md', 'ReadMe.zh.md']) {
+    const body = read(path.join(repoRoot, readme));
+    // Restrict the check to actual badge lines — `[![alt](shield-url)](link)`.
+    // The intro area legitimately references the upstream repo and historical
+    // issues there for context; we only forbid stale badges, not all mentions.
+    const badgeLines = body
+      .split('\n')
+      .filter((line) => /^\[!\[[^\]]+\]\([^)]+\)\]\(/.test(line));
+    assert.ok(
+      badgeLines.length >= REQUIRED_BADGE_PATTERNS.length,
+      `${readme} must have at least ${REQUIRED_BADGE_PATTERNS.length} badge lines, found ${badgeLines.length}`
+    );
+    const header = badgeLines.join('\n');
+
+    for (const forbidden of FORBIDDEN_BADGE_HOSTS) {
+      assert.ok(
+        !header.includes(forbidden),
+        `${readme} badges must not reference ${forbidden} (legacy fork or dead service)`
+      );
+    }
+    for (const required of REQUIRED_BADGE_PATTERNS) {
+      assert.ok(
+        required.test(header),
+        `${readme} badges must contain one matching ${required}`
+      );
+    }
+  }
 });

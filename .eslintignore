@@ -1,0 +1,6 @@
+node_modules/
+coverage/
+tests/e2e/playwright-report/
+tests/e2e/test-results/
+tests/fixtures/hexo-site/public/
+tests/fixtures/hexo-site/db.json

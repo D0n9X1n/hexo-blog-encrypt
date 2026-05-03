@@ -7,6 +7,9 @@ const { ensureFixtureInstalled } = require('./ensureFixtureInstalled');
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const DEFAULT_FIXTURE = path.join(REPO_ROOT, 'tests', 'fixtures', 'hexo-site');
 const TEMPLATE_REL = path.join('templates', 'encrypted-post.md');
+const AUTOSAVE_TEMPLATE_REL = path.join('templates', 'autosave-post.md');
+const TAG_ONLY_TEMPLATE_REL = path.join('templates', 'tag-encrypted-post.md');
+const CALLBACK_TEMPLATE_REL = path.join('templates', 'callback-post.md');
 const POSTS_REL = path.join('source', '_posts');
 
 /**
@@ -26,10 +29,12 @@ const POSTS_REL = path.join('source', '_posts');
 function discoverThemes() {
   const libDir = path.join(REPO_ROOT, 'lib');
   const entries = fs.readdirSync(libDir);
+  // The `^hbe\..+\.html$` end-anchor already excludes non-theme siblings
+  // (`hbe.bundle.js`, `hbe.bundle.js.map`, `hbe.style.css`) — we don't
+  // need an extra name filter here.
   const themes = entries
     .filter((name) => /^hbe\..+\.html$/.test(name))
-    .map((name) => name.replace(/^hbe\./, '').replace(/\.html$/, ''))
-    .filter((name) => name && name !== 'js' && name !== 'style');
+    .map((name) => name.replace(/^hbe\./, '').replace(/\.html$/, ''));
   return Array.from(new Set(themes)).sort();
 }
 
@@ -57,6 +62,40 @@ function materializePosts(fixtureDir, themes) {
     fs.writeFileSync(dest, body, 'utf8');
     written.push(dest);
   }
+
+  // Single autosave-on post (default theme only) — used by the
+  // autoSave-opt-in e2e spec. Avoids materializing 8× redundant posts.
+  // The template is a REQUIRED fixture asset; let `readFileSync` throw
+  // a clear "no such file" error if it's missing, instead of silently
+  // skipping the post (which would surface later as a confusing 404 in
+  // the e2e suite).
+  const autosaveTemplatePath = path.join(fixtureDir, AUTOSAVE_TEMPLATE_REL);
+  const autosaveBody = fs.readFileSync(autosaveTemplatePath, 'utf8')
+    .split('__THEME__').join('default');
+  const autosaveDest = path.join(postsDir, 'autosave-default.md');
+  fs.writeFileSync(autosaveDest, autosaveBody, 'utf8');
+  written.push(autosaveDest);
+
+  // Single tag-only-encrypted post (default theme) — no front-matter
+  // password; encryption is driven by `_config.yml.encrypt.tags`. This
+  // post is the e2e regression for the Hexo-Warehouse-Query path through
+  // `resolveTagPassword` (real `data.tags` is NOT a plain array).
+  const tagOnlyTemplatePath = path.join(fixtureDir, TAG_ONLY_TEMPLATE_REL);
+  const tagOnlyBody = fs.readFileSync(tagOnlyTemplatePath, 'utf8');
+  const tagOnlyDest = path.join(postsDir, 'tag-only-encrypted.md');
+  fs.writeFileSync(tagOnlyDest, tagOnlyBody, 'utf8');
+  written.push(tagOnlyDest);
+
+  // Single callback-fixture post (default theme) — embeds an inline
+  // `<script>` that registers a `hexo-blog-decrypt` listener firing
+  // `window.alert(...)`. Regression for the public callback hook
+  // documented in both READMEs.
+  const callbackTemplatePath = path.join(fixtureDir, CALLBACK_TEMPLATE_REL);
+  const callbackBody = fs.readFileSync(callbackTemplatePath, 'utf8');
+  const callbackDest = path.join(postsDir, 'callback-fixture.md');
+  fs.writeFileSync(callbackDest, callbackBody, 'utf8');
+  written.push(callbackDest);
+
   return written;
 }
 

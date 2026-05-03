@@ -1,10 +1,11 @@
 # hexo-blog-encrypt
 
-![GitHub release (latest SemVer including pre-releases)](https://img.shields.io/github/v/release/D0n9x1n/hexo-blog-encrypt?include_prereleases)
+[![GitHub release](https://img.shields.io/github/v/release/D0n9X1n/hexo-blog-encrypt?include_prereleases&logo=github&label=release&color=brightgreen)](https://github.com/D0n9X1n/hexo-blog-encrypt/releases)
+[![npm](https://img.shields.io/npm/v/hexo-blog-encrypt?logo=npm&color=brightgreen)](https://www.npmjs.com/package/hexo-blog-encrypt)
+[![npm downloads](https://img.shields.io/npm/dm/hexo-blog-encrypt?logo=npm&label=downloads)](https://www.npmjs.com/package/hexo-blog-encrypt)
+[![License](https://img.shields.io/npm/l/hexo-blog-encrypt?color=brightgreen)](./LICENSE)
 [![Tests](https://github.com/D0n9X1n/hexo-blog-encrypt/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/D0n9X1n/hexo-blog-encrypt/actions/workflows/test.yml)
-[![Live Demo](https://img.shields.io/badge/demo-online-brightgreen)](https://d0n9x1n.github.io/hexo-blog-encrypt/)
-[![Build Status](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/badges/build.png?b=master)](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/build-status/master)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/?branch=master)
+[![Live Demo](https://img.shields.io/badge/demo-online-brightgreen?logo=github)](https://d0n9x1n.github.io/hexo-blog-encrypt/)
 
 #### 提 issue 之前，请务必提供复现方式，log，配置信息等必要信息。良好的 issue 可以节省双方的时间。
 *请严格按照模版要求，不明确的 issue 将直接关闭。*
@@ -26,13 +27,13 @@
 
 ## 特性
 
-- 一旦你输入了正确的密码, 它将会被存储在本地浏览器的 localStorage中. 按个按钮, 密码将会被清空. 若博客中有脚本, 它将会被正确地执行.
+- 一旦你输入了正确的密码, 加密的文章会在浏览器端解密. 默认情况下密码 **不会** 被持久化; 在文章信息头或 `_config.yml` 中设置 `autoSave: true` 之后, 派生出的密钥才会被缓存到 `localStorage`, 这样下次刷新同一页面时就能自动解密. 若文章中含有脚本, 它将会在解密后被正确执行.
 
 - 支持按标签加密.
 
 - 所有的核心功能都是由原生的 API 所提供的. 在 Node.js中, 我们使用 [Crypto](https://nodejs.org/dist/latest-v12.x/docs/api/crypto.html). 在浏览器中, 我们使用 [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API).
 
-- [PBKDF2](https://tools.ietf.org/html/rfc2898), [SHA256](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf) 被用于分发密钥, [AES256-CBC](https://csrc.nist.gov/publications/detail/sp/800-38a/final) 被用于加解密, 我们还使用 [HMAC](https://csrc.nist.gov/csrc/media/publications/fips/198/1/final/documents/fips-198-1_final.pdf) 来验证密文的来源, 并确保其未被篡改.
+- [PBKDF2](https://tools.ietf.org/html/rfc2898) 与 [SHA-256](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf) 被用于派生密钥, 我们使用 [AES-256-GCM](https://csrc.nist.gov/publications/detail/sp/800-38d/final) 进行带认证的加解密 — GCM 自带的 auth tag 即可检测密文被篡改 (取代了 v3 中独立的 HMAC 步骤).
 
 - 我们广泛地使用 Promise 来进行异步操作, 以此确保线程不被阻塞.
 
@@ -43,6 +44,67 @@
 ## 在线演示
 
 - 点击 [Demo Page](https://d0n9x1n.github.io/hexo-blog-encrypt/), **所有的密码都是 `hello`**.
+
+## 浏览器支持
+
+运行时使用 Web Crypto (`crypto.subtle`), 因此需要 **安全上下文**
+(HTTPS 或 `http://localhost`). 已验证:
+
+| 浏览器 | 最低版本 | 备注 |
+| --- | --- | --- |
+| Chromium / Edge | 92+ | CI 中通过 Playwright 自动测试 |
+| Firefox | 90+ | |
+| Safari (macOS / iOS) | 14+ | 发版前手动冒烟 |
+
+如果站点是通过非 localhost 的纯 HTTP 提供, 解密会静默失败
+(`crypto.subtle` 为 `undefined`). 生产环境请始终使用 HTTPS.
+
+## 为什么要从 v3 升级
+
+v4 不是表面的刷新, 而是真正修复了 v3 的安全短板与 UX 痛点. 主要原因:
+
+- **更强的密码学.** **AES-256-GCM** 自带的 auth tag 取代了 v3 的
+  AES-CBC + 独立 HMAC. 单一原语、单一鉴权路径、硬件加速, 并且免疫一类
+  CBC padding-oracle 与 HMAC 比较 bug.
+- **每篇独立 salt + nonce.** v3 所有文章共用同一个 salt — 同样的密码
+  到处派生出同样的密钥. v4 每篇独立派生密钥 — 攻击者无法把对一个密码
+  的 PBKDF2 计算结果, 复用到其它使用相同密码的文章上.
+- **更强的 KDF 默认值.** v3 默认仅 **1,024** 轮 PBKDF2-SHA256 — 远低于
+  现代推荐值, 在现代硬件上很容易被批量爆破均摊. v4 默认 **250,000**
+  轮 (≈ 240× 单次工作量), 推荐 ≥ 600,000 (OWASP 2023). 可通过
+  `kdf.iterations` 按文章覆盖.
+- **隐私默认关闭.** v3 总是把解密后的密钥缓存到 `localStorage`, 共享
+  设备的下一个用户可以直接重看. v4 默认 `autoSave: false`, 你按需开启
+  (按文章或全局).
+- **行内错误提示.** v3 用 `window.alert()` 弹窗提示密码错 — 移动端
+  尤其打断流程. v4 直接把错误显示在密码框旁边 (`role="alert"`).
+- **可选的"解密"按钮.** 让不知道按 Enter 的访客也能用. 文案可配置.
+- **更小.** 抛弃了打包的 CryptoJS 依赖, 改用浏览器原生 Web Crypto
+  API. 浏览器端 bundle ≈ 6 KB (minified).
+- **有测试.** 服务端套件 100% 行 / 分支 / 函数覆盖 + Playwright e2e
+  覆盖全部 8 个主题. v3 几乎没有自动化测试; v4 每次推送都跑回归.
+
+如果你在意有人能拉到你生成的 HTML 后做离线密码爆破, 或者在意共用
+设备上缓存密钥被偷看 — 请升级.
+
+每条变化更深入的"为什么", 见 wiki:
+[Migration v3 → v4](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki/Migration-v3-to-v4).
+
+## 从 v3 升级
+
+v4 修改了密文格式 (AES-GCM, 每篇文章独立 salt + 每次加密独立 nonce).
+v3 加密的产物在 v4 下无法解密, 反之亦然. 升级步骤:
+
+1. 升级插件: `npm install --save hexo-blog-encrypt@^4`.
+2. 重新生成: `hexo clean && hexo generate`.
+3. 如果使用 CDN, 请清空缓存 (按设计, 每次构建文章 HTML 都会变化 —
+   每次加密都使用新的 nonce — 但运行时资源 `lib/hbe.<hash>.js`
+   是按内容 hash 命名的, 只有 bundle 改变时 URL 才会变).
+4. 可选: 从 `_config.yml` 与 front-matter 中删除 `wrong_hash_message`
+   (v4 起废弃, v5 中删除).
+
+不会触碰任何源 `.md` 文件. 完整的 break 列表与新增的 `decryptButton` /
+`autoSave` / `kdf.iterations` 等配置请见 [CHANGELOG.md](./CHANGELOG.md).
 
 ## 安装
 
@@ -85,6 +147,8 @@ password: mikemessi
 abstract: 有东西被加密了, 请输入密码查看.
 message: 您好, 这里需要密码.
 wrong_pass_message: 抱歉, 这个密码看着不太对, 请再试试.
+# v4 起已废弃 — AES-GCM 已经将 “密码错误” 与 “密文被篡改” 这两类失败统一处理,
+# 该字段现在等同于 `wrong_pass_message`. 请改设 `wrong_pass_message`.
 wrong_hash_message: 抱歉, 这个文章不能被校验, 不过您还是能看看解密后的内容.
 ---
 
@@ -104,7 +168,27 @@ encrypt: # hexo-blog-encrypt
   - {name: tagName, password: 密码A}
   - {name: tagName, password: 密码B}
   wrong_pass_message: 抱歉, 这个密码看着不太对, 请再试试.
+  # v4 起已废弃 (等同于 `wrong_pass_message`), 详见上方说明.
   wrong_hash_message: 抱歉, 这个文章不能被校验, 不过您还是能看看解密后的内容.
+
+  # ── v4 新配置 (全部可选, 均有安全的默认值) ────────────────────────────
+  # 在密码框旁渲染一个可见的 “解密” 按钮.
+  # 主题模板若已经通过 `<%- decrypt_button %>` 自带按钮则会忽略本配置.
+  # 默认: true.
+  decryptButton:
+    show: true
+    text: 解密
+
+  # 解密后是否将明文缓存到 localStorage, 让刷新页面跳过密码输入.
+  # 默认 OFF — 可在文章 front-matter 中通过 `autoSave: true` 单独开启,
+  # 也可以在这里全局开启. 缓存键命名空间为 `hbe.v4.<post-permalink-hash>`.
+  autoSave: false
+
+  # PBKDF2 迭代次数. 下限: 100_000. 推荐 ≥ 600_000
+  # (OWASP 2023 关于 PBKDF2-SHA256 的推荐). 低于推荐值时构建会打印 warning.
+  # 默认: 250_000.
+  kdf:
+    iterations: 250000
 
 ```
 
@@ -216,6 +300,7 @@ abstract: 有东西被加密了, 请输入密码查看.
 message: 您好, 这里需要密码.
 theme: xray
 wrong_pass_message: 抱歉, 这个密码看着不太对, 请再试试.
+# v4 起已废弃 (等同于 `wrong_pass_message`), 详见 “高级设置”.
 wrong_hash_message: 抱歉, 这个文章不能被校验, 不过您还是能看看解密后的内容.
 ---
 
@@ -236,6 +321,7 @@ encrypt: # hexo-blog-encrypt
   - {name: tagName, password: 密码B}
   theme: xray
   wrong_pass_message: 抱歉, 这个密码看着不太对, 请再试试.
+  # v4 起已废弃 (等同于 `wrong_pass_message`), 详见 “高级设置”.
   wrong_hash_message: 抱歉, 这个文章不能被校验, 不过您还是能看看解密后的内容.
 
 ```

@@ -4,6 +4,7 @@ const assert = require('assert');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 const { generateSite } = require('../helpers/generateSite');
 const { serveSite } = require('../helpers/serveSite');
@@ -27,22 +28,47 @@ function sha256(filePath) {
  * does NOT set a `globalTeardown` key).
  */
 module.exports = async () => {
+  // Wave 7+: the browser bundle is built on demand (it's gitignored). Run
+  // `npm run build` BEFORE generateSite so the bundle exists when the Hexo
+  // generator emits the hashed asset, and the artifact-identity preflight
+  // below has something to checksum.
+  execSync('npm run build', { cwd: REPO_ROOT, stdio: 'inherit' });
+
   const { publicDir } = await generateSite();
 
   // Criterion 14 — artifact-identity preflight.
   //
-  // The whole point of the E2E suite is to load the REAL `lib/hbe.js`
-  // in a real browser and exercise the real ciphertext that `index.js`
-  // produced. If the served copy of `lib/hbe.js` (or `lib/hbe.style.css`)
-  // ever diverges from the source — e.g. a stale build artifact, a
-  // copy-paste regression, a registered generator that rewrites the
-  // file — we want to fail HERE, loud, with both digests printed,
-  // not in some downstream "Cannot read property of undefined" stack.
+  // The whole point of the E2E suite is to load the REAL bundle in a real
+  // browser and exercise the real ciphertext that the server produced. If the
+  // served copy of the bundle (or `lib/hbe.style.css`) ever diverges from
+  // the source — e.g. a stale build artifact, a copy-paste regression, a
+  // registered generator that rewrites the file — we want to fail HERE, loud,
+  // with both digests printed, not in some downstream "Cannot read property
+  // of undefined" stack.
+  //
+  // The bundle is now emitted at `lib/hbe.<hex10>.js` (content-hashed) — pick
+  // the single matching file out of `publicDir/lib/`.
+  const sourceBundle = path.join(REPO_ROOT, 'lib', 'hbe.bundle.js');
+  assert.ok(
+    fs.existsSync(sourceBundle),
+    `Source bundle missing at ${sourceBundle} after npm run build — investigate build/build.js`
+  );
+
+  const servedLibDir = path.join(publicDir, 'lib');
+  const servedBundleMatches = fs.existsSync(servedLibDir)
+    ? fs.readdirSync(servedLibDir).filter((f) => /^hbe\.[0-9a-f]{10}\.js$/.test(f))
+    : [];
+  assert.strictEqual(
+    servedBundleMatches.length,
+    1,
+    `Expected exactly one served bundle matching lib/hbe.<hex10>.js; got: ${JSON.stringify(servedBundleMatches)}`
+  );
+
   const checks = [
     {
-      label: 'lib/hbe.js',
-      src: path.join(REPO_ROOT, 'lib', 'hbe.js'),
-      served: path.join(publicDir, 'lib', 'hbe.js'),
+      label: 'browser bundle',
+      src: sourceBundle,
+      served: path.join(servedLibDir, servedBundleMatches[0]),
     },
     {
       label: 'lib/hbe.style.css',

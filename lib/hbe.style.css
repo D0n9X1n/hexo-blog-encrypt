@@ -747,3 +747,108 @@
 	transform: translate3d(0, 2em, 0) scale3d(0.655, 0.655, 1);
 }
 /* shrink theme }}} */
+
+/* ============================================================
+ * v4 SHELL: form, button, error, loading, dark mode.
+ *
+ * Themes wrap the input + button in <form id="hbeForm"> so Enter
+ * and click both fire 'submit'. The button is opt-in via the
+ * `decryptButton.show` config — themes always emit the slot, the
+ * server decides whether to render it.
+ *
+ * NEW in v4 (additive — pre-v4 themes that lack these slots
+ * remain visually identical to v3 except for the .hbe-error
+ * region appearing only when populated).
+ * ============================================================ */
+
+.hbe-form {
+margin: 0;
+padding: 0;
+display: contents;
+}
+
+.hbe-button {
+display: inline-block;
+margin: 0.5em 1em;
+padding: 0.7em 1.6em;
+font-size: 1rem;
+font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-weight: 600;
+color: #fff;
+background: #2a7ae2;
+border: none;
+border-radius: 4px;
+cursor: pointer;
+-webkit-appearance: none;
+transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.hbe-button:hover,
+.hbe-button:focus {
+background: #1c5db8;
+outline: none;
+box-shadow: 0 0 0 3px rgba(42, 122, 226, 0.35);
+}
+
+.hbe-button:disabled,
+.hbe-button[aria-busy="true"] {
+cursor: progress;
+opacity: 0.7;
+}
+
+.hbe-button[aria-busy="true"]::after {
+content: "";
+display: inline-block;
+margin-left: 0.5em;
+width: 0.9em;
+height: 0.9em;
+vertical-align: -0.15em;
+border: 2px solid currentColor;
+border-right-color: transparent;
+border-radius: 50%;
+animation: hbe-spin 0.7s linear infinite;
+}
+
+@keyframes hbe-spin {
+to { transform: rotate(360deg); }
+}
+
+.hbe-error {
+min-height: 1.4em;
+margin: 0.5em 1em;
+padding: 0.5em 1em;
+color: #b00020;
+font-size: 0.95rem;
+font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+background: transparent;
+}
+
+.hbe-error:not(:empty) {
+background: rgba(176, 0, 32, 0.08);
+border-radius: 4px;
+}
+
+@media (prefers-color-scheme: dark) {
+.hbe-input-field {
+background: #2a2f36;
+color: #e6e6e6;
+}
+.hbe-input-label {
+color: #cfd6e4;
+}
+.hbe-button {
+background: #4d8df0;
+color: #fff;
+}
+.hbe-button:hover,
+.hbe-button:focus {
+background: #6ba1f5;
+box-shadow: 0 0 0 3px rgba(77, 141, 240, 0.35);
+}
+.hbe-error {
+color: #ff7a7a;
+}
+.hbe-error:not(:empty) {
+background: rgba(255, 122, 122, 0.12);
+}
+}

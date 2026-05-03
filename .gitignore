@@ -4,6 +4,16 @@ node_modules/
 package-lock.json
 coverage/
 .nyc_output/
+tests/e2e/playwright-report/
+tests/e2e/test-results/
+tests/fixtures/hexo-site/public/
+tests/fixtures/hexo-site/db.json
+# Posts under tests/fixtures/hexo-site/source/_posts/ are materialized
+# at test-run time from templates in .../templates/. Only the .gitkeep
+# placeholder is tracked.
+tests/fixtures/hexo-site/source/_posts/*.md
+lib/hbe.bundle.js
+lib/hbe.bundle.js.map
 ### .git template
 
 
@@ -25,7 +35,9 @@ cscope.po.out
 
 
 ### Xcode template
-build/
+# (Xcode-style ignore of `build/` would swallow our build script directory.
+# Whitelist build/ explicitly to allow committing build/build.js.)
+!build/
 *.pbxuser
 !default.pbxuser
 *.mode1v3

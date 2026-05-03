@@ -8,15 +8,32 @@ const { buildSite, discoverThemes } = require('../helpers/buildSite.js');
 // Discovered at module-load time so the parameterized `test()` calls below
 // register synchronously, giving the runner one sub-test per theme.
 // `discoverThemes()` reads from `lib/hbe.*.html` on disk and excludes the
-// non-theme `hbe.js` and `hbe.style.css` siblings (see helpers/buildSite.js).
+// non-theme `hbe.bundle.js` / `hbe.bundle.js.map` / `hbe.style.css` siblings
+// (see helpers/buildSite.js — the `/^hbe\..+\.html$/` regex rejects them).
 const THEMES = discoverThemes();
 
 const REQUIRED_DATA_ATTRS = [
-  'data-wpm',
-  'data-whm',
-  'data-hmacdigest',
-  'data-keysalt',
-  'data-ivsalt',
+  'data-hbe-format=',
+  'data-wpm=',
+  'data-whm=',
+  'data-salt=',
+  'data-nonce=',
+  'data-kdf-iterations=',
+  'data-auto-save=',
+];
+
+// Wave 4 v4 SHELL contract: every theme must wrap input + button in a form
+// (so Enter and click both submit), expose a button slot for click-to-decrypt,
+// and provide a [role="alert"] error region (so the browser shows wrong-password
+// inline, never via alert()). The v4 wire-format attribute swap is deferred
+// to Wave 6 — Wave 4 is structural-only so the existing v3 build pipeline keeps
+// `npm test` green.
+const REQUIRED_SHELL_SLOTS = [
+  /id=["']hbeForm["']/,
+  /id=["']hbePass["']/,
+  /class=["'][^"']*\bhbe-button\b[^"']*["']/,
+  /class=["'][^"']*\bhbe-error\b[^"']*["']/,
+  /role=["']alert["']/,
 ];
 
 let hexo;
@@ -70,6 +87,13 @@ for (const theme of THEMES) {
       assert.ok(
         content.includes(attr),
         `theme '${theme}' content is missing required attribute '${attr}'`,
+      );
+    }
+
+    for (const slotPattern of REQUIRED_SHELL_SLOTS) {
+      assert.ok(
+        slotPattern.test(content),
+        `theme '${theme}' content is missing required v4 shell slot matching ${slotPattern}`,
       );
     }
 
