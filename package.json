@@ -41,7 +41,7 @@
     "test:docs": "node --test tests/docs.test.js",
     "lint": "eslint --ext .js ./"
   },
-  "version": "3.1.9",
+  "version": "4.0.0",
   "engines": {
     "node": ">=18"
   },

@@ -1,0 +1,79 @@
+# Publishes hexo-blog-encrypt to npm when a `v*` tag is pushed.
+#
+# Pre-flight (manual, before tagging):
+#   1. Update CHANGELOG.md with the release date.
+#   2. Bump `version` in `package.json` to match the tag (e.g. `v4.0.0` → `4.0.0`).
+#   3. Revert `demo/package.json`'s `hexo-blog-encrypt` from `"file:.."`
+#      back to `"^X.Y.Z"` so the deployed demo references the published
+#      package, not a local file: path.
+#      We deliberately do NOT use `prepublishOnly` to mutate this file —
+#      that would leave a dirty working tree and risk corrupted commits.
+#   4. Commit, push, then create+push the `v*` tag.
+#
+# Required repo secrets:
+#   - NPM_TOKEN: an npm "Automation" token with publish rights for
+#     `hexo-blog-encrypt`. Provenance (`--provenance`) additionally
+#     requires `id-token: write` permission below.
+
+name: Release to npm
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  id-token: write   # needed for `npm publish --provenance`
+
+jobs:
+  publish:
+    name: Publish ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Cache npm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node20-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node20-
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Verify package.json version matches tag
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          TAG_VERSION=${GITHUB_REF_NAME#v}
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "::error::package.json version ($PKG_VERSION) does not match tag ($TAG_VERSION)"
+            exit 1
+          fi
+
+      - name: Build browser bundle
+        run: npm run build
+
+      - name: Run full test suite (lint + server + e2e)
+        run: npm test
+
+      - name: Verify tarball contents
+        run: |
+          npm pack --dry-run --json > pack.json
+          node build/verify-pack.js pack.json
+
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public
