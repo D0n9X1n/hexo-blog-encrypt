@@ -10,10 +10,13 @@
 #      that would leave a dirty working tree and risk corrupted commits.
 #   4. Commit, push, then create+push the `v*` tag.
 #
-# Required repo secrets:
-#   - NPM_TOKEN: an npm "Automation" token with publish rights for
-#     `hexo-blog-encrypt`. Provenance (`--provenance`) additionally
-#     requires `id-token: write` permission below.
+# Auth: Trusted Publishing via OIDC.
+#   Configure the trusted publisher on npmjs.com:
+#     https://www.npmjs.com/package/hexo-blog-encrypt/access
+#       → Trusted Publishers → GitHub Actions
+#       → org D0n9X1n, repo hexo-blog-encrypt, workflow release.yml
+#   No long-lived NPM_TOKEN secret is required. The `id-token: write`
+#   permission below + npm CLI >= 11.5.1 + `--provenance` is enough.
 
 name: Release to npm
 
@@ -24,7 +27,7 @@ on:
 
 permissions:
   contents: read
-  id-token: write   # needed for `npm publish --provenance`
+  id-token: write   # OIDC — required for trusted publishing AND --provenance
 
 # Never cancel a half-completed publish — let any in-flight job finish.
 concurrency:
@@ -46,6 +49,11 @@ jobs:
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
+
+      - name: Upgrade npm to a version that supports OIDC trusted publishing
+        # Node 20 ships with npm 10.x; trusted publishing needs >= 11.5.1.
+        # Pinning to ^11 keeps us inside the major while picking up patches.
+        run: npm install -g npm@^11
 
       - name: Cache npm cache
         uses: actions/cache@v4
@@ -90,7 +98,8 @@ jobs:
           npm pack --dry-run --json > pack.json
           node build/verify-pack.js pack.json
 
-      - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish to npm (OIDC trusted publisher + provenance)
+        # No NODE_AUTH_TOKEN: npm detects the GitHub Actions OIDC issuer
+        # via the id-token permission above and exchanges it with the
+        # trusted publisher configured for this package on npmjs.com.
         run: npm publish --provenance --access public

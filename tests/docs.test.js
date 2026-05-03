@@ -235,3 +235,42 @@ test('Both READMEs use only valid, this-repo badges (no stale legacy-fork pointe
     }
   }
 });
+
+test('release.yml uses npm OIDC trusted publishing (no long-lived NPM_TOKEN secret)', () => {
+  // Trusted publishing exchanges a short-lived GitHub Actions OIDC
+  // token for npm publish authority — no NPM_TOKEN to rotate, leak,
+  // or accidentally print. This test fails closed if a future commit
+  // re-introduces the long-lived secret pattern.
+  const releaseYml = path.join(repoRoot, '.github', 'workflows', 'release.yml');
+  assert.ok(fs.existsSync(releaseYml), '.github/workflows/release.yml must exist');
+  const body = read(releaseYml);
+
+  // The workflow must NOT pass the legacy token to the publish step.
+  // Comments mentioning the names are fine (they explain we're not using
+  // them); we look only at non-comment lines.
+  const codeLines = body
+    .split('\n')
+    .filter((line) => !line.trim().startsWith('#'));
+  const code = codeLines.join('\n');
+
+  assert.ok(
+    !/secrets\.NPM_TOKEN/.test(code),
+    'release.yml must not reference secrets.NPM_TOKEN — use OIDC trusted publishing instead'
+  );
+  assert.ok(
+    !/NODE_AUTH_TOKEN\s*:/.test(code),
+    'release.yml must not set NODE_AUTH_TOKEN env on the publish step — OIDC supersedes it'
+  );
+
+  // Required positive markers: id-token: write permission and a publish
+  // command with --provenance (provenance + OIDC are the trusted-publish
+  // contract).
+  assert.ok(
+    /id-token:\s*write/.test(body),
+    'release.yml must grant `id-token: write` for OIDC token exchange'
+  );
+  assert.ok(
+    /npm publish.*--provenance/.test(body),
+    'release.yml must publish with --provenance'
+  );
+});
