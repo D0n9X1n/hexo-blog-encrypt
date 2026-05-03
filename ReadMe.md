@@ -2,6 +2,7 @@
 
 ![GitHub release (latest SemVer including pre-releases)](https://img.shields.io/github/v/release/D0n9x1n/hexo-blog-encrypt?include_prereleases)
 [![Tests](https://github.com/D0n9X1n/hexo-blog-encrypt/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/D0n9X1n/hexo-blog-encrypt/actions/workflows/test.yml)
+[![Live Demo](https://img.shields.io/badge/demo-online-brightgreen)](https://d0n9x1n.github.io/hexo-blog-encrypt/)
 [![Build Status](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/badges/build.png?b=master)](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/build-status/master)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/MikeCoder/hexo-blog-encrypt/?branch=master)
 
@@ -29,13 +30,13 @@
 
 - Promise is widely used to make sure our main procedures are asynchronous, so that there is little chance for the process to be blocked, and the experience will be more fluent.
 
-- Template theme supported, you can use [`default`, `blink`, `flip`, `shrink`, `surge`, `up`, `wave`, `xray`] to set up your template theme, and [CHECK ONLINE](https://mhexo.github.io/tags/ThemeTests/).
+- Template theme supported, you can use [`default`, `blink`, `flip`, `shrink`, `surge`, `up`, `wave`, `xray`] to set up your template theme, and [CHECK ONLINE](https://d0n9x1n.github.io/hexo-blog-encrypt/tags/theme-demo/).
 
 - Outdated browsers may not work well. In such case, please upgrade your browser.
 
 ## Online demo
 
-- See [Demo Page](https://mhexo.github.io/), **all passwords are `hello`**.
+- See [Demo Page](https://d0n9x1n.github.io/hexo-blog-encrypt/), **all passwords are `hello`**.
 
 ## Install
 
@@ -144,7 +145,7 @@ It will be called after the blog is decrypted.
 </script>
 ```
 
-Demo: [Callback Example](https://mhexo.github.io/2020/12/06/Callback-Test/).
+Demo: [Callback Example](https://d0n9x1n.github.io/hexo-blog-encrypt/demo/callback/).
 
 ### After Decrypt Event
 Thanks to @[f-dong](https://github.com/f-dong), we now will trigger a event named `hexo-blog-decrypt`, so you can add a call back to listen to that event.
@@ -226,14 +227,14 @@ encrypt: # hexo-blog-encrypt
 
 Check them online, and PICK one:
 
-+ [default](https://mhexo.github.io/2020/12/23/Theme-Test-Default/)
-+ [blink](https://mhexo.github.io/2020/12/23/Theme-Test-Blink/)
-+ [shrink](https://mhexo.github.io/2020/12/23/Theme-Test-Shrink/)
-+ [flip](https://mhexo.github.io/2020/12/23/Theme-Test-Flip/)
-+ [up](https://mhexo.github.io/2020/12/23/Theme-Test-Up/)
-+ [surge](https://mhexo.github.io/2020/12/23/Theme-Test-Surge/)
-+ [wave](https://mhexo.github.io/2020/12/23/Theme-Test-Wave/)
-+ [xray](https://mhexo.github.io/2020/12/23/Theme-Test-Xray/)
++ [default](https://d0n9x1n.github.io/hexo-blog-encrypt/demo/theme/default/)
++ [blink](https://d0n9x1n.github.io/hexo-blog-encrypt/demo/theme/blink/)
++ [shrink](https://d0n9x1n.github.io/hexo-blog-encrypt/demo/theme/shrink/)
++ [flip](https://d0n9x1n.github.io/hexo-blog-encrypt/demo/theme/flip/)
++ [up](https://d0n9x1n.github.io/hexo-blog-encrypt/demo/theme/up/)
++ [surge](https://d0n9x1n.github.io/hexo-blog-encrypt/demo/theme/surge/)
++ [wave](https://d0n9x1n.github.io/hexo-blog-encrypt/demo/theme/wave/)
++ [xray](https://d0n9x1n.github.io/hexo-blog-encrypt/demo/theme/xray/)
 
 
 ## License

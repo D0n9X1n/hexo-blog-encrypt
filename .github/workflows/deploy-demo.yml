@@ -1,0 +1,138 @@
+name: Deploy demo
+
+# Auto-publish the demo site under demo/ to GitHub Pages.
+#
+# Trigger model (per rubber-duck design review):
+#   - workflow_run on the "Tests" workflow → only deploy after tests pass on master.
+#   - workflow_dispatch → manual re-deploy (gated to master in the job `if`).
+#
+# We DO NOT trigger on `push` directly, to avoid publishing a demo from a commit
+# whose tests later fail.
+on:
+  workflow_run:
+    workflows: [Tests]
+    branches: [master]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Don't cancel an in-flight deploy mid-publish — risk of orphaning the Pages env.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    # Gate: only run when triggered from master AND (for workflow_run) the upstream
+    # workflow concluded successfully.
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master')
+      || (github.event_name == 'workflow_run'
+          && github.event.workflow_run.conclusion == 'success'
+          && github.event.workflow_run.head_branch == 'master')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # For workflow_run, default checkout is the workflow file's branch (master).
+          # Explicit ref is harmless and self-documenting.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          # Need full history (or at least origin/master) for the freshness check below.
+          fetch-depth: 0
+
+      # Stale-deploy guard (per cross-model audit): when triggered by workflow_run, the
+      # head_sha may already have been superseded by a newer master push whose Tests run
+      # has finished and deployed first. Without this check, an older commit's
+      # workflow_run could clobber the demo with stale content. Skip if so.
+      - name: Verify deploying the current master HEAD
+        if: github.event_name == 'workflow_run'
+        run: |
+          git fetch --quiet origin master
+          REMOTE_SHA=$(git rev-parse origin/master)
+          HEAD_SHA="${{ github.event.workflow_run.head_sha }}"
+          if [ "$REMOTE_SHA" != "$HEAD_SHA" ]; then
+            echo "::notice::Skipping stale deploy: workflow_run head_sha=$HEAD_SHA but origin/master=$REMOTE_SHA"
+            echo "stale=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "stale=false" >> "$GITHUB_OUTPUT"
+          fi
+        id: freshness
+
+      - uses: actions/setup-node@v4
+        if: steps.freshness.outputs.stale != 'true'
+        with:
+          node-version: 20.x
+
+      # This repo gitignores package-lock.json, so `cache: 'npm'` on setup-node
+      # would fail. Cache ~/.npm manually instead.
+      - name: Cache npm packages
+        if: steps.freshness.outputs.stale != 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-demo-${{ hashFiles('package.json', 'demo/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-demo-
+            ${{ runner.os }}-npm-
+
+      # Root install MUST come first so that `demo/`'s `file:..` symlink target
+      # (this repo as a package) is resolvable.
+      - name: Install root (plugin) dependencies
+        if: steps.freshness.outputs.stale != 'true'
+        run: npm install --no-audit --no-fund
+
+      - name: Install demo site dependencies
+        if: steps.freshness.outputs.stale != 'true'
+        working-directory: demo
+        run: npm install --no-audit --no-fund
+
+      - name: Build demo site (hexo generate)
+        if: steps.freshness.outputs.stale != 'true'
+        working-directory: demo
+        run: |
+          npx hexo clean
+          npx hexo generate
+
+      - name: Verify build output
+        if: steps.freshness.outputs.stale != 'true'
+        run: |
+          test -f demo/public/index.html || { echo "::error::demo/public/index.html missing"; exit 1; }
+          test -f demo/public/lib/hbe.js || { echo "::error::demo/public/lib/hbe.js missing"; exit 1; }
+          test -f demo/public/css/hbe.style.css || { echo "::error::demo/public/css/hbe.style.css missing"; exit 1; }
+          # Sanity: every theme demo must have an encrypted wrapper (hbeData attr).
+          for theme in blink default flip shrink surge up wave xray; do
+            grep -q "hbeData" "demo/public/demo/theme/$theme/index.html" \
+              || { echo "::error::theme $theme: hbeData wrapper missing"; exit 1; }
+          done
+          # Plaintext leak guard.
+          if grep -rq "the eagle has landed" demo/public/demo/; then
+            echo "::error::Plaintext secret leaked into encrypted post HTML"; exit 1;
+          fi
+          echo "Build verification passed."
+
+      - uses: actions/configure-pages@v5
+        if: steps.freshness.outputs.stale != 'true'
+
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.freshness.outputs.stale != 'true'
+        with:
+          path: demo/public
+
+    outputs:
+      stale: ${{ steps.freshness.outputs.stale }}
+
+  deploy:
+    needs: build
+    # Skip deploy if build skipped due to staleness.
+    if: needs.build.outputs.stale != 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,27 @@
+{
+  "name": "hexo-blog-encrypt-demo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Live demo site for hexo-blog-encrypt. Auto-deployed to GitHub Pages from this repo's master branch.",
+  "scripts": {
+    "build": "hexo clean && hexo generate",
+    "server": "hexo server",
+    "hexo": "hexo"
+  },
+  "hexo": {
+    "version": "7.3.0"
+  },
+  "dependencies": {
+    "hexo": "^7",
+    "hexo-blog-encrypt": "file:..",
+    "hexo-generator-archive": "^2",
+    "hexo-generator-category": "^2",
+    "hexo-generator-index": "^4",
+    "hexo-generator-tag": "^2",
+    "hexo-renderer-ejs": "^2",
+    "hexo-renderer-marked": "^7",
+    "hexo-renderer-stylus": "^3",
+    "hexo-server": "^3",
+    "hexo-theme-landscape": "^1"
+  }
+}

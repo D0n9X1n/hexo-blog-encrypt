@@ -1,0 +1,90 @@
+# Live demo site for hexo-blog-encrypt.
+# Auto-deployed to https://d0n9x1n.github.io/hexo-blog-encrypt/ via .github/workflows/deploy-demo.yml
+
+# IMPORTANT: `root` MUST keep its trailing slash. The plugin string-concats
+# `${hexo.config.root}lib/hbe.js`, so `root: /hexo-blog-encrypt` (no slash) would
+# emit `/hexo-blog-encryptlib/hbe.js` and break asset loading.
+title: hexo-blog-encrypt — Live Demo
+subtitle: ''
+description: 'Live demo for the hexo-blog-encrypt Hexo plugin. Every theme, the callback hook, and tag-based encryption — all decrypted in your browser.'
+author: D0n9X1n
+language: en
+timezone: UTC
+
+url: https://d0n9x1n.github.io/hexo-blog-encrypt
+root: /hexo-blog-encrypt/
+permalink: :year/:month/:day/:title/
+permalink_defaults:
+pretty_urls:
+  trailing_index: true
+  trailing_html: true
+
+source_dir: source
+public_dir: public
+tag_dir: tags
+archive_dir: archives
+category_dir: categories
+code_dir: downloads/code
+i18n_dir: :lang
+skip_render:
+
+new_post_name: :title.md
+default_layout: post
+titlecase: false
+external_link:
+  enable: true
+  field: site
+  exclude: ''
+filename_case: 0
+render_drafts: false
+post_asset_folder: false
+relative_link: false
+future: true
+syntax_highlighter: highlight.js
+highlight:
+  line_number: true
+  auto_detect: false
+  tab_replace: ''
+  wrap: true
+  hljs: false
+
+# Show every demo post on the index (we ship 10 posts; default per_page: 10
+# would push the last one onto page 2).
+index_generator:
+  path: ''
+  per_page: 20
+  order_by: -date
+
+default_category: uncategorized
+category_map:
+tag_map:
+
+meta_generator: true
+
+date_format: YYYY-MM-DD
+time_format: HH:mm:ss
+updated_option: 'mtime'
+
+per_page: 20
+pagination_dir: page
+
+include:
+exclude:
+ignore:
+
+theme: landscape
+
+deploy:
+  type: ''
+
+# hexo-blog-encrypt: tag-based encryption.
+# Posts tagged "ThemeDemos" are auto-encrypted with this password (no per-post password needed).
+encrypt:
+  abstract: 'This post is encrypted. Enter the password to read it — decryption happens in your browser.'
+  message: 'Password is "hello" — type it in to decrypt this post.'
+  theme: default
+  wrong_pass_message: 'Wrong password. Try again.'
+  wrong_hash_message: 'These decrypted contents may have been changed, but you can still read them.'
+  silent: false
+  tags:
+    - { name: ThemeDemos, password: hello }
