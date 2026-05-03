@@ -1,0 +1,3 @@
+[submodule "feature-crew"]
+	path = feature-crew
+	url = https://github.com/D0n9X1n/feature-crew.git

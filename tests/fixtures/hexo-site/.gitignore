@@ -1,0 +1,5 @@
+node_modules/
+public/
+db.json
+.deploy_git/
+source/_posts/encrypted-*.md

@@ -1,0 +1,71 @@
+# Minimal Hexo fixture site for hexo-blog-encrypt E2E tests.
+# Pages are served from a static HTTP server during tests; URL is local-only.
+
+title: hexo-blog-encrypt fixture
+subtitle: ''
+description: 'Fixture site for E2E tests'
+author: tests
+language: en
+timezone: UTC
+
+url: http://localhost
+root: /
+permalink: :title/
+permalink_defaults:
+pretty_urls:
+  trailing_index: true
+  trailing_html: true
+
+source_dir: source
+public_dir: public
+tag_dir: tags
+archive_dir: archives
+category_dir: categories
+code_dir: downloads/code
+i18n_dir: :lang
+skip_render:
+
+new_post_name: :title.md
+default_layout: post
+titlecase: false
+external_link:
+  enable: false
+filename_case: 0
+render_drafts: false
+post_asset_folder: false
+relative_link: false
+future: true
+syntax_highlighter: highlight.js
+highlight:
+  line_number: true
+  auto_detect: false
+  tab_replace: ''
+  wrap: true
+  hljs: false
+
+index_generator:
+  path: ''
+  per_page: 10
+  order_by: -date
+
+default_category: uncategorized
+category_map:
+tag_map:
+
+meta_generator: true
+
+date_format: YYYY-MM-DD
+time_format: HH:mm:ss
+updated_option: 'mtime'
+
+per_page: 10
+pagination_dir: page
+
+include:
+exclude:
+ignore:
+
+theme: _minimal
+
+deploy:
+  type: ''

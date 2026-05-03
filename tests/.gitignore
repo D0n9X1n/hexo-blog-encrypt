@@ -1,0 +1,10 @@
+fixtures/hexo-site/node_modules/
+fixtures/hexo-site/public/
+fixtures/hexo-site/db.json
+fixtures/hexo-site/.deploy_git/
+
+# E2E test artifacts (T6)
+e2e/.runtime.json
+e2e/.themes.json
+e2e/playwright-report/
+e2e/test-results/

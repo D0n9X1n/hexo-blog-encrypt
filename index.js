@@ -51,7 +51,7 @@ hexo.extend.filter.register('after_post_render', (data) => {
 
   if (data.tags) {
     data.tags.forEach((cTag) => {
-      if (tagEncryptPairs.hasOwnProperty(cTag.name)) {
+      if (Object.prototype.hasOwnProperty.call(tagEncryptPairs, cTag.name)) {
         tagUsed = password ? tagUsed : cTag.name;
         password = password || tagEncryptPairs[cTag.name];
       }
@@ -141,34 +141,3 @@ function dlog(level, x) {
   }
 }
 
-// Utils functions
-function textToArray(s) {
-  var i = s.length;
-  var n = 0;
-  var ba = new Array()
-
-  for (var j = 0; j < i;) {
-    var c = s.codePointAt(j);
-    if (c < 128) {
-      ba[n++] = c;
-      j++;
-    } else if ((c > 127) && (c < 2048)) {
-      ba[n++] = (c >> 6) | 192;
-      ba[n++] = (c & 63) | 128;
-      j++;
-    } else if ((c > 2047) && (c < 65536)) {
-      ba[n++] = (c >> 12) | 224;
-      ba[n++] = ((c >> 6) & 63) | 128;
-      ba[n++] = (c & 63) | 128;
-      j++;
-    } else {
-      ba[n++] = (c >> 18) | 240;
-      ba[n++] = ((c >> 12) & 63) | 128;
-      ba[n++] = ((c >> 6) & 63) | 128;
-      ba[n++] = (c & 63) | 128;
-      j += 2;
-    }
-  }
-
-  return new Uint8Array(ba);
-}
