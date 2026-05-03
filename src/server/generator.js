@@ -45,9 +45,30 @@ function createGenerator(opts) {
     ? opts.sourcemapPath
     : null;
 
+  // Memoization cell — populated on first call and refreshed when the
+  // bundle file's mtime/size changes. See the in-function comment below
+  // for why this is correct.
+  let cache = null;
+
   return function generate() {
-    const bundleBytes = fs.readFileSync(bundlePath);
-    const hash = hex10(bundleBytes);
+    // Memoize bundle bytes by mtime: in `hexo generate` (single build) the
+    // file never changes, so all calls return the cached buffer + hash. In
+    // `hexo server` watch mode, an `npm run build` mid-session updates the
+    // mtime, invalidating the cache exactly once. This closes the
+    // hash-mismatch window between the filter (which inlines the script
+    // src) and the generator (which emits the bytes) — both now agree on
+    // the same content hash within one mtime tick.
+    const stat = fs.statSync(bundlePath);
+    if (cache === null || cache.mtimeMs !== stat.mtimeMs || cache.size !== stat.size) {
+      const bundleBytes = fs.readFileSync(bundlePath);
+      cache = {
+        mtimeMs: stat.mtimeMs,
+        size: stat.size,
+        bytes: bundleBytes,
+        hash: hex10(bundleBytes),
+      };
+    }
+    const { bytes: bundleBytes, hash } = cache;
     const jsRoutePath = `lib/hbe.${hash}.js`;
 
     const routes = [

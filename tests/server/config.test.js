@@ -163,12 +163,19 @@ test('resolve() coerces undefined kdf.iterations to defaults', () => {
 });
 
 test('deepMerge: array overlay replaces base wholesale (no element-wise merge)', () => {
-  // Surface this branch via the tags array in hexoConfig vs. postData.
+  // DEFAULTS has no `tags` field; overlaying hexoConfig.encrypt.tags
+  // flows through deepMerge's array-overlay branch
+  // (`Array.isArray(overlay) → return clone(overlay)`). The result is
+  // the wholesale array from the overlay — element-wise merging would
+  // have produced something else.
+  // (Post-side `tags` is intentionally NOT picked into the deep-merge —
+  // see `POST_KNOWN_KEYS` in `src/server/config.js`. The post's tag list
+  // is read directly by `resolveTagPassword` and never deep-merged.)
   const out = resolve(
     { encrypt: { tags: [{ name: 'A', password: 'a' }] } },
-    { password: 'p', tags: [{ name: 'B' }] }
+    { password: 'p' }
   );
-  assert.deepEqual(out.tags, [{ name: 'B' }]);
+  assert.deepEqual(out.tags, [{ name: 'A', password: 'a' }]);
 });
 
 test('shallowPickKnown handles non-object source via post=null path', () => {

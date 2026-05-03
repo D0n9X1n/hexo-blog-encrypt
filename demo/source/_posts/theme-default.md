@@ -17,13 +17,9 @@ This is the public preview text for the **default** theme. The encrypted body is
 
 The password for this post is `hello` — type it in to decrypt.
 
-This text was encrypted at build time with **AES-256-CBC**. The browser derives the AES key from your password using **PBKDF2-SHA256** (1024 iterations for the key, 512 iterations for the IV), then performs the decryption client-side via the Web Crypto API.
+This text was encrypted at build time with **AES-256-GCM**. The browser derives the AES key from your password via **PBKDF2-SHA256** (250,000 iterations by default; configurable per-post via `kdf.iterations`), then performs the decryption client-side via the Web Crypto API. The GCM auth tag means a tampered ciphertext fails closed with the same wrong-password message — no plaintext leak, no separate HMAC step.
 
-```js
-// What the wrapper template injects on each encrypted post:
-<script data-pjax src="/hexo-blog-encrypt/lib/hbe.js"></script>
-<link href="/hexo-blog-encrypt/css/hbe.style.css" rel="stylesheet" type="text/css">
-```
+The plugin auto-injects a `<script>` referencing the content-hashed browser bundle (e.g. `lib/hbe.<hash>.js`) and the stylesheet, so encrypted posts work without any theme edits.
 
 > The secret phrase is **the eagle has landed**.
 

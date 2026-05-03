@@ -36,7 +36,7 @@ const REQUIRED_DATA_ATTRS = [
 const PLACEHOLDER_PREFIX = '{{hbe';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
-const BUNDLE_PATH = path.join(REPO_ROOT, 'lib', 'hbe.js');
+const BUNDLE_PATH = path.join(REPO_ROOT, 'lib', 'hbe.bundle.js');
 
 // Independent v4 GCM round-trip: catches algorithm drift in src/server/crypto.js
 // without sharing code with the SUT.
@@ -205,6 +205,116 @@ test('criterion 7: front-matter password wins over tag password', async () => {
   assert.ok(ok.includes(SECRET_NEEDLE));
 
   assert.throws(() => decryptHbeV4({ password: 'tagpass', ...payload }));
+});
+
+// ---------------------------------------------------------------------------
+// Regression — `data.tags` is a Hexo Warehouse Query containing function
+// values (e.g. moment-locale plurals on each Tag's `length` getter); under
+// `structuredClone` (Node ≥18) those are NOT cloneable and would have
+// thrown DataCloneError in `config.deepMerge`. The fix is that
+// `resolve()`'s post-side pick uses POST_KNOWN_KEYS, which DELIBERATELY
+// excludes `tags` (the post's tag list is read directly via
+// `resolveTagPassword(hexo.config.encrypt, data.tags)` — never deep-merged).
+// ---------------------------------------------------------------------------
+test('regression: post.tags as a function-bearing object does NOT crash deepMerge', async () => {
+  hexo.config.encrypt = { tags: [{ name: 'Secret', password: 'tagpass' }] };
+  // Mimic Hexo's Warehouse Tag: a non-plain object whose enumerable
+  // members include functions. `structuredClone` would throw on this
+  // shape if it ever flowed through `deepMerge`'s `clone`.
+  function HexoTag(name) {
+    this.name = name;
+    this.length = function lengthGetter() { return 1; };
+    this.relative = function relativePath() { return '/tags/' + name + '/'; };
+  }
+  const tagShim = [new HexoTag('Secret')];
+  const data = makeSyntheticData({
+    title: 'tags-with-functions',
+    password: 'fmpass',
+    tags: tagShim,
+  });
+
+  await assert.doesNotReject(
+    hexo.execFilter('after_post_render', data, { context: hexo }),
+    'filter must not crash on function-bearing post.tags'
+  );
+  assert.equal(data.encrypt, true);
+
+  // The original tags array reference is preserved on `data.tags`
+  // (we never mutate it, never deep-clone it).
+  assert.strictEqual(data.tags, tagShim);
+  assert.equal(data.tags[0].name, 'Secret');
+  assert.equal(typeof data.tags[0].length, 'function');
+});
+
+// ---------------------------------------------------------------------------
+// Regression — `data.tags` is a Hexo Warehouse Query (NOT a plain array).
+// `Array.isArray(query) === false` would silently disable tag-encryption,
+// publishing the post in PLAINTEXT. The fix is `normalizePostTags` in
+// `src/server/index.js`, which accepts arrays, `.toArray()`-able queries,
+// and any object with a working `.forEach`. v3 used `data.tags.forEach`,
+// so this restores back-compat.
+// ---------------------------------------------------------------------------
+test('regression: tag-only encryption fires when post.tags is a Warehouse-Query-like (.forEach) object', async () => {
+  hexo.config.encrypt = { tags: [{ name: 'Secret', password: 'tagpass' }] };
+  // Warehouse Query: NOT an Array, but iterable via .forEach.
+  // This is exactly the shape Hexo passes for `data.tags` in real builds.
+  const tagQuery = {
+    length: 1,
+    forEach(fn) { fn({ name: 'Secret' }); },
+  };
+  const data = makeSyntheticData({
+    title: 'tag-query',
+    tags: tagQuery,
+  });
+  delete data.password; // tag-only — no front-matter password
+
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+
+  assert.equal(data.encrypt, true, 'tag-only encryption must fire for Warehouse-Query-like .tags');
+  assert.ok(data.content.includes('hbeData'), 'wrapper must be rendered');
+  assert.equal(data.content.indexOf(SECRET_NEEDLE), -1,
+    'plaintext secret MUST NOT appear in rendered output');
+
+  const payload = extractPayload(data.content);
+  const plaintext = decryptHbeV4({ password: 'tagpass', ...payload });
+  assert.ok(plaintext.includes(SECRET_NEEDLE));
+});
+
+test('regression: tag-only encryption fires when post.tags exposes .toArray() (Warehouse Query)', async () => {
+  hexo.config.encrypt = { tags: [{ name: 'Secret', password: 'tagpass' }] };
+  const tagQuery = {
+    toArray() { return [{ name: 'Secret' }]; },
+    forEach() { throw new Error('toArray should be preferred'); },
+  };
+  const data = makeSyntheticData({
+    title: 'tag-query-toarray',
+    tags: tagQuery,
+  });
+  delete data.password;
+
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+
+  assert.equal(data.encrypt, true);
+  assert.equal(data.content.indexOf(SECRET_NEEDLE), -1);
+  const payload = extractPayload(data.content);
+  assert.ok(decryptHbeV4({ password: 'tagpass', ...payload }).includes(SECRET_NEEDLE));
+});
+
+test('regression: post.tags = null/undefined does NOT crash and leaves post unencrypted', async () => {
+  hexo.config.encrypt = { tags: [{ name: 'Secret', password: 'tagpass' }] };
+  const data = makeSyntheticData({ title: 'no-tags', tags: null });
+  delete data.password;
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  assert.notEqual(data.encrypt, true);
+  assert.ok(data.content.includes(SECRET_NEEDLE), 'no tags + no fm password = unencrypted');
+});
+
+test('regression: post.tags is a non-iterable object falls back to no tag-encryption', async () => {
+  hexo.config.encrypt = { tags: [{ name: 'Secret', password: 'tagpass' }] };
+  const data = makeSyntheticData({ title: 'weird-tags', tags: { not: 'iterable' } });
+  delete data.password;
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  assert.notEqual(data.encrypt, true);
 });
 
 // ---------------------------------------------------------------------------

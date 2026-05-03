@@ -12,20 +12,33 @@ const codeowners = path.join(repoRoot, '.github', 'CODEOWNERS');
 const prTemplate = path.join(repoRoot, '.github', 'PULL_REQUEST_TEMPLATE.md');
 
 const REQUIRED_PLACEHOLDERS = [
-  '{{hbeEncryptedData}}',
-  '{{hbeHmacDigest}}',
+  '{{hbeFormat}}',
   '{{hbeWrongPassMessage}}',
   '{{hbeWrongHashMessage}}',
+  '{{hbeKdfIterations}}',
+  '{{hbeAutoSave}}',
   '{{hbeMessage}}',
-  '{{hbeKeySalt}}',
-  '{{hbeIvSalt}}'
+  '{{hbeButtonText}}',
+  '{{hbeSalt}}',
+  '{{hbeNonce}}',
+  '{{hbeEncryptedData}}'
+];
+
+const REQUIRED_DATA_ATTR_NAMES = [
+  'data-hbe-format',
+  'data-wpm',
+  'data-whm',
+  'data-salt',
+  'data-nonce',
+  'data-kdf-iterations',
+  'data-auto-save'
 ];
 
 function read(file) {
   return fs.readFileSync(file, 'utf8');
 }
 
-test('docs/THEMES.md exists and encodes the one-file theme drop contract', () => {
+test('docs/THEMES.md exists and encodes the v4 one-file theme drop contract', () => {
   assert.ok(fs.existsSync(themesDoc), 'docs/THEMES.md must exist');
   const body = read(themesDoc);
   assert.ok(
@@ -40,6 +53,25 @@ test('docs/THEMES.md exists and encodes the one-file theme drop contract', () =>
     assert.ok(
       body.includes(placeholder),
       `docs/THEMES.md must list placeholder ${placeholder}`
+    );
+  }
+  for (const attrName of REQUIRED_DATA_ATTR_NAMES) {
+    assert.ok(
+      body.includes(attrName),
+      `docs/THEMES.md must reference v4 data attribute "${attrName}"`
+    );
+  }
+  // The v3 IIFE was removed in v4; the doc must NOT advertise it as the
+  // browser-side asset path or theme authors will follow a dead link.
+  assert.ok(
+    !/`lib\/hbe\.js`/.test(body),
+    'docs/THEMES.md must not reference the deleted v3 `lib/hbe.js` asset'
+  );
+  // Likewise the v3-only HMAC/CBC placeholders must not be re-introduced.
+  for (const stale of ['{{hbeHmacDigest}}', '{{hbeKeySalt}}', '{{hbeIvSalt}}']) {
+    assert.ok(
+      !body.includes(stale),
+      `docs/THEMES.md must not reference removed v3 placeholder ${stale}`
     );
   }
 });

@@ -3,3 +3,5 @@ public/
 db.json
 .deploy_git/
 source/_posts/encrypted-*.md
+source/_posts/autosave-*.md
+source/_posts/tag-only-*.md

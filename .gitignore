@@ -8,6 +8,8 @@ tests/e2e/playwright-report/
 tests/e2e/test-results/
 tests/fixtures/hexo-site/public/
 tests/fixtures/hexo-site/db.json
+lib/hbe.bundle.js
+lib/hbe.bundle.js.map
 ### .git template
 
 
@@ -29,7 +31,9 @@ cscope.po.out
 
 
 ### Xcode template
-build/
+# (Xcode-style ignore of `build/` would swallow our build script directory.
+# Whitelist build/ explicitly to allow committing build/build.js.)
+!build/
 *.pbxuser
 !default.pbxuser
 *.mode1v3

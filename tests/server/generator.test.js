@@ -11,7 +11,7 @@ const { Readable } = require('node:stream');
 const { createGenerator } = require('../../src/server/generator');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
-const REAL_BUNDLE = path.join(REPO_ROOT, 'lib', 'hbe.js');
+const REAL_BUNDLE = path.join(REPO_ROOT, 'lib', 'hbe.bundle.js');
 const REAL_CSS = path.join(REPO_ROOT, 'lib', 'hbe.style.css');
 
 function mkTmp() {
@@ -117,14 +117,18 @@ test('lazy: bundle bytes + hash are recomputed on each generation call (file cha
   const firstJs = first.find((r) => /\.js$/.test(r.path));
   const firstHash = firstJs.path.match(/lib\/hbe\.([0-9a-f]+)\.js/)[1];
 
-  fs.writeFileSync(bundlePath, 'bbb');
+  // Use different SIZE so cache invalidation triggers regardless of mtime
+  // resolution (some FS — older NFS, certain tmpfs configs — round mtime
+  // to the second; same-second + same-size writes would falsely hit the
+  // cache. Different size guarantees invalidation on any FS.)
+  fs.writeFileSync(bundlePath, 'bbbbbbbbbbb');
   const second = gen();
   const secondJs = second.find((r) => /\.js$/.test(r.path));
   const secondHash = secondJs.path.match(/lib\/hbe\.([0-9a-f]+)\.js/)[1];
 
   assert.notEqual(firstHash, secondHash, 'hash must change when bundle changes');
   const secondBytes = await readData(secondJs);
-  assert.deepEqual(secondBytes, Buffer.from('bbb'));
+  assert.deepEqual(secondBytes, Buffer.from('bbbbbbbbbbb'));
 });
 
 test('lazy: createGenerator() does NOT throw at construction when bundlePath is missing (deferred to first call)', () => {

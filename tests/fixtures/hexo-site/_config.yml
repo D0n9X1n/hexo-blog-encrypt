@@ -69,3 +69,9 @@ theme: _minimal
 
 deploy:
   type: ''
+
+encrypt:
+  abstract: 'Encrypted (test fixture)'
+  message: 'Enter the password.'
+  tags:
+    - { name: 'TagOnly', password: 'tagsecret' }

@@ -15,11 +15,11 @@ This post demonstrates the `hexo-blog-decrypt` event hook. The password is `hell
 
 # Hooking into the decryption event
 
-The browser-side `hbe.js` dispatches a `hexo-blog-decrypt` event on `window` after a successful decryption. Listen for it from your theme to re-initialize syntax highlighting, refresh a Table of Contents, lazy-load images, etc.
+The browser bundle dispatches a `hexo-blog-decrypt` event on `window` after a successful decryption. Listen for it from your theme to re-initialize syntax highlighting, refresh a Table of Contents, lazy-load images, etc. Under v4, the event is a `CustomEvent` whose `detail.mode` reads `'manual'` for a fresh password decrypt and `'cached'` when an opt-in `autoSave` reload auto-decrypts; v3-style listeners that ignore `detail` keep working.
 
 ```js
-window.addEventListener('hexo-blog-decrypt', () => {
-  console.log('[demo] decryption succeeded — rerunning post-render hooks');
+window.addEventListener('hexo-blog-decrypt', (e) => {
+  console.log('[demo] decryption succeeded — mode:', e.detail && e.detail.mode);
   // e.g. hljs.highlightAll();
   // e.g. mermaid.init();
   // e.g. mathjax.typesetPromise();

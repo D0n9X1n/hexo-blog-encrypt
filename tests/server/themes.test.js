@@ -8,7 +8,8 @@ const { buildSite, discoverThemes } = require('../helpers/buildSite.js');
 // Discovered at module-load time so the parameterized `test()` calls below
 // register synchronously, giving the runner one sub-test per theme.
 // `discoverThemes()` reads from `lib/hbe.*.html` on disk and excludes the
-// non-theme `hbe.js` and `hbe.style.css` siblings (see helpers/buildSite.js).
+// non-theme `hbe.bundle.js` / `hbe.bundle.js.map` / `hbe.style.css` siblings
+// (see helpers/buildSite.js — the `/^hbe\..+\.html$/` regex rejects them).
 const THEMES = discoverThemes();
 
 const REQUIRED_DATA_ATTRS = [

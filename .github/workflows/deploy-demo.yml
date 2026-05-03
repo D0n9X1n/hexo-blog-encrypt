@@ -85,6 +85,14 @@ jobs:
         if: steps.freshness.outputs.stale != 'true'
         run: npm install --no-audit --no-fund
 
+      # v4: the browser bundle is built from `src/browser/` via esbuild and
+      # is gitignored. Without this step, hexo generate would crash with
+      # ENOENT on `lib/hbe.bundle.js` the first time the v4 plugin filter
+      # tries to emit a script-src hash.
+      - name: Build browser bundle
+        if: steps.freshness.outputs.stale != 'true'
+        run: npm run build
+
       - name: Install demo site dependencies
         if: steps.freshness.outputs.stale != 'true'
         working-directory: demo
@@ -101,7 +109,12 @@ jobs:
         if: steps.freshness.outputs.stale != 'true'
         run: |
           test -f demo/public/index.html || { echo "::error::demo/public/index.html missing"; exit 1; }
-          test -f demo/public/lib/hbe.js || { echo "::error::demo/public/lib/hbe.js missing"; exit 1; }
+          # v4 emits a content-hashed bundle: lib/hbe.<hex10>.js
+          shopt -s nullglob
+          bundles=(demo/public/lib/hbe.[0-9a-f]*.js)
+          if [ ${#bundles[@]} -ne 1 ]; then
+            echo "::error::Expected exactly one demo/public/lib/hbe.<hex>.js bundle; got ${#bundles[@]}: ${bundles[*]}"; exit 1
+          fi
           test -f demo/public/css/hbe.style.css || { echo "::error::demo/public/css/hbe.style.css missing"; exit 1; }
           # Sanity: every theme demo must have an encrypted wrapper (hbeData attr).
           for theme in blink default flip shrink surge up wave xray; do

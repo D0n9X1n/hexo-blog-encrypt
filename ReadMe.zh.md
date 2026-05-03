@@ -26,13 +26,13 @@
 
 ## 特性
 
-- 一旦你输入了正确的密码, 它将会被存储在本地浏览器的 localStorage中. 按个按钮, 密码将会被清空. 若博客中有脚本, 它将会被正确地执行.
+- 一旦你输入了正确的密码, 加密的文章会在浏览器端解密. 默认情况下密码 **不会** 被持久化; 在文章信息头或 `_config.yml` 中设置 `autoSave: true` 之后, 派生出的密钥才会被缓存到 `localStorage`, 这样下次刷新同一页面时就能自动解密. 若文章中含有脚本, 它将会在解密后被正确执行.
 
 - 支持按标签加密.
 
 - 所有的核心功能都是由原生的 API 所提供的. 在 Node.js中, 我们使用 [Crypto](https://nodejs.org/dist/latest-v12.x/docs/api/crypto.html). 在浏览器中, 我们使用 [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API).
 
-- [PBKDF2](https://tools.ietf.org/html/rfc2898), [SHA256](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf) 被用于分发密钥, [AES256-CBC](https://csrc.nist.gov/publications/detail/sp/800-38a/final) 被用于加解密, 我们还使用 [HMAC](https://csrc.nist.gov/csrc/media/publications/fips/198/1/final/documents/fips-198-1_final.pdf) 来验证密文的来源, 并确保其未被篡改.
+- [PBKDF2](https://tools.ietf.org/html/rfc2898) 与 [SHA-256](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf) 被用于派生密钥, 我们使用 [AES-256-GCM](https://csrc.nist.gov/publications/detail/sp/800-38d/final) 进行带认证的加解密 — GCM 自带的 auth tag 即可检测密文被篡改 (取代了 v3 中独立的 HMAC 步骤).
 
 - 我们广泛地使用 Promise 来进行异步操作, 以此确保线程不被阻塞.
 
@@ -85,6 +85,8 @@ password: mikemessi
 abstract: 有东西被加密了, 请输入密码查看.
 message: 您好, 这里需要密码.
 wrong_pass_message: 抱歉, 这个密码看着不太对, 请再试试.
+# v4 起已废弃 — AES-GCM 已经将 “密码错误” 与 “密文被篡改” 这两类失败统一处理,
+# 该字段现在等同于 `wrong_pass_message`. 请改设 `wrong_pass_message`.
 wrong_hash_message: 抱歉, 这个文章不能被校验, 不过您还是能看看解密后的内容.
 ---
 
@@ -104,7 +106,27 @@ encrypt: # hexo-blog-encrypt
   - {name: tagName, password: 密码A}
   - {name: tagName, password: 密码B}
   wrong_pass_message: 抱歉, 这个密码看着不太对, 请再试试.
+  # v4 起已废弃 (等同于 `wrong_pass_message`), 详见上方说明.
   wrong_hash_message: 抱歉, 这个文章不能被校验, 不过您还是能看看解密后的内容.
+
+  # ── v4 新配置 (全部可选, 均有安全的默认值) ────────────────────────────
+  # 在密码框旁渲染一个可见的 “解密” 按钮.
+  # 主题模板若已经通过 `<%- decrypt_button %>` 自带按钮则会忽略本配置.
+  # 默认: true.
+  decryptButton:
+    show: true
+    text: 解密
+
+  # 解密后是否将明文缓存到 localStorage, 让刷新页面跳过密码输入.
+  # 默认 OFF — 可在文章 front-matter 中通过 `autoSave: true` 单独开启,
+  # 也可以在这里全局开启. 缓存键命名空间为 `hbe.v4.<post-permalink-hash>`.
+  autoSave: false
+
+  # PBKDF2 迭代次数. 下限: 100_000. 推荐 ≥ 600_000
+  # (OWASP 2023 关于 PBKDF2-SHA256 的推荐). 低于推荐值时构建会打印 warning.
+  # 默认: 250_000.
+  kdf:
+    iterations: 250000
 
 ```
 
@@ -216,6 +238,7 @@ abstract: 有东西被加密了, 请输入密码查看.
 message: 您好, 这里需要密码.
 theme: xray
 wrong_pass_message: 抱歉, 这个密码看着不太对, 请再试试.
+# v4 起已废弃 (等同于 `wrong_pass_message`), 详见 “高级设置”.
 wrong_hash_message: 抱歉, 这个文章不能被校验, 不过您还是能看看解密后的内容.
 ---
 
@@ -236,6 +259,7 @@ encrypt: # hexo-blog-encrypt
   - {name: tagName, password: 密码B}
   theme: xray
   wrong_pass_message: 抱歉, 这个密码看着不太对, 请再试试.
+  # v4 起已废弃 (等同于 `wrong_pass_message`), 详见 “高级设置”.
   wrong_hash_message: 抱歉, 这个文章不能被校验, 不过您还是能看看解密后的内容.
 
 ```

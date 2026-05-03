@@ -20,13 +20,13 @@
 
 ## Features
 
-- Once you enter the correct password, you can get the access to encrypted posts, and the password is remembered locally. Press the button again, and the stored password will be erased. If there're scripts in the post, they will be executed once the post is decrypted.
+- Once you enter the correct password, the encrypted post is decrypted client-side. By default the password is **not** persisted; opt in with `autoSave: true` (per-post or in `_config.yml`) to have a derived key cached in `localStorage` so a subsequent reload of the same page auto-decrypts. If there are scripts in the post, they will be executed once the post is decrypted.
 
 - Support preset tag-specified password.
 
 - All functions are provided by the native APIs. We use [Crypto](https://nodejs.org/dist/latest-v12.x/docs/api/crypto.html) in Node.js, and use [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) in Browsers.
 
-- [PBKDF2](https://tools.ietf.org/html/rfc2898), [SHA256](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf) is used to derive keys, We use [AES256-CBC](https://csrc.nist.gov/publications/detail/sp/800-38a/final) to encrypt and decrypt data, we also use [HMAC](https://csrc.nist.gov/csrc/media/publications/fips/198/1/final/documents/fips-198-1_final.pdf) to verify message authentication codes to make sure the posts are decrypted well and not modified.
+- [PBKDF2](https://tools.ietf.org/html/rfc2898) with [SHA-256](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf) is used to derive keys, and we use [AES-256-GCM](https://csrc.nist.gov/publications/detail/sp/800-38d/final) for both encryption and authenticated decryption — the GCM auth tag detects any modification of the ciphertext (replacing the v3 separate HMAC step).
 
 - Promise is widely used to make sure our main procedures are asynchronous, so that there is little chance for the process to be blocked, and the experience will be more fluent.
 
@@ -79,6 +79,9 @@ password: mikemessi
 abstract: Here's something encrypted, password is required to continue reading.
 message: Hey, password is required here.
 wrong_pass_message: Oh, this is an invalid password. Check and try again, please.
+# Deprecated under v4 — AES-GCM unifies wrong-password and tampered-ciphertext
+# failures, so this option is now an alias of `wrong_pass_message`. Set
+# `wrong_pass_message` instead.
 wrong_hash_message: Oh, these decrypted content cannot be verified, but you can still have a look.
 ---
 
@@ -97,7 +100,28 @@ encrypt: # hexo-blog-encrypt
   - {name: encryptAsDiary, password: passwordA}
   - {name: encryptAsTips, password: passwordB}
   wrong_pass_message: Oh, this is an invalid password. Check and try again, please.
+  # Deprecated under v4 (alias of `wrong_pass_message`). See note above.
   wrong_hash_message: Oh, these decrypted content cannot be verified, but you can still have a look.
+
+  # ── v4 keys (all optional, safe defaults) ────────────────────────────
+  # Render a visible "Decrypt" button next to the password field.
+  # Themes that already include a button via `<%- decrypt_button %>`
+  # ignore this option. Default: true.
+  decryptButton:
+    show: true
+    text: Decrypt
+
+  # Cache the decrypted plaintext in localStorage so reloads skip the
+  # password prompt. OFF by default — opt in per post via front-matter
+  # `autoSave: true`, or globally here. Cache key is namespaced under
+  # `hbe.v4.<post-permalink-hash>`.
+  autoSave: false
+
+  # PBKDF2 iteration count. Floor: 100_000. Recommended ≥ 600_000
+  # (OWASP 2023 for PBKDF2-SHA256). Lower-than-recommended values log a
+  # warning at build time. Default: 250_000.
+  kdf:
+    iterations: 250000
 
 ```
 
@@ -221,6 +245,7 @@ encrypt: # hexo-blog-encrypt
   - {name: encryptAsTips, password: passwordB}
   theme: xray
   wrong_pass_message: Oh, this is an invalid password. Check and try again, please.
+  # Deprecated under v4 (alias of `wrong_pass_message`); see "Advanced settings".
   wrong_hash_message: Oh, these decrypted content cannot be verified, but you can still have a look.
 
 ```

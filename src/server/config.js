@@ -53,19 +53,30 @@ function shallowPickKnown(source, knownKeys) {
   return out;
 }
 
-const KNOWN_KEYS = [
+// Keys allowed to flow from the front-matter `post` object into `resolve()`'s
+// deep merge. Deliberately EXCLUDES `tags`: Hexo materializes `post.tags` as a
+// Warehouse Query containing functions/methods, which `structuredClone` cannot
+// clone (DataCloneError). The post's tag list is read directly by
+// `resolveTagPassword(hexoConfig.encrypt, data.tags)` over in `index.js`; the
+// `tags` field on `hexoConfig.encrypt` (the {name, password} registry) is
+// allowed and lives in `KNOWN_KEYS`.
+const POST_KNOWN_KEYS = [
   'password',
   'abstract',
   'message',
   'theme',
   'template',
-  'tags',
   'wrong_pass_message',
   'wrong_hash_message',
   'silent',
   'autoSave',
   'decryptButton',
   'kdf',
+];
+
+const KNOWN_KEYS = [
+  ...POST_KNOWN_KEYS,
+  'tags',
 ];
 
 function resolve(hexoConfig, postData, logger) {
@@ -86,8 +97,11 @@ function resolve(hexoConfig, postData, logger) {
   // Layer 1: defaults → hexo encrypt block (for top-level shared keys, NOT password/theme overrides per-post).
   let merged = deepMerge(DEFAULTS, shallowPickKnown(hexoEncrypt, KNOWN_KEYS));
 
-  // Layer 2: post front-matter wins.
-  merged = deepMerge(merged, shallowPickKnown(post, KNOWN_KEYS));
+  // Layer 2: post front-matter wins. Use POST_KNOWN_KEYS (which excludes
+  // `tags`) to avoid pulling Hexo's Warehouse Query for `post.tags` into
+  // the deep-merge — `structuredClone` would throw DataCloneError on the
+  // function-bearing internals.
+  merged = deepMerge(merged, shallowPickKnown(post, POST_KNOWN_KEYS));
 
   // Deprecation: template → theme.
   if (merged.template !== undefined && merged.template !== null) {

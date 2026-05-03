@@ -4,6 +4,7 @@ const assert = require('assert');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 const { generateSite } = require('../helpers/generateSite');
 const { serveSite } = require('../helpers/serveSite');
@@ -27,6 +28,12 @@ function sha256(filePath) {
  * does NOT set a `globalTeardown` key).
  */
 module.exports = async () => {
+  // Wave 7+: the browser bundle is built on demand (it's gitignored). Run
+  // `npm run build` BEFORE generateSite so the bundle exists when the Hexo
+  // generator emits the hashed asset, and the artifact-identity preflight
+  // below has something to checksum.
+  execSync('npm run build', { cwd: REPO_ROOT, stdio: 'inherit' });
+
   const { publicDir } = await generateSite();
 
   // Criterion 14 — artifact-identity preflight.
@@ -40,17 +47,11 @@ module.exports = async () => {
   // of undefined" stack.
   //
   // The bundle is now emitted at `lib/hbe.<hex10>.js` (content-hashed) — pick
-  // the single matching file out of `publicDir/lib/`. The source bundle is
-  // either `lib/hbe.bundle.js` (Wave 7+ esbuild output) or `lib/hbe.js` (v3
-  // IIFE, used through Wave 6). Try the new name first, then fall back.
-  const sourceBundleCandidates = [
-    path.join(REPO_ROOT, 'lib', 'hbe.bundle.js'),
-    path.join(REPO_ROOT, 'lib', 'hbe.js'),
-  ];
-  const sourceBundle = sourceBundleCandidates.find((p) => fs.existsSync(p));
+  // the single matching file out of `publicDir/lib/`.
+  const sourceBundle = path.join(REPO_ROOT, 'lib', 'hbe.bundle.js');
   assert.ok(
-    sourceBundle,
-    `No source bundle found; tried: ${sourceBundleCandidates.join(', ')}`
+    fs.existsSync(sourceBundle),
+    `Source bundle missing at ${sourceBundle} after npm run build — investigate build/build.js`
   );
 
   const servedLibDir = path.join(publicDir, 'lib');
