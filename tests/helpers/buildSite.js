@@ -9,6 +9,7 @@ const DEFAULT_FIXTURE = path.join(REPO_ROOT, 'tests', 'fixtures', 'hexo-site');
 const TEMPLATE_REL = path.join('templates', 'encrypted-post.md');
 const AUTOSAVE_TEMPLATE_REL = path.join('templates', 'autosave-post.md');
 const TAG_ONLY_TEMPLATE_REL = path.join('templates', 'tag-encrypted-post.md');
+const CALLBACK_TEMPLATE_REL = path.join('templates', 'callback-post.md');
 const POSTS_REL = path.join('source', '_posts');
 
 /**
@@ -84,6 +85,16 @@ function materializePosts(fixtureDir, themes) {
   const tagOnlyDest = path.join(postsDir, 'tag-only-encrypted.md');
   fs.writeFileSync(tagOnlyDest, tagOnlyBody, 'utf8');
   written.push(tagOnlyDest);
+
+  // Single callback-fixture post (default theme) — embeds an inline
+  // `<script>` that registers a `hexo-blog-decrypt` listener firing
+  // `window.alert(...)`. Regression for the public callback hook
+  // documented in both READMEs.
+  const callbackTemplatePath = path.join(fixtureDir, CALLBACK_TEMPLATE_REL);
+  const callbackBody = fs.readFileSync(callbackTemplatePath, 'utf8');
+  const callbackDest = path.join(postsDir, 'callback-fixture.md');
+  fs.writeFileSync(callbackDest, callbackBody, 'utf8');
+  written.push(callbackDest);
 
   return written;
 }

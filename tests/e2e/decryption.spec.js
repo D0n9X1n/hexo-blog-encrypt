@@ -398,4 +398,46 @@ test.describe('v4 UX (single-theme)', () => {
     expect(await mode).toBe('manual');
     await expect(page.locator('body')).toContainText('OPEN-SESAME-TAG-ONLY');
   });
+
+  // ─────────────────────────────────────────────────────────────────────
+  // Public callback regression: an inline `<script>` inside the
+  // encrypted body wires up a `hexo-blog-decrypt` window listener that
+  // calls `window.alert(...)`. v4 must execute that script after
+  // decryption (via `dom.js#convertHTMLToElement` re-creating script
+  // nodes as live elements) AND must dispatch the event AFTER the DOM
+  // swap, so the listener catches it. Regression for the public hook
+  // documented in both READMEs.
+  // ─────────────────────────────────────────────────────────────────────
+  test('decryption callback: inline <script> sees hexo-blog-decrypt event and fires alert()', async ({ page }) => {
+    const consoleErrors = [];
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') consoleErrors.push(msg.text());
+    });
+
+    let dialogMessage = null;
+    page.on('dialog', async (dialog) => {
+      dialogMessage = dialog.message();
+      await dialog.dismiss();
+    });
+
+    await page.goto('/callback-fixture/');
+    await expect(page.locator('#hbePass')).toBeVisible();
+
+    await page.locator('#hbePass').fill(PASSWORD);
+    await page.locator('#hbePass').press('Enter');
+
+    // The decrypted content must reveal — proves the alert() did NOT
+    // block the reveal flow (alert is async-handled in Playwright).
+    await expect(page.locator('body')).toContainText('CALLBACK-FIRED-7F2A');
+
+    // Poll because dialog handlers fire on a microtask after the
+    // alert() call inside the listener.
+    await expect.poll(() => dialogMessage, { timeout: 2000 })
+      .toMatch(/Decryption callback fired! mode = manual/);
+
+    expect(
+      consoleErrors,
+      `Console errors during callback decrypt:\n${consoleErrors.join('\n')}`
+    ).toEqual([]);
+  });
 });
