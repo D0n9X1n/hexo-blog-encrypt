@@ -1,47 +1,57 @@
 # Copilot Instructions — hexo-blog-encrypt
 
-## What this is
+This file is intentionally **thin**. Project details live in
+[`docs/`](../docs/) — that is the source of truth for everything below.
+This file only orients agents and lists the non-negotiables that must
+be enforced even if you never get around to reading the docs.
 
-A Hexo plugin that encrypts blog posts at build time. Readers enter a password in the browser to decrypt content client-side via Web Crypto. Plain Node.js — uses Hexo's filter/generator hooks; no bundler.
+## Read at session start
 
-### Key files
+In this order:
 
-- `index.js` — Hexo entry. Registers config defaults, the `hexo-blog-encrypt` filter on `after_post_render`, and the `hbe.js`/`hbe.css` generators.
-- `lib/` — Encryption logic (PBKDF2 → AES-CBC), the HTML wrapper template, the in-browser `hbe.js` decryptor, and `hbe.css`.
-- `ReadMe.md` / `ReadMe.zh.md` — User-facing docs (English / Chinese).
+1. [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) — what this project
+   is, key files, server / browser modules, wire-format overview.
+2. [`docs/DEVELOPMENT.md`](../docs/DEVELOPMENT.md) — workflow rules
+   (feature-crew), test commands, submodule maintenance.
+3. [`docs/THEMES.md`](../docs/THEMES.md) — the one-file theme drop
+   contract (read only if you're touching themes).
+4. [`docs/RELEASING.md`](../docs/RELEASING.md) — release procedure
+   (read only if you're cutting a release or touching the publish
+   workflows).
 
-Encryption uses a per-post random salt (see commit `e91245d`); the salt is embedded in the wrapper HTML so the browser-side `hbe.js` can derive the same key.
+Project-specific specs are in [`docs/specs/`](../docs/specs/), accepted
+implementation plans in [`docs/plans/`](../docs/plans/).
 
-## Conventions
+## Non-negotiables
 
-- Node CommonJS (`require`/`module.exports`); no transpilation.
-- ESLint config in `.eslintrc.js`, EditorConfig in `.editorconfig` — match existing style.
-- Backward-compatible config: new options must default safely; existing encrypted posts must still decrypt.
-- Update both `ReadMe.md` and `ReadMe.zh.md` when user-facing behavior changes.
+These are the rules that never bend, regardless of track / scope /
+"just a quick fix" framing:
 
-## Development workflow — feature-crew
+- **Use the feature-crew workflow** for non-trivial work. PM proposes a
+  track (Trivial / Standard / Complex) and confirms with the user
+  before starting. See [`docs/DEVELOPMENT.md`](../docs/DEVELOPMENT.md)
+  for the dispatch rules.
+- **No production code without a failing test first.** No completion
+  claims without fresh verification. No fixes without root-cause
+  investigation. Cross-model audit on every hard-gate artifact.
+- **Backward compatibility.** New config options must default safely.
+  Existing encrypted posts in the wild must still decrypt against the
+  new bundle, OR the wire-format byte (`data-hbe-format`) must bump in
+  lockstep with the bundle.
+- **Update both READMEs.** `ReadMe.md` and `ReadMe.zh.md` carry the
+  same headings in the same order — the docs test (`tests/docs.test.js`)
+  guards this for the "Why upgrade" section. Apply user-facing docs
+  changes to BOTH.
+- **Don't ship dev-only paths in the npm tarball.** `package.json`'s
+  `files` whitelist limits the tarball to `index.js` + `lib/`. Don't
+  add `tests/`, `demo/`, `feature-crew/`, `.github/`, or `src/` —
+  the bundle in `lib/` is what ships, not the sources.
+- **Run `npm test` before pushing** anything that touches `src/`,
+  `lib/`, or `tests/`. CI will reject regressions; locally is faster.
 
-This project uses the **feature-crew** agent framework (vendored as a git submodule at `feature-crew/`). All non-trivial work goes through it.
+## Submodule
 
-**Read at session start (in this order):**
-1. `feature-crew/.github/copilot-instructions.md` — framework rules (TDD, root-cause debugging, verification, cross-model audit)
-2. `feature-crew/agents/pm.md` — PM behavior and track-selection process
-3. `feature-crew/workflow/pipeline.md` — three pipelines, gates, dispatch rules
-
-**On every user request to build, fix, change, or investigate:**
-1. **Act as the PM.** Propose a track — **Trivial**, **Standard**, or **Complex** — and confirm with the user before starting work.
-   - Trivial: 1 file, no design needed (e.g., typo, single-line tweak). PM does it directly.
-   - Standard: 1–5 files, small feature. Bullet-spec → light build → one QA pass.
-   - Complex: multi-module / new architecture. Brainstorm → spec → architect → devs → QA → tech lead.
-2. **Follow the matching flow** in `feature-crew/workflow/pipeline.md`. Don't apply Complex ceremony to Trivial work, and don't rush Complex work through Standard. Wrong track = wasted work or missed risk.
-3. **Honor the non-negotiables:** no production code without a failing test first; no completion claims without fresh verification; no fixes without root-cause investigation; cross-model audit on every hard-gate artifact (spec, plan, tests-as-spec, implementation diff, tech-lead final).
-4. **Dispatch subagents** per the pipeline rules. PM may write code directly only on Trivial work and light Standard work (≤2 files); otherwise dispatch a developer subagent.
-
-Agent prompt templates live in `feature-crew/agents/` (architect, developer, qa-spec-reviewer, qa-code-reviewer, tech-lead). Specs go in `feature-crew/docs/specs/`, plans in `feature-crew/docs/plans/`.
-
-### Submodule maintenance
-
-After cloning the repo, initialize the submodule:
+`feature-crew/` is a git submodule. After a fresh clone:
 
 ```sh
 git submodule update --init --recursive

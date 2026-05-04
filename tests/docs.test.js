@@ -274,3 +274,117 @@ test('release.yml uses npm OIDC trusted publishing (no long-lived NPM_TOKEN secr
     'release.yml must publish with --provenance'
   );
 });
+
+test('publish-gh-packages.yml uses GITHUB_TOKEN, not a long-lived PAT', () => {
+  // The GitHub Packages mirror workflow must rely solely on the
+  // auto-provided GITHUB_TOKEN (with permissions: packages: write
+  // declared inline). A future contributor must not be able to silently
+  // swap in a personal-access-token-shaped secret.
+  const ghPkgYml = path.join(repoRoot, '.github', 'workflows', 'publish-gh-packages.yml');
+  assert.ok(fs.existsSync(ghPkgYml), '.github/workflows/publish-gh-packages.yml must exist');
+  const body = read(ghPkgYml);
+
+  // Required positive markers.
+  assert.ok(
+    /packages:\s*write/.test(body),
+    'publish-gh-packages.yml must grant `packages: write` for GH Packages publish'
+  );
+  assert.ok(
+    /id-token:\s*write/.test(body),
+    'publish-gh-packages.yml must grant `id-token: write` for --provenance'
+  );
+  assert.ok(
+    /secrets\.GITHUB_TOKEN/.test(body),
+    'publish-gh-packages.yml must use the auto-provided secrets.GITHUB_TOKEN for npm auth'
+  );
+  assert.ok(
+    /npm publish.*--provenance/.test(body),
+    'publish-gh-packages.yml must publish with --provenance'
+  );
+  assert.ok(
+    /@d0n9x1n\/hexo-blog-encrypt/.test(body),
+    'publish-gh-packages.yml must publish under the @d0n9x1n scope (GH Packages requires owner-scoped names)'
+  );
+
+  // Forbid PAT-shaped secret names. GH Packages publish should never
+  // need a long-lived token because GITHUB_TOKEN already has the
+  // packages: write scope when declared above.
+  const codeLines = body
+    .split('\n')
+    .filter((line) => !line.trim().startsWith('#'));
+  const code = codeLines.join('\n');
+  for (const forbidden of [
+    /secrets\.NPM_TOKEN/,
+    /secrets\.GH_PACKAGES_TOKEN/,
+    /secrets\.PAT/,
+    /secrets\.PERSONAL_ACCESS_TOKEN/
+  ]) {
+    assert.ok(
+      !forbidden.test(code),
+      `publish-gh-packages.yml must not reference ${forbidden} — GITHUB_TOKEN with packages: write is enough`
+    );
+  }
+});
+
+test('docs/ source-of-truth files exist and cross-link cleanly', () => {
+  // The repo's contract: docs/ is the source of truth for project
+  // details. .github/copilot-instructions.md is a thin pointer file
+  // that orients agents to docs/ and lists the non-negotiables.
+  // This test guards the contract: the three core docs must exist,
+  // copilot-instructions must point to them, and copilot-instructions
+  // must stay short (so it stays a pointer, not a duplicate).
+  const docsDir = path.join(repoRoot, 'docs');
+  const required = ['ARCHITECTURE.md', 'RELEASING.md', 'DEVELOPMENT.md'];
+  for (const name of required) {
+    const p = path.join(docsDir, name);
+    assert.ok(fs.existsSync(p), `docs/${name} must exist (source-of-truth doc)`);
+    const body = read(p);
+    assert.ok(
+      body.length > 500,
+      `docs/${name} must contain real content (> 500 bytes), got ${body.length}`
+    );
+  }
+
+  const copilot = path.join(repoRoot, '.github', 'copilot-instructions.md');
+  assert.ok(fs.existsSync(copilot), '.github/copilot-instructions.md must exist');
+  const body = read(copilot);
+
+  // Must link to each of the three core docs.
+  for (const name of required) {
+    assert.ok(
+      body.includes(`docs/${name}`),
+      `.github/copilot-instructions.md must link to docs/${name}`
+    );
+  }
+
+  // Must stay a pointer, not a duplicate. ≤ 100 lines keeps it skimmable
+  // and forces details into docs/.
+  const lines = body.split('\n').length;
+  assert.ok(
+    lines <= 100,
+    `.github/copilot-instructions.md must stay ≤ 100 lines (a pointer file), got ${lines}`
+  );
+});
+
+test('docs/RELEASING.md documents both registries and the OIDC + GH Packages flows', () => {
+  // RELEASING.md is the single maintainer-facing reference. It must
+  // cover BOTH publish targets (npmjs canonical + GH Packages mirror)
+  // and call out the OIDC trusted-publishing setup that release.yml
+  // depends on. Reviewers should be able to reach for one doc, not two.
+  const body = read(path.join(repoRoot, 'docs', 'RELEASING.md'));
+  const required = [
+    /npmjs\.com/i,
+    /github packages/i,
+    /OIDC|trusted publish/i,
+    /provenance/i,
+    /@d0n9x1n\/hexo-blog-encrypt/,
+    /publish-gh-packages\.yml/,
+    /release\.yml/
+  ];
+  for (const re of required) {
+    assert.ok(
+      re.test(body),
+      `docs/RELEASING.md must mention ${re}`
+    );
+  }
+});
