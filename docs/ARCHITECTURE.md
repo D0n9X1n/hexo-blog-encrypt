@@ -29,7 +29,7 @@ browser bundle is built with esbuild (no runtime bundler).
 | `index.js` | Composition root — wires config + crypto + template + generator into the Hexo filter callback. |
 | `config.js` | Deep-merge of `hexo.config.encrypt` with per-post front-matter; KDF-iterations floor; `wrong_hash_message` → `wrong_pass_message` defaulting; tag-registry lookup. |
 | `crypto.js` | PBKDF2-SHA256 → AES-256-GCM. Per-post 16-byte salt + 12-byte nonce. Returns `{ ciphertextHex, saltHex, nonceHex, tagHex, kdfIterations }`. |
-| `template.js` | Single allowlist of 10 `{{hbe…}}` placeholders + per-placeholder render mode (attr-escape / text-escape / hex-validated). The contract every theme HTML satisfies. |
+| `template.js` | Single allowlist of 11 `{{hbe…}}` placeholders + per-placeholder render mode (attr-escape / text-escape / hex-validated). The contract every theme HTML satisfies. |
 | `generator.js` | Hexo asset generator. Emits `lib/hbe.style.css` + content-hashed `lib/hbe.<hex10>.js`. The hex10 is `sha256(bundle).slice(0, 10)`. |
 | `logger.js` | Tiny console wrapper — namespaced "[hexo-blog-encrypt]" prefix + verbosity gate. |
 

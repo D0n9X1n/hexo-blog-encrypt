@@ -38,6 +38,7 @@ const PLACEHOLDERS = [
   { token: '{{hbeKdfIterations}}',     field: 'kdfIterations',  mode: 'attr' },
   { token: '{{hbeAutoSave}}',          field: 'autoSave',       mode: 'attr' },
   { token: '{{hbeMessage}}',           field: 'message',        mode: 'text' },
+  { token: '{{hbeButtonClass}}',       field: 'buttonClass',    mode: 'attr' },
   { token: '{{hbeButtonText}}',        field: 'buttonText',     mode: 'text' },
   { token: '{{hbeSalt}}',              field: 'salt',           mode: 'hex' },
   { token: '{{hbeNonce}}',             field: 'nonce',          mode: 'hex' },

@@ -152,7 +152,8 @@ function register(hexo) {
       message: cfg.message,
       wpm: cfg.wrong_pass_message,
       whm: cfg.wrong_hash_message,
-      buttonText: buttonShow ? buttonText : '',
+      buttonClass: buttonShow ? '' : ' hbe-button-hidden',
+      buttonText,
       kdfIterations: cfg.kdf.iterations,
       autoSave: !!cfg.autoSave,
     });

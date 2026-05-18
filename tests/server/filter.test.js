@@ -729,14 +729,16 @@ test('post with empty content still encrypts (empty plaintext)', async () => {
 });
 
 // ---------------------------------------------------------------------------
-// Branch: decryptButton.show=false hides the button label
+// Branch: decryptButton.show=false hides the button element
 // ---------------------------------------------------------------------------
-test('decryptButton.show=false renders an empty button-text slot', async () => {
+test('decryptButton.show=false adds the hidden button class', async () => {
   hexo.config.encrypt = { decryptButton: { show: false, text: 'Custom' } };
   const data = makeSyntheticData({ title: 'no-btn', password: 'p' });
   await hexo.execFilter('after_post_render', data, { context: hexo });
-  // The button element is still present in markup; only its text is empty.
-  assert.match(data.content, /<button class="hbe hbe-button"[^>]*>\s*<\/button>/);
+  assert.match(
+    data.content,
+    /<button class="hbe hbe-button hbe-button-hidden"[^>]*>\s*Custom\s*<\/button>/
+  );
 });
 
 // ---------------------------------------------------------------------------

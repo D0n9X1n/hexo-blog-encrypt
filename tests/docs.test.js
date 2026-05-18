@@ -18,6 +18,7 @@ const REQUIRED_PLACEHOLDERS = [
   '{{hbeKdfIterations}}',
   '{{hbeAutoSave}}',
   '{{hbeMessage}}',
+  '{{hbeButtonClass}}',
   '{{hbeButtonText}}',
   '{{hbeSalt}}',
   '{{hbeNonce}}',

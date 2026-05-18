@@ -10,6 +10,8 @@ const TEMPLATE_REL = path.join('templates', 'encrypted-post.md');
 const AUTOSAVE_TEMPLATE_REL = path.join('templates', 'autosave-post.md');
 const TAG_ONLY_TEMPLATE_REL = path.join('templates', 'tag-encrypted-post.md');
 const CALLBACK_TEMPLATE_REL = path.join('templates', 'callback-post.md');
+const NON_ASCII_BUTTON_TEMPLATE_REL = path.join('templates', 'non-ascii-button-post.md');
+const HIDDEN_BUTTON_TEMPLATE_REL = path.join('templates', 'hidden-button-post.md');
 const POSTS_REL = path.join('source', '_posts');
 
 /**
@@ -95,6 +97,18 @@ function materializePosts(fixtureDir, themes) {
   const callbackDest = path.join(postsDir, 'callback-fixture.md');
   fs.writeFileSync(callbackDest, callbackBody, 'utf8');
   written.push(callbackDest);
+
+  const nonAsciiButtonTemplatePath = path.join(fixtureDir, NON_ASCII_BUTTON_TEMPLATE_REL);
+  const nonAsciiButtonBody = fs.readFileSync(nonAsciiButtonTemplatePath, 'utf8');
+  const nonAsciiButtonDest = path.join(postsDir, 'non-ascii-button-default.md');
+  fs.writeFileSync(nonAsciiButtonDest, nonAsciiButtonBody, 'utf8');
+  written.push(nonAsciiButtonDest);
+
+  const hiddenButtonTemplatePath = path.join(fixtureDir, HIDDEN_BUTTON_TEMPLATE_REL);
+  const hiddenButtonBody = fs.readFileSync(hiddenButtonTemplatePath, 'utf8');
+  const hiddenButtonDest = path.join(postsDir, 'hidden-button-default.md');
+  fs.writeFileSync(hiddenButtonDest, hiddenButtonBody, 'utf8');
+  written.push(hiddenButtonDest);
 
   return written;
 }
