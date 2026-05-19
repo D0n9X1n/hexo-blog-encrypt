@@ -14,7 +14,7 @@ The 8 themes that ship today are: `default`, `blink`, `flip`, `shrink`,
 ## Adding a theme
 
 1. Create `lib/hbe.<name>.html` containing:
-   - All 10 `{{hbe...}}` placeholders (see below) — the server-side filter
+   - All 11 `{{hbe...}}` placeholders (see below) — the server-side filter
      substitutes them at render time.
    - A wrapper element with `id="hexo-blog-encrypt"` (the browser bundle finds
      it by id) carrying the seven `data-*` attributes listed below.
@@ -38,7 +38,7 @@ filename is the source of truth.
 
 ## Required placeholders
 
-Every `lib/hbe.<name>.html` MUST contain these 10 placeholders verbatim. They
+Every `lib/hbe.<name>.html` MUST contain these 11 placeholders verbatim. They
 are string-substituted by `src/server/template.js` for each encrypted post:
 
 | Placeholder                | Field          | Render mode       | Meaning                                                                        |
@@ -49,6 +49,7 @@ are string-substituted by `src/server/template.js` for each encrypted post:
 | `{{hbeKdfIterations}}`     | `kdfIterations`| attr-escaped      | PBKDF2 iteration count used to derive the AES key. Default 250000; configurable per-post. |
 | `{{hbeAutoSave}}`          | `autoSave`     | attr-escaped      | `"true"` if the derived AES key should be persisted to `localStorage` so a subsequent reload auto-decrypts. Default `"false"`. |
 | `{{hbeMessage}}`           | `message`      | text-escaped      | Prompt label shown above the password input.                                   |
+| `{{hbeButtonClass}}`       | `buttonClass`  | attr-escaped      | Optional extra class suffix for the submit button (currently used to hide it when `decryptButton.show: false`). |
 | `{{hbeButtonText}}`        | `buttonText`   | text-escaped      | Visible label for the decrypt submit button.                                   |
 | `{{hbeSalt}}`              | `salt`         | hex (validated)   | Per-post 32-byte PBKDF2 salt as 64 hex chars.                                  |
 | `{{hbeNonce}}`             | `nonce`        | hex (validated)   | Per-post 12-byte AES-GCM nonce as 24 hex chars.                                |
@@ -76,7 +77,7 @@ To keep the one-file-drop contract intact:
   config flow in `src/server/config.js`) AND the browser bundle
   (`src/browser/main.js`'s `readWireFormat`). These two halves share an
   implicit wire format and the version is bumped via `{{hbeFormat}}`.
-- **Don’t** rename or remove any of the 10 placeholders. Existing themes —
+- **Don’t** rename or remove any of the 11 placeholders. Existing themes —
   and every encrypted post in the wild — depend on them.
 - **Don’t** move or rename the `#hexo-blog-encrypt` wrapper, the `#hbeForm`
   form, the `#hbePass` input, the `.hbe-button` submit button, or the

@@ -211,6 +211,39 @@ for (const theme of themes) {
 // ─── Single-theme global v4 specs ────────────────────────────────────────
 
 test.describe('v4 UX (single-theme)', () => {
+  test('non-ASCII button text stays centered on its own line', async ({ page }) => {
+    await page.goto('/non-ascii-button-default/');
+    await expect(page.locator('#hbePass')).toBeVisible();
+
+    const button = page.locator('#hexo-blog-encrypt .hbe-button');
+    await expect(button).toHaveText('解密按钮');
+
+    const inputBox = await page.locator('#hexo-blog-encrypt .hbe-input').boundingBox();
+    const buttonBox = await button.boundingBox();
+
+    expect(inputBox).not.toBeNull();
+    expect(buttonBox).not.toBeNull();
+
+    const inputCenter = inputBox.x + (inputBox.width / 2);
+    const buttonCenter = buttonBox.x + (buttonBox.width / 2);
+
+    expect(buttonBox.y).toBeGreaterThanOrEqual(inputBox.y + inputBox.height - 1);
+    expect(Math.abs(buttonCenter - inputCenter)).toBeLessThanOrEqual(2);
+  });
+
+  test('decryptButton.show=false hides the button but Enter still decrypts', async ({ page }) => {
+    await page.goto('/hidden-button-default/');
+    await expect(page.locator('#hbePass')).toBeVisible();
+    await expect(page.locator('#hexo-blog-encrypt .hbe-button')).toBeHidden();
+
+    const mode = listenForDecryptMode(page);
+    await page.locator('#hbePass').fill(PASSWORD);
+    await page.locator('#hbePass').press('Enter');
+
+    expect(await mode).toBe('manual');
+    await expect(page.locator('body')).toContainText(SECRET);
+  });
+
   test('button click decrypts (not just Enter key)', async ({ page }) => {
     await page.goto('/encrypted-default/');
     await expect(page.locator('#hbePass')).toBeVisible();
