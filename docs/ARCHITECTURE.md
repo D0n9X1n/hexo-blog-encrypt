@@ -16,7 +16,6 @@ browser bundle is built with esbuild (no runtime bundler).
 | `lib/hbe.style.css` | Single stylesheet shared by every theme. |
 | `tests/` | Real-Hexo + Playwright e2e harness. `npm test` runs lint + server tests + e2e. |
 | `docs/` | Source-of-truth project documentation (you are here). |
-| `feature-crew/` | Vendored agent framework used for non-trivial work. Git submodule. |
 | `.github/workflows/` | CI: `test.yml` (every push/PR), `release.yml` (npm), `publish-gh-packages.yml` (GH Packages mirror), `deploy-demo.yml` (Pages). |
 | `demo/` | Live-demo Hexo site published to GitHub Pages. References the published npm package, NOT a `file:..` path. |
 | `ReadMe.md` / `ReadMe.zh.md` | User-facing README in English / 中文. **Both must be updated** when user-facing behavior changes. |
@@ -69,13 +68,11 @@ bumping the version byte and the bundle in lockstep.
   "Why upgrade" section.
 - **Tarball whitelist.** `package.json`'s `files` field limits the npm
   tarball to `index.js` + `lib/`. Don't ship `tests/`, `demo/`,
-  `feature-crew/`, `.github/`, or `src/` (the bundle in `lib/` is what
-  ships, not the sources).
+  `.github/`, or `src/` (the bundle in `lib/` is what ships, not the
+  sources).
 
 ## See also
 
 - [`docs/THEMES.md`](THEMES.md) — the one-file theme drop contract.
 - [`docs/RELEASING.md`](RELEASING.md) — release procedure.
 - [`docs/DEVELOPMENT.md`](DEVELOPMENT.md) — workflow rules + commands.
-- [`docs/specs/`](specs/) — accepted feature specs.
-- [`docs/plans/`](plans/) — accepted implementation plans.

@@ -1,27 +1,20 @@
 # Development
 
-How to work on this project — workflow rules, test commands, and
-submodule maintenance.
+How to work on this project — setup, test commands, and basic workflow rules.
 
 ## Setup (after a fresh clone)
 
 ```sh
-git submodule update --init --recursive
 npm install
 ```
 
-The submodule pulls in the **feature-crew** agent framework at
-`feature-crew/`. To pull the latest framework updates later:
-
-```sh
-git submodule update --remote feature-crew
-```
+That's it. No submodules, no extra steps.
 
 ## Test commands
 
 | Command | What it runs |
 | --- | --- |
-| `npm test` | Lint + server tests (`tests/server.test.js`, `tests/docs.test.js`) + Playwright e2e against all 8 themes. The full suite the CI runs. |
+| `npm test` | Lint + server tests (`tests/server/*.test.js`, `tests/docs.test.js`) + Playwright e2e against all 8 themes. The full suite CI runs. |
 | `npm run lint` | ESLint over `src/` + `tests/`. |
 | `npm run test:server` | Server-side Node tests only. Fast (no browser). |
 | `npm run test:e2e` | Playwright e2e only. Spins up a real Hexo build of `tests/fixtures/hexo-site/`, serves it, drives Chromium. |
@@ -31,51 +24,18 @@ Run `npm test` BEFORE you push anything that touches `src/`, `lib/`, or
 `tests/`. CI will reject regressions; running locally first catches
 them in seconds.
 
-## Workflow — feature-crew
+## Workflow basics
 
-This project uses the **feature-crew** agent framework (vendored as a
-git submodule at `feature-crew/`). All non-trivial work goes through
-it. Trivial work (single-file typo, badge tweak, etc.) may be done
-directly.
-
-**Read at session start (in this order):**
-
-1. `feature-crew/.github/copilot-instructions.md` — framework rules
-   (TDD, root-cause debugging, verification, cross-model audit).
-2. `feature-crew/agents/pm.md` — PM behavior + track-selection process.
-3. `feature-crew/workflow/pipeline.md` — three pipelines, gates, dispatch rules.
-
-**On every user request to build, fix, change, or investigate:**
-
-1. **Act as the PM.** Propose a track — **Trivial**, **Standard**, or
-   **Complex** — and confirm with the user before starting work.
-   - **Trivial:** 1 file, no design needed (e.g., typo, single-line
-     tweak). PM does it directly.
-   - **Standard:** 1–5 files, small feature. Bullet-spec → light build
-     → one QA pass.
-   - **Complex:** multi-module / new architecture. Brainstorm → spec
-     → architect → devs → QA → tech lead.
-2. **Follow the matching flow** in
-   `feature-crew/workflow/pipeline.md`. Don't apply Complex ceremony
-   to Trivial work, and don't rush Complex work through Standard.
-   Wrong track = wasted work or missed risk.
-3. **Honor the non-negotiables:**
-   - No production code without a failing test first.
-   - No completion claims without fresh verification.
-   - No fixes without root-cause investigation.
-   - Cross-model audit on every hard-gate artifact (spec, plan,
-     tests-as-spec, implementation diff, tech-lead final).
-4. **Dispatch subagents** per the pipeline rules. PM may write code
-   directly only on Trivial work and light Standard work (≤2 files);
-   otherwise dispatch a developer subagent.
-
-Agent prompt templates live in `feature-crew/agents/` (architect,
-developer, qa-spec-reviewer, qa-code-reviewer, tech-lead). Specs go in
-`feature-crew/docs/specs/`, plans in `feature-crew/docs/plans/`.
-
-Project-specific specs and plans (i.e. specs about this codebase, not
-about the framework) live in [`docs/specs/`](specs/) and
-[`docs/plans/`](plans/).
+- **No production code without a failing test first.** Add the test,
+  watch it fail, then make it pass.
+- **Root-cause fixes.** Don't paper over symptoms; understand why
+  something broke before patching.
+- **Verify before claiming done.** Re-run the relevant tests after
+  every change.
+- **Backward compatibility.** New config options must default safely.
+  Existing encrypted posts in the wild must still decrypt against the
+  new bundle, OR the wire-format byte (`data-hbe-format`) must bump in
+  lockstep with the bundle.
 
 ## Branch protection
 

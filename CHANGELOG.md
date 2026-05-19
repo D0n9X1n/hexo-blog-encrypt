@@ -6,6 +6,42 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [4.0.1] — 2026-05-19
+
+### Fixed
+
+* **Decrypt button layout** — on wide screens the button could land on the
+  same row as the password input and lose centering. The shared decrypt
+  form now uses a flex column layout so the button always renders centered,
+  on its own line, below the input. Long / non-ASCII labels wrap correctly.
+* **`decryptButton.show: false`** — previously only the label was blanked
+  while the button chrome remained clickable. The button is now actually
+  removed from layout via a new `hbe-button-hidden` class, while Enter-key
+  form submission still works.
+
+### Template contract
+
+* Added `{{hbeButtonClass}}` placeholder (10 → 11). All 8 shipped themes
+  and the docs were updated together. Custom themes following
+  [`docs/THEMES.md`](docs/THEMES.md) should add the placeholder to their
+  button element:
+
+  ```html
+  <button class="hbe hbe-button{{hbeButtonClass}}" type="submit">{{hbeButtonText}}</button>
+  ```
+
+  No wire-format change — existing encrypted posts continue to decrypt.
+
+### Tests
+
+* Server-side unit test for the new hidden-button class.
+* Playwright e2e for non-ASCII button text + geometric centering check.
+* Playwright e2e for `decryptButton.show: false` + Enter-key fallback.
+
+Closes #231. PR #232.
+
+---
+
 ## [4.0.0] — 2026-05-03
 
 ### Highlights

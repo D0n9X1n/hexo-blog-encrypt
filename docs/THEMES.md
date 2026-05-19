@@ -5,8 +5,7 @@ encrypted post. The plugin auto-discovers themes by reading `lib/hbe.<name>.html
 at filter time, so adding a 9th (or 99th) theme is **a single-file drop** — no
 edits to `index.js` or any browser-side source required.
 
-This contract is enforced by `tests/docs.test.js` and described in detail in
-[`docs/specs/2026-05-01-e2e-test-harness-design.md`](specs/2026-05-01-e2e-test-harness-design.md).
+This contract is enforced by `tests/docs.test.js`.
 
 The 8 themes that ship today are: `default`, `blink`, `flip`, `shrink`,
 `surge`, `up`, `wave`, `xray`.
@@ -87,7 +86,6 @@ To keep the one-file-drop contract intact:
 
 ## See also
 
-- Spec: [`docs/specs/2026-05-01-e2e-test-harness-design.md`](specs/2026-05-01-e2e-test-harness-design.md)
 - Server-side filter: `src/server/index.js` (composition root) + `src/server/template.js` (placeholder table)
 - Browser bundle source: `src/browser/` — built via `npm run build` (esbuild) into `lib/hbe.bundle.js`. The served filename is content-hashed at deploy time as `lib/hbe.<hex10>.js` so cache busts are automatic across releases.
 - Existing themes: `lib/hbe.*.html`

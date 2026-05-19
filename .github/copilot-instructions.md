@@ -11,29 +11,22 @@ In this order:
 
 1. [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) — what this project
    is, key files, server / browser modules, wire-format overview.
-2. [`docs/DEVELOPMENT.md`](../docs/DEVELOPMENT.md) — workflow rules
-   (feature-crew), test commands, submodule maintenance.
+2. [`docs/DEVELOPMENT.md`](../docs/DEVELOPMENT.md) — setup, test
+   commands, workflow basics.
 3. [`docs/THEMES.md`](../docs/THEMES.md) — the one-file theme drop
    contract (read only if you're touching themes).
 4. [`docs/RELEASING.md`](../docs/RELEASING.md) — release procedure
    (read only if you're cutting a release or touching the publish
    workflows).
 
-Project-specific specs are in [`docs/specs/`](../docs/specs/), accepted
-implementation plans in [`docs/plans/`](../docs/plans/).
-
 ## Non-negotiables
 
-These are the rules that never bend, regardless of track / scope /
+These are the rules that never bend, regardless of scope or
 "just a quick fix" framing:
 
-- **Use the feature-crew workflow** for non-trivial work. PM proposes a
-  track (Trivial / Standard / Complex) and confirms with the user
-  before starting. See [`docs/DEVELOPMENT.md`](../docs/DEVELOPMENT.md)
-  for the dispatch rules.
 - **No production code without a failing test first.** No completion
   claims without fresh verification. No fixes without root-cause
-  investigation. Cross-model audit on every hard-gate artifact.
+  investigation.
 - **Backward compatibility.** New config options must default safely.
   Existing encrypted posts in the wild must still decrypt against the
   new bundle, OR the wire-format byte (`data-hbe-format`) must bump in
@@ -44,21 +37,7 @@ These are the rules that never bend, regardless of track / scope /
   changes to BOTH.
 - **Don't ship dev-only paths in the npm tarball.** `package.json`'s
   `files` whitelist limits the tarball to `index.js` + `lib/`. Don't
-  add `tests/`, `demo/`, `feature-crew/`, `.github/`, or `src/` —
-  the bundle in `lib/` is what ships, not the sources.
+  add `tests/`, `demo/`, `.github/`, or `src/` — the bundle in `lib/`
+  is what ships, not the sources.
 - **Run `npm test` before pushing** anything that touches `src/`,
   `lib/`, or `tests/`. CI will reject regressions; locally is faster.
-
-## Submodule
-
-`feature-crew/` is a git submodule. After a fresh clone:
-
-```sh
-git submodule update --init --recursive
-```
-
-To pull the latest framework updates:
-
-```sh
-git submodule update --remote feature-crew
-```
