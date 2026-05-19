@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // \"\"'); ver=\"\"; if [[ \"$cmd\" =~ git[[:space:]]+tag([[:space:]]+-[asfm][[:space:]]*[^[:space:]]*)*[[:space:]]+v([0-9][^[:space:]]*) ]]; then ver=\"${BASH_REMATCH[2]}\"; elif [[ \"$cmd\" =~ git[[:space:]]+push([[:space:]]+[^[:space:]]+)+[[:space:]]+v([0-9][^[:space:]]*) ]]; then ver=\"${BASH_REMATCH[2]}\"; fi; [[ -z \"$ver\" ]] && exit 0; ver=\"${ver%% *}\"; changelog=\"${CLAUDE_PROJECT_DIR:-.}/CHANGELOG.md\"; if [[ ! -f \"$changelog\" ]] || ! grep -qE \"^## \\[${ver//./\\\\.}\\] — [0-9]{4}-[0-9]{2}-[0-9]{2}\" \"$changelog\"; then jq -n --arg v \"$ver\" '{hookSpecificOutput: {hookEventName: \"PreToolUse\", permissionDecision: \"deny\", permissionDecisionReason: \"BLOCKED: CHANGELOG.md missing dated entry for \\($v). Add `## [\\($v)] — YYYY-MM-DD` before tagging/pushing.\"}}'; fi; exit 0",
+            "shell": "bash"
+          }
+        ]
+      }
+    ]
+  }
+}
