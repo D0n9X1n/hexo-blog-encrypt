@@ -31,9 +31,11 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('node:crypto');
 
 const { test, expect } = require('./fixtures');
 const { discoverThemes } = require('../helpers/buildSite');
+const { encrypt, decrypt } = require('../../src/server/crypto');
 
 const THEMES_FILE = path.join(__dirname, '.themes.json');
 const themes = fs.existsSync(THEMES_FILE)
@@ -300,6 +302,168 @@ test.describe('v4 UX (single-theme)', () => {
         .filter((k) => k.startsWith('hbe.v4.'))
         .forEach((k) => localStorage.removeItem(k));
     });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────
+  // stableSalt clean-rebuild regression (issue #233 / PR #234).
+  //
+  // The WHOLE point of `stableSalt: true` is that a clean static rebuild
+  // (Cloudflare Pages / Vercel / Netlify / GitHub Actions) re-emits the
+  // SAME permalink-derived salt but a FRESH random nonce + ciphertext.
+  // A derived key cached in localStorage from the PREVIOUS build depends
+  // only on (password, salt, iterations) — so it must still auto-decrypt
+  // the new payload. The existing autoSave test only reloads the SAME
+  // static HTML (salt AND nonce unchanged), so it never exercises this.
+  //
+  // The site is built once in globalSetup, so we SIMULATE the rebuild:
+  // read the real wire (salt/nonce/ciphertext) from the page, re-encrypt
+  // the SAME plaintext under the SAME salt via the server crypto (giving a
+  // fresh nonce + ciphertext, exactly like a rebuild), then `page.route()`
+  // the reload to serve that rebuilt payload. data-salt is left unchanged.
+  //
+  // NOTE: data-salt MUST be captured BEFORE the manual decrypt — on
+  // success `dom.js` replaces the wrapper <div> with a fresh node that
+  // carries no data-salt/data-nonce, so reading it afterwards yields null.
+  // ─────────────────────────────────────────────────────────────────────
+  test('stableSalt clean-rebuild: cached key auto-decrypts a fresh nonce/ciphertext (mode="cached")', async ({ page }) => {
+    await page.goto('/stablesalt-default/');
+
+    // Capture the wire BEFORE decrypt (the wrapper is destroyed on reveal).
+    const wire = await page.evaluate(() => {
+      const el = document.getElementById('hexo-blog-encrypt');
+      return {
+        saltHex: el.dataset.salt,
+        nonceHex: el.dataset.nonce,
+        ciphertextHex: el.querySelector('script#hbeData').textContent.trim(),
+      };
+    });
+    expect(wire.saltHex, 'data-salt must be 32-byte hex').toMatch(/^[0-9a-f]{64}$/);
+
+    // 1) Manual decrypt → seeds the localStorage cache with the derived key.
+    const firstMode = listenForDecryptMode(page);
+    await page.locator('#hbePass').fill(PASSWORD);
+    await page.locator('#hbePass').press('Enter');
+    expect(await firstMode).toBe('manual');
+    await expect(page.locator('body')).toContainText(SECRET);
+
+    // The cached entry's salt must match the page salt we captured.
+    const cachedSalt = await page.evaluate(() => {
+      const k = Object.keys(localStorage).find((x) => x.startsWith('hbe.v4.'));
+      return k ? JSON.parse(localStorage.getItem(k)).salt : null;
+    });
+    expect(cachedSalt, 'cached salt must equal the page salt').toBe(wire.saltHex);
+
+    // 2) Simulate a clean rebuild: recover the exact plaintext, then
+    //    re-encrypt under the SAME salt → same salt, fresh nonce/ciphertext.
+    const plaintext = decrypt(
+      Buffer.from(wire.saltHex, 'hex'),
+      Buffer.from(wire.nonceHex, 'hex'),
+      Buffer.from(wire.ciphertextHex, 'hex'),
+      PASSWORD
+    );
+    const rebuilt = encrypt(plaintext, PASSWORD, { salt: Buffer.from(wire.saltHex, 'hex') });
+    const rebuiltNonceHex = rebuilt.nonce.toString('hex');
+    const rebuiltCiphertextHex = rebuilt.ciphertext.toString('hex');
+    expect(rebuilt.salt.toString('hex'), 'rebuild keeps the salt').toBe(wire.saltHex);
+    expect(rebuiltNonceHex, 'rebuild mints a fresh nonce').not.toBe(wire.nonceHex);
+    expect(rebuiltCiphertextHex, 'fresh nonce ⇒ fresh ciphertext').not.toBe(wire.ciphertextHex);
+
+    // 3) Serve the rebuilt payload on the reload (data-salt untouched).
+    await page.route('**/stablesalt-default/**', async (route) => {
+      const response = await route.fetch();
+      let body = await response.text();
+      body = body
+        .replace(`data-nonce="${wire.nonceHex}"`, `data-nonce="${rebuiltNonceHex}"`)
+        .replace(wire.ciphertextHex, rebuiltCiphertextHex);
+      await route.fulfill({ response, body });
+    });
+
+    // 4) Capture the auto-decrypt mode across the navigation, then reload.
+    await page.addInitScript(() => {
+      window.__hbeAutoMode = null;
+      window.addEventListener('hexo-blog-decrypt', (e) => {
+        window.__hbeAutoMode = (e && e.detail && e.detail.mode) || 'legacy';
+      });
+    });
+    await page.reload();
+
+    // 5) No password interaction — the cached key decrypts the NEW payload.
+    await expect.poll(
+      () => page.evaluate(() => window.__hbeAutoMode),
+      { timeout: 3000 }
+    ).toBe('cached');
+    await expect(page.locator('body')).toContainText(SECRET);
+
+    await page.evaluate(() => {
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith('hbe.v4.'))
+        .forEach((k) => localStorage.removeItem(k));
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────
+  // Self-heal companion: if the salt itself changes (permalink changed, or
+  // stableSalt turned off so a random salt is minted), the cached key is
+  // stale. storage.load() drops it on salt mismatch and the visitor is
+  // re-prompted — never silently stuck on a key that can't decrypt.
+  // ─────────────────────────────────────────────────────────────────────
+  test('stableSalt self-heal: salt change clears the cache and re-prompts (no mode="cached")', async ({ page }) => {
+    await page.goto('/stablesalt-default/');
+
+    const wire = await page.evaluate(() => {
+      const el = document.getElementById('hexo-blog-encrypt');
+      return {
+        saltHex: el.dataset.salt,
+        nonceHex: el.dataset.nonce,
+        ciphertextHex: el.querySelector('script#hbeData').textContent.trim(),
+      };
+    });
+
+    // Seed the cache with a key bound to the ORIGINAL salt.
+    const firstMode = listenForDecryptMode(page);
+    await page.locator('#hbePass').fill(PASSWORD);
+    await page.locator('#hbePass').press('Enter');
+    expect(await firstMode).toBe('manual');
+    await expect(page.locator('body')).toContainText(SECRET);
+
+    // Simulate a rebuild that minted a DIFFERENT salt (permalink changed,
+    // or stableSalt off) while leaving the ORIGINAL nonce + ciphertext in
+    // place. This is deliberate: rewriting ONLY data-salt makes the test
+    // *discriminating*. Under correct code, storage.load() rejects the
+    // cached key on the salt mismatch BEFORE any decrypt, so the visitor is
+    // re-prompted. Under a regression where load() stopped gating on salt,
+    // the still-cached key would successfully decrypt the untouched original
+    // ciphertext → mode="cached" → these assertions fail and catch it.
+    // (Re-encrypting under the new salt instead would let such a regression
+    // pass, because the stale key would merely hit a GCM failure that
+    // main.js also cleans up — an indistinguishable end state.)
+    const newSaltHex = crypto.randomBytes(32).toString('hex');
+    expect(newSaltHex, 'self-heal setup needs a different salt').not.toBe(wire.saltHex);
+
+    await page.route('**/stablesalt-default/**', async (route) => {
+      const response = await route.fetch();
+      let body = await response.text();
+      body = body.replace(`data-salt="${wire.saltHex}"`, `data-salt="${newSaltHex}"`);
+      await route.fulfill({ response, body });
+    });
+
+    await page.addInitScript(() => {
+      window.__hbeAutoMode = null;
+      window.addEventListener('hexo-blog-decrypt', (e) => {
+        window.__hbeAutoMode = (e && e.detail && e.detail.mode) || 'legacy';
+      });
+    });
+    await page.reload();
+
+    // The password form is shown again (salt-mismatched key was dropped).
+    await expect(page.locator('#hbePass')).toBeVisible();
+    // Auto-decrypt never fired, and the secret is NOT auto-revealed.
+    expect(await page.evaluate(() => window.__hbeAutoMode)).toBeNull();
+    await expect(page.locator('body')).not.toContainText(SECRET);
+    // The stale cache entry was cleared by storage.load() on the mismatch.
+    expect(await page.evaluate(
+      () => Object.keys(localStorage).filter((k) => k.startsWith('hbe.v4.')).length
+    )).toBe(0);
   });
 
   test('legacy event listener (no detail access) still fires', async ({ page }) => {
