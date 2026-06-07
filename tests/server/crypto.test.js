@@ -30,6 +30,27 @@ test('encrypt() nonce is fresh per call (two same-input calls → different nonc
   assert.notEqual(a.nonce.toString('hex'), b.nonce.toString('hex'), 'nonces must differ');
 });
 
+test('encrypt() accepts a supplied 32-byte salt while keeping nonce fresh', () => {
+  const suppliedSalt = crypto.createHash('sha256').update('stable-permalink').digest();
+  const a = encrypt(PLAINTEXT, PASSWORD, { salt: suppliedSalt });
+  const b = encrypt(PLAINTEXT, PASSWORD, { salt: suppliedSalt });
+  assert.equal(a.salt.toString('hex'), suppliedSalt.toString('hex'));
+  assert.equal(b.salt.toString('hex'), suppliedSalt.toString('hex'));
+  assert.notEqual(a.nonce.toString('hex'), b.nonce.toString('hex'), 'nonces must remain random');
+  assert.equal(decrypt(a.salt, a.nonce, a.ciphertext, PASSWORD), PLAINTEXT);
+});
+
+test('encrypt() rejects supplied salt that is not a 32-byte Buffer', () => {
+  assert.throws(
+    () => encrypt(PLAINTEXT, PASSWORD, { salt: 'not-a-buffer' }),
+    /salt must be a 32-byte Buffer/
+  );
+  assert.throws(
+    () => encrypt(PLAINTEXT, PASSWORD, { salt: Buffer.alloc(31) }),
+    /salt must be a 32-byte Buffer/
+  );
+});
+
 test('encrypt() ciphertext length = plaintext bytes + 16 (GCM tag)', () => {
   const out = encrypt(PLAINTEXT, PASSWORD);
   const ptBytes = Buffer.byteLength(PLAINTEXT, 'utf8');

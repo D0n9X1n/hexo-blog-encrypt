@@ -21,7 +21,15 @@ function encrypt(plaintext, password, opts) {
   const iterations = (opts && Number.isInteger(opts.iterations) && opts.iterations > 0)
     ? opts.iterations
     : DEFAULT_ITERATIONS;
-  const salt = crypto.randomBytes(SALT_BYTES);
+  let salt;
+  if (opts && opts.salt !== undefined) {
+    if (!Buffer.isBuffer(opts.salt) || opts.salt.length !== SALT_BYTES) {
+      throw new Error('salt must be a 32-byte Buffer');
+    }
+    salt = Buffer.from(opts.salt);
+  } else {
+    salt = crypto.randomBytes(SALT_BYTES);
+  }
   const nonce = crypto.randomBytes(NONCE_BYTES);
   const dk = deriveKey(password, salt, iterations);
   const cipher = crypto.createCipheriv(CIPHER, dk, nonce);

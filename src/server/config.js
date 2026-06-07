@@ -13,6 +13,7 @@ const DEFAULTS = Object.freeze({
   // unified GCM failure handling).
   silent: false,
   autoSave: false,
+  stableSalt: false,
   decryptButton: Object.freeze({
     show: true,
     text: 'Decrypt',
@@ -70,6 +71,7 @@ const POST_KNOWN_KEYS = [
   'wrong_hash_message',
   'silent',
   'autoSave',
+  'stableSalt',
   'decryptButton',
   'kdf',
 ];

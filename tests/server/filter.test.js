@@ -379,6 +379,93 @@ test('per-post salt: two posts with the same password produce different salts AN
   assert.notEqual(pa.ciphertextHex, pb.ciphertextHex, 'ciphertext must differ');
 });
 
+test('stableSalt defaults off: same permalink built twice still produces different salts', async () => {
+  hexo.config.encrypt = {};
+  const opts = {
+    title: 'stable-default-off',
+    password: 'shared',
+    content: '<p>same</p>',
+    permalink: 'https://example.test/stable-default-off/',
+  };
+  const a = makeSyntheticData(opts);
+  const b = makeSyntheticData(opts);
+
+  await hexo.execFilter('after_post_render', a, { context: hexo });
+  await hexo.execFilter('after_post_render', b, { context: hexo });
+
+  const pa = extractPayload(a.content);
+  const pb = extractPayload(b.content);
+  assert.notEqual(pa.saltHex, pb.saltHex, 'stableSalt defaults off, so salt must remain random');
+});
+
+test('stableSalt opt-in: same permalink built twice reuses salt but not nonce', async () => {
+  hexo.config.encrypt = { stableSalt: true };
+  const opts = {
+    title: 'stable-on',
+    password: 'shared',
+    content: '<p>same</p>',
+    permalink: 'https://example.test/stable-on/',
+  };
+  const a = makeSyntheticData(opts);
+  const b = makeSyntheticData(opts);
+
+  await hexo.execFilter('after_post_render', a, { context: hexo });
+  await hexo.execFilter('after_post_render', b, { context: hexo });
+
+  const pa = extractPayload(a.content);
+  const pb = extractPayload(b.content);
+  assert.equal(pa.saltHex, pb.saltHex, 'same permalink must derive the same stable salt');
+  assert.notEqual(pa.nonceHex, pb.nonceHex, 'nonce must remain random');
+  assert.notEqual(pa.ciphertextHex, pb.ciphertextHex, 'fresh nonce keeps ciphertext different');
+  assert.ok(decryptHbeV4({ password: 'shared', ...pa }).includes('<p>same</p>'));
+  assert.ok(decryptHbeV4({ password: 'shared', ...pb }).includes('<p>same</p>'));
+});
+
+test('stableSalt opt-in: different permalinks produce different salts', async () => {
+  hexo.config.encrypt = { stableSalt: true };
+  const a = makeSyntheticData({
+    title: 'stable-a',
+    password: 'shared',
+    content: '<p>same</p>',
+    permalink: 'https://example.test/stable-a/',
+  });
+  const b = makeSyntheticData({
+    title: 'stable-b',
+    password: 'shared',
+    content: '<p>same</p>',
+    permalink: 'https://example.test/stable-b/',
+  });
+
+  await hexo.execFilter('after_post_render', a, { context: hexo });
+  await hexo.execFilter('after_post_render', b, { context: hexo });
+
+  const pa = extractPayload(a.content);
+  const pb = extractPayload(b.content);
+  assert.notEqual(pa.saltHex, pb.saltHex, 'permalink is the stable salt identity');
+});
+
+test('stableSalt opt-in without a non-empty permalink falls back to random salt', async () => {
+  hexo.config.encrypt = { stableSalt: true };
+  const a = makeSyntheticData({ title: 'stable-no-permalink-a', password: 'shared', content: '<p>same</p>' });
+  const b = makeSyntheticData({ title: 'stable-no-permalink-b', password: 'shared', content: '<p>same</p>' });
+  const c = makeSyntheticData({
+    title: 'stable-empty-permalink',
+    password: 'shared',
+    content: '<p>same</p>',
+    permalink: '',
+  });
+
+  await hexo.execFilter('after_post_render', a, { context: hexo });
+  await hexo.execFilter('after_post_render', b, { context: hexo });
+  await hexo.execFilter('after_post_render', c, { context: hexo });
+
+  const pa = extractPayload(a.content);
+  const pb = extractPayload(b.content);
+  const pc = extractPayload(c.content);
+  assert.notEqual(pa.saltHex, pb.saltHex, 'missing permalink cannot derive stable salt');
+  assert.notEqual(pa.saltHex, pc.saltHex, 'empty permalink cannot derive stable salt');
+});
+
 // ---------------------------------------------------------------------------
 // v4 NEW: per-encryption nonce — same content built twice → different nonce/ciphertext
 // ---------------------------------------------------------------------------
