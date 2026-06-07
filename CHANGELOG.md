@@ -6,6 +6,31 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [4.0.2] — 2026-06-07
+
+### Tests
+
+* **`stableSalt` clean-rebuild e2e regression** — added end-to-end coverage
+  for the headline `stableSalt` guarantee that previously had none. With
+  `stableSalt: true` + `autoSave: true`, a clean static rebuild re-emits the
+  same permalink-derived salt but a **fresh** nonce and ciphertext. A new
+  Playwright test seeds the `localStorage` key cache from one build, then
+  simulates a rebuild (re-encrypting the same plaintext under the same salt
+  via the server crypto, yielding a new nonce/ciphertext) and asserts the
+  cached key still auto-decrypts the new payload (`mode="cached"`, no
+  re-prompt). A companion self-heal test proves that when the salt itself
+  changes (permalink change / `stableSalt` off), `storage.load()` drops the
+  stale entry and the visitor is re-prompted. New fixture
+  `templates/stablesalt-post.md` → `stablesalt-default.md`. No runtime or
+  crypto behavior changed — tests and docs only.
+
+### Docs
+
+* Refreshed the wiki and in-repo docs to describe `stableSalt`, correct the
+  per-post salt size (32 bytes), and note the deterministic-salt tradeoff.
+
+---
+
 ## [4.0.1] — 2026-05-19
 
 ### Fixed

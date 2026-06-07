@@ -8,6 +8,7 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const DEFAULT_FIXTURE = path.join(REPO_ROOT, 'tests', 'fixtures', 'hexo-site');
 const TEMPLATE_REL = path.join('templates', 'encrypted-post.md');
 const AUTOSAVE_TEMPLATE_REL = path.join('templates', 'autosave-post.md');
+const STABLESALT_TEMPLATE_REL = path.join('templates', 'stablesalt-post.md');
 const TAG_ONLY_TEMPLATE_REL = path.join('templates', 'tag-encrypted-post.md');
 const CALLBACK_TEMPLATE_REL = path.join('templates', 'callback-post.md');
 const NON_ASCII_BUTTON_TEMPLATE_REL = path.join('templates', 'non-ascii-button-post.md');
@@ -77,6 +78,18 @@ function materializePosts(fixtureDir, themes) {
   const autosaveDest = path.join(postsDir, 'autosave-default.md');
   fs.writeFileSync(autosaveDest, autosaveBody, 'utf8');
   written.push(autosaveDest);
+
+  // Single stableSalt-on post (default theme only) — used by the
+  // stableSalt clean-rebuild e2e regression. Combines `autoSave: true`
+  // with `stableSalt: true` so the e2e can prove that a key cached from
+  // a previous build still auto-decrypts a fresh nonce/ciphertext as
+  // long as the (permalink-derived) salt is unchanged.
+  const stableSaltTemplatePath = path.join(fixtureDir, STABLESALT_TEMPLATE_REL);
+  const stableSaltBody = fs.readFileSync(stableSaltTemplatePath, 'utf8')
+    .split('__THEME__').join('default');
+  const stableSaltDest = path.join(postsDir, 'stablesalt-default.md');
+  fs.writeFileSync(stableSaltDest, stableSaltBody, 'utf8');
+  written.push(stableSaltDest);
 
   // Single tag-only-encrypted post (default theme) — no front-matter
   // password; encryption is driven by `_config.yml.encrypt.tags`. This

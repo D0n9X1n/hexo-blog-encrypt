@@ -67,6 +67,13 @@ not clear solely because the cached nonce differs; decryption always uses
 the current page's `data-nonce` and ciphertext. If AES-GCM authentication
 fails, the cache is cleared and the password form remains visible.
 
+The Playwright e2e suite (`tests/e2e/decryption.spec.js`) guards this
+clean-rebuild path directly: with `stableSalt` + `autoSave` on, it seeds
+the cache, simulates a rebuild (same salt, fresh nonce + ciphertext via the
+server crypto) over the reload, and asserts the cached key still
+auto-decrypts (`mode="cached"`); a companion test asserts the salt-change
+self-heal re-prompts.
+
 ## Code conventions
 
 - **Node CommonJS** (`require` / `module.exports`) on the server side; no
