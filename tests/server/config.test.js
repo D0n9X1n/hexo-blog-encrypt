@@ -19,6 +19,7 @@ test('DEFAULTS exposes the documented v4 keys + values', () => {
   assert.equal(DEFAULTS.theme, 'default');
   assert.equal(DEFAULTS.silent, false);
   assert.equal(DEFAULTS.autoSave, false);
+  assert.equal(DEFAULTS.stableSalt, false);
   assert.equal(DEFAULTS.kdf.iterations, 250000);
   assert.equal(DEFAULTS.decryptButton.show, true);
   assert.equal(typeof DEFAULTS.decryptButton.text, 'string');
@@ -71,9 +72,16 @@ test('UNSET wrong_hash_message defaults to the resolved wrong_pass_message (sing
   assert.equal(out.wrong_hash_message, 'wrong pw!');
 });
 
-test('new keys (kdf.iterations, decryptButton.{show,text}, autoSave) honoured', () => {
+test('new keys (kdf.iterations, decryptButton.{show,text}, autoSave, stableSalt) honoured', () => {
   const out = resolve(
-    { encrypt: { kdf: { iterations: 500000 }, decryptButton: { show: false, text: 'Open' }, autoSave: true } },
+    {
+      encrypt: {
+        kdf: { iterations: 500000 },
+        decryptButton: { show: false, text: 'Open' },
+        autoSave: true,
+        stableSalt: true,
+      },
+    },
     { password: 'pw' },
     fakeLogger()
   );
@@ -81,6 +89,7 @@ test('new keys (kdf.iterations, decryptButton.{show,text}, autoSave) honoured', 
   assert.equal(out.decryptButton.show, false);
   assert.equal(out.decryptButton.text, 'Open');
   assert.equal(out.autoSave, true);
+  assert.equal(out.stableSalt, true);
 });
 
 test('kdf.iterations: 1000 THROWS with error mentioning the 100_000 floor', () => {
@@ -120,12 +129,13 @@ test('numeric password from YAML (password: 12345) is coerced to string and work
 
 test('post-data overrides hexo-config (front-matter wins)', () => {
   const out = resolve(
-    { encrypt: { theme: 'shrink', autoSave: true } },
-    { password: 'pw', theme: 'flip', autoSave: false },
+    { encrypt: { theme: 'shrink', autoSave: true, stableSalt: true } },
+    { password: 'pw', theme: 'flip', autoSave: false, stableSalt: false },
     fakeLogger()
   );
   assert.equal(out.theme, 'flip');
   assert.equal(out.autoSave, false);
+  assert.equal(out.stableSalt, false);
 });
 
 // ---------------------------------------------------------------------------

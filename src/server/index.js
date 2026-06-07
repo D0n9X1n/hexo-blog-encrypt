@@ -1,5 +1,6 @@
 'use strict';
 
+const crypto = require('node:crypto');
 const path = require('node:path');
 
 const { resolve } = require('./config');
@@ -15,6 +16,7 @@ const BUNDLE_PATH = path.join(REPO_ROOT, 'lib', 'hbe.bundle.js');
 const BUNDLE_SOURCEMAP_PATH = path.join(REPO_ROOT, 'lib', 'hbe.bundle.js.map');
 
 const FORMAT_VERSION = '4';
+const STABLE_SALT_NAMESPACE = 'hexo-blog-encrypt:v4:stableSalt:';
 
 // Per-instance Symbol so user front-matter keys can never collide with our
 // idempotence marker. We deliberately do NOT use Symbol.for(...) (a global
@@ -45,6 +47,14 @@ function normalizePostTags(postTags) {
     return out;
   }
   return [];
+}
+
+function stableSaltFromPermalink(permalink) {
+  return crypto.createHash('sha256')
+    .update(STABLE_SALT_NAMESPACE)
+    .update('\0')
+    .update(permalink)
+    .digest();
 }
 
 function resolveTagPassword(hexoEncrypt, postTags) {
@@ -133,8 +143,12 @@ function register(hexo) {
     data.origin = data.content;
 
     const plaintext = String(data.content == null ? '' : data.content);
+    const stableSaltEnabled = cfg.stableSalt === true
+      && typeof data.permalink === 'string'
+      && data.permalink.length > 0;
     const { salt, nonce, ciphertext } = encrypt(plaintext, cfg.password, {
       iterations: cfg.kdf.iterations,
+      salt: stableSaltEnabled ? stableSaltFromPermalink(data.permalink) : undefined,
     });
 
     const buttonShow = !cfg.decryptButton || cfg.decryptButton.show !== false;

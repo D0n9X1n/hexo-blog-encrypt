@@ -179,10 +179,20 @@ encrypt: # hexo-blog-encrypt
     show: true
     text: 解密
 
-  # 解密后是否将明文缓存到 localStorage, 让刷新页面跳过密码输入.
+  # 是否将派生出的 AES 密钥缓存到 localStorage, 让刷新页面跳过密码输入.
   # 默认 OFF — 可在文章 front-matter 中通过 `autoSave: true` 单独开启,
   # 也可以在这里全局开启. 缓存键命名空间为 `hbe.v4.<post-permalink-hash>`.
   autoSave: false
+
+  # 让同一篇文章的 PBKDF2 salt 在 clean build 间保持稳定, 文章身份来自
+  # 当前实现中的 post permalink. 默认: false. 配合 autoSave 时, 适用于
+  # Cloudflare Pages、Vercel、Netlify、GitHub Actions 等每次部署都会从
+  # 干净环境重新生成 HTML 的静态部署平台.
+  #
+  # 只稳定 salt; AES-GCM nonce 每次加密仍然随机, 避免 nonce reuse.
+  # 如果文章 permalink 改变, stable salt 也会改变, 该页面已有的
+  # localStorage 缓存会失效.
+  stableSalt: false
 
   # PBKDF2 迭代次数. 下限: 100_000. 推荐 ≥ 600_000
   # (OWASP 2023 关于 PBKDF2-SHA256 的推荐). 低于推荐值时构建会打印 warning.
@@ -191,6 +201,10 @@ encrypt: # hexo-blog-encrypt
     iterations: 250000
 
 ```
+
+`autoSave` 读取缓存密钥时会比较缓存中的 salt 与当前页面 salt. 仅 nonce
+变化不会提前删除缓存; 浏览器会使用缓存密钥配合当前页面的 nonce 与密文尝试
+解密. 如果 AES-GCM 认证失败, 该缓存条目会被清除, 访客需要重新输入密码.
 
 #### 对博文禁用 Tag 加密
 

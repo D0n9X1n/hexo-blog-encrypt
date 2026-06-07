@@ -185,11 +185,23 @@ encrypt: # hexo-blog-encrypt
     show: true
     text: Decrypt
 
-  # Cache the decrypted plaintext in localStorage so reloads skip the
-  # password prompt. OFF by default — opt in per post via front-matter
+  # Cache the derived AES key in localStorage so reloads skip the password
+  # prompt. OFF by default — opt in per post via front-matter
   # `autoSave: true`, or globally here. Cache key is namespaced under
   # `hbe.v4.<post-permalink-hash>`.
   autoSave: false
+
+  # Keep the PBKDF2 salt stable across clean static builds for the same
+  # post permalink. Default: false. This is useful with autoSave on
+  # Cloudflare Pages, Vercel, Netlify, GitHub Actions, and similar
+  # platforms that rebuild generated HTML from a clean environment on
+  # every deploy.
+  #
+  # Only the salt is stable. The AES-GCM nonce remains random for every
+  # encryption to avoid nonce reuse. If the post permalink changes, the
+  # stable salt changes too, and existing localStorage cache for that page
+  # is invalidated.
+  stableSalt: false
 
   # PBKDF2 iteration count. Floor: 100_000. Recommended ≥ 600_000
   # (OWASP 2023 for PBKDF2-SHA256). Lower-than-recommended values log a
@@ -198,6 +210,12 @@ encrypt: # hexo-blog-encrypt
     iterations: 250000
 
 ```
+
+When `autoSave` reads a cached key, it compares the cached salt with the
+current page salt. A nonce change alone does not delete the cache up
+front; the browser tries the cached key with the current page nonce and
+ciphertext. If AES-GCM authentication fails, the cache entry is cleared
+and the visitor is asked for the password again.
 
 #### To disable tag encryption
 
