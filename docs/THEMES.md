@@ -67,6 +67,12 @@ The seven `data-*` attributes the browser bundle reads from the
 | `data-kdf-iterations`  | `{{hbeKdfIterations}}`      | PBKDF2 iteration count.                             |
 | `data-auto-save`       | `{{hbeAutoSave}}`           | Whether the derived key is persisted to `localStorage`. |
 
+The `stableSalt` option deliberately does not add a `data-*` attribute.
+It only changes how the server chooses `{{hbeSalt}}` when rendering the
+page. The browser uses `data-salt` to validate cached `autoSave` keys,
+then always decrypts with the current page's `data-nonce` and
+ciphertext. If AES-GCM authentication fails, the cache is cleared.
+
 ## Forbidden
 
 To keep the one-file-drop contract intact:

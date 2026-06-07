@@ -27,7 +27,7 @@ browser bundle is built with esbuild (no runtime bundler).
 | --- | --- |
 | `index.js` | Composition root — wires config + crypto + template + generator into the Hexo filter callback. |
 | `config.js` | Deep-merge of `hexo.config.encrypt` with per-post front-matter; KDF-iterations floor; `wrong_hash_message` → `wrong_pass_message` defaulting; tag-registry lookup. |
-| `crypto.js` | PBKDF2-SHA256 → AES-256-GCM. Per-post 16-byte salt + 12-byte nonce. Returns `{ ciphertextHex, saltHex, nonceHex, tagHex, kdfIterations }`. |
+| `crypto.js` | PBKDF2-SHA256 → AES-256-GCM. Per-post 32-byte salt + 12-byte nonce. With `stableSalt: true`, the salt is derived from the post permalink; the nonce is still random for every encryption. |
 | `template.js` | Single allowlist of 11 `{{hbe…}}` placeholders + per-placeholder render mode (attr-escape / text-escape / hex-validated). The contract every theme HTML satisfies. |
 | `generator.js` | Hexo asset generator. Emits `lib/hbe.style.css` + content-hashed `lib/hbe.<hex10>.js`. The hex10 is `sha256(bundle).slice(0, 10)`. |
 | `logger.js` | Tiny console wrapper — namespaced "[hexo-blog-encrypt]" prefix + verbosity gate. |
@@ -53,6 +53,19 @@ exact attribute / placeholder table is in [`docs/THEMES.md`](THEMES.md);
 the bundle gates on `data-hbe-format="4"` and refuses to attempt
 decryption against any other value, so changing the wire format requires
 bumping the version byte and the bundle in lockstep.
+
+`stableSalt` is server-side only and does not add an eighth `data-*`
+attribute. When enabled, `src/server/index.js` derives the 32-byte salt
+from the namespace `hexo-blog-encrypt:v4:stableSalt:` plus the post
+permalink. If the permalink changes, the stable salt changes and any
+existing `autoSave` cache for that page is invalidated.
+
+For `autoSave`, the browser cache entry keeps `{ version, dk, salt,
+nonce }` for v4 schema compatibility. On load, the browser clears the
+entry when the cached salt differs from the current `data-salt`. It does
+not clear solely because the cached nonce differs; decryption always uses
+the current page's `data-nonce` and ciphertext. If AES-GCM authentication
+fails, the cache is cleared and the password form remains visible.
 
 ## Code conventions
 

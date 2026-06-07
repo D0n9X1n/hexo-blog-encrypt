@@ -186,6 +186,53 @@ test('Both READMEs explain WHY to upgrade from v3 BEFORE explaining HOW', () => 
   }
 });
 
+test('Both READMEs document stableSalt clean-build autoSave semantics', () => {
+  const cases = [
+    {
+      readme: 'ReadMe.md',
+      required: [
+        /stableSalt/,
+        /Default:\s*false|default[^.\n]*(?:false|OFF|off)/i,
+        /autoSave/,
+        /derived AES key/i,
+        /nonce[^.\n]*random|random[^.\n]*nonce/i,
+        /Cloudflare Pages/,
+        /Vercel/,
+        /Netlify/,
+        /GitHub Actions/,
+        /permalink[^.\n]*(?:changes|changed|change)|(?:changes|changed|change)[^.\n]*permalink/i,
+        /AES-GCM authentication fails[^.\n]*cache/i,
+      ],
+    },
+    {
+      readme: 'ReadMe.zh.md',
+      required: [
+        /stableSalt/,
+        /默认[:：]?\s*false|默认[^.\n]*(?:OFF|关闭|false)/i,
+        /autoSave/,
+        /AES 密钥/,
+        /nonce[^.\n]*随机|随机[^.\n]*nonce/i,
+        /Cloudflare Pages/,
+        /Vercel/,
+        /Netlify/,
+        /GitHub Actions/,
+        /permalink[^.\n]*(?:改变|变化)|(?:改变|变化)[^.\n]*permalink/i,
+        /AES-GCM 认证失败[^.\n]*缓存/,
+      ],
+    },
+  ];
+
+  for (const { readme, required } of cases) {
+    const body = read(path.join(repoRoot, readme));
+    for (const re of required) {
+      assert.ok(
+        re.test(body),
+        `${readme} must document stableSalt/autoSave semantic matching ${re}`
+      );
+    }
+  }
+});
+
 test('Both READMEs use only valid, this-repo badges (no stale legacy-fork pointers)', () => {
   // The README header lists badges. Every badge must:
   //   (1) point at THIS repository or this npm package — not the
