@@ -9,7 +9,7 @@
 //     version: 4,
 //     dk:      base64(rawKeyBytes),  // 32 bytes
 //     salt:    <hex64>,              // matches data-salt
-//     nonce:   <hex24>,              // matches data-nonce
+//     nonce:   <hex24>,              // retained for v4 schema compatibility
 //   }
 //
 // IMPORTANT: when `autoSave` is false, save() is a no-op. When reading, any
@@ -54,7 +54,7 @@ async function save({ pageKey, key, saltHex, nonceHex, autoSave }) {
   }
 }
 
-async function load({ pageKey, expectedSaltHex, expectedNonceHex }) {
+async function load({ pageKey, expectedSaltHex }) {
   let entry;
   try {
     const raw = localStorage.getItem(storageKey(pageKey));
@@ -78,9 +78,10 @@ async function load({ pageKey, expectedSaltHex, expectedNonceHex }) {
     return null;
   }
 
-  // If the encrypted page's salt/nonce changed (rebuild minted fresh ones),
-  // the cached key is stale. Drop it.
-  if (entry.salt !== expectedSaltHex || entry.nonce !== expectedNonceHex) {
+  // If the encrypted page's salt changed, the cached key is stale. Nonce is
+  // not part of PBKDF2 key derivation; decrypt still uses the current page's
+  // nonce and ciphertext, and failure clears the cache in main.js.
+  if (entry.salt !== expectedSaltHex) {
     try { localStorage.removeItem(storageKey(pageKey)); } catch (_e) { /* ignore */ }
     return null;
   }

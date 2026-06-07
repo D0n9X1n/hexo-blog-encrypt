@@ -57,7 +57,6 @@ async function tryAutoDecrypt(mainElement, wire, guardedReveal) {
   const cachedKey = await storage.load({
     pageKey: pageKey(),
     expectedSaltHex: wire.saltHex,
-    expectedNonceHex: wire.nonceHex,
   });
   if (!cachedKey) return false;
   const result = await cryptoMod.tryDecryptWithKey({
