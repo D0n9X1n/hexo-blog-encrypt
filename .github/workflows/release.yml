@@ -103,3 +103,80 @@ jobs:
         # via the id-token permission above and exchanges it with the
         # trusted publisher configured for this package on npmjs.com.
         run: npm publish --provenance --access public
+
+  # Create the GitHub Release for the tag AFTER npm publish succeeds.
+  #
+  # Deliberately a SEPARATE job from `publish`: the publish job does OIDC
+  # trusted publishing and is kept at `contents: read` (least privilege for
+  # the most sensitive credential). Only this job gets `contents: write`,
+  # and it has NO `id-token` — so the release-notes step can never touch the
+  # npm-publishing token, and vice-versa.
+  #
+  # Release notes = the CHANGELOG.md section for this version, followed by
+  # the full list of commits since the previous tag. Idempotent: re-running
+  # the workflow edits the existing Release instead of failing.
+  github-release:
+    name: GitHub Release ${{ github.ref_name }}
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write   # scoped to THIS job only — create/edit Releases
+
+    steps:
+      - name: Checkout (full history + tags)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # need tag history to compute "since previous tag"
+
+      - name: Build release notes (CHANGELOG section + commits since prev tag)
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          VER="${TAG#v}"
+
+          # 1) Extract this version's CHANGELOG section: from `## [VER]` up to
+          #    (but not including) the next `## [` heading.
+          awk -v ver="$VER" '
+            $0 ~ "^## \\[" ver "\\]" {f=1; print; next}
+            f && /^## \[/ {exit}
+            f {print}
+          ' CHANGELOG.md > notes.md
+
+          if [ ! -s notes.md ]; then
+            echo "::error::No CHANGELOG.md section found for ${VER}"
+            exit 1
+          fi
+
+          # 2) Find the previous tag (most recent tag reachable from this
+          #    tag's parent). Append the full commit list since then.
+          PREV_TAG=$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || true)
+          {
+            echo
+            if [ -n "$PREV_TAG" ]; then
+              echo "### Commits since ${PREV_TAG}"
+              echo
+              git log --no-merges --pretty='- %s (%h)' "${PREV_TAG}..${TAG}"
+              echo
+              echo "**Full changelog:** https://github.com/${GITHUB_REPOSITORY}/compare/${PREV_TAG}...${TAG}"
+            else
+              echo "### Commits"
+              echo
+              git log --no-merges --pretty='- %s (%h)' "${TAG}"
+            fi
+          } >> notes.md
+
+          echo "----- release notes -----"
+          cat notes.md
+
+      - name: Create or update the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "$TAG" --notes-file notes.md
+          else
+            gh release create "$TAG" --title "$TAG" --notes-file notes.md --verify-tag
+          fi
