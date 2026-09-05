@@ -252,35 +252,46 @@ It will be called after the blog decrypted.
 例子在: [Callback 例子](https://d0n9x1n.github.io/hexo-blog-encrypt/demo/callback/).
 
 ### 解密后的触发事件
-感谢 @[f-dong](https://github.com/f-dong), 我们现在会在解密完成后触发一个 `hexo-blog-decrypt` 事件, 你们可以编写 callback 来监听该事件.
 
+插件在解密后向 `window` 发送一次 `hexo-blog-decrypt` 事件。
+`event.detail.mode` 为 `manual`（输入密码）或 `cached`（使用缓存密钥）。
+请监听事件，而不是手动触发：
+
+```js
+window.addEventListener('hexo-blog-decrypt', function (event) {
+  // 在这里重新初始化主题中的目录、代码高亮等功能。
+  console.log('Decrypted:', event.detail.mode);
+});
 ```
-// trigger event
-var event = new Event('hexo-blog-decrypt');
-window.dispatchEvent(event);
-```
+
+从 **4.0.3** 起，普通外部脚本按文章中的顺序加载完成后，才执行后续内联脚本。
+这解决了 DPlayer 等组件在其依赖库尚未加载时就初始化的问题。
+外部脚本加载成功、失败或达到每个脚本 **15 秒** 的等待上限后，才发送解密事件；
+原有 `onload` / `onerror` 处理函数保持不变。超时不等于取消，脚本可能稍后执行。
+带有显式 `async` 的外部脚本仍独立加载；动态恢复的 `defer` 不会重新产生页面解析阶段。
+内联 `type="module"` 脚本及脚本内部的异步任务保留浏览器原生时序，不保证在解密事件前完成。
+依赖这些任务时，请使用它们自己的就绪信号。
+
+[脚本加载顺序示例](https://d0n9x1n.github.io/hexo-blog-encrypt/demo/script-order/)
+（密码 `hello`）同时展示普通解密与缓存密钥解密。
 
 ### 对 TOC 进行加密
 
-如果你有一篇文章使用了 TOC，你需要修改模板的部分代码。这里用 landscape 作为例子：
+**不要在生成页面时将加密文章的 `post.origin` 渲染到 HTML 中。**
+它是供旧版 Hexo 集成使用的明文；即使用 `display:none` 隐藏目录，标题仍会泄露。
+搜索和 feed 插件也必须排除加密文章的明文字段。
 
-+ 你可以在 hexo/themes/landscape/layout/_partial/article.ejs 找到 article.ejs。
-+ 然后找到 <% post.content %> 这段代码，通常在30行左右。
-+ 使用如下的代码来替代它:
+在主题模板中，仅为未加密文章生成服务端目录。例如：
 
-```
-<% if(post.toc == true){ %>
-  <div id="toc-div" class="toc-article" <% if (post.encrypt == true) { %>style="display:none" <% } %>>
-    <strong class="toc-title">Index</strong>
-      <% if (post.encrypt == true) { %>
-        <%- toc(post.origin, {list_number: true}) %>
-      <% } else { %>
-        <%- toc(post.content, {list_number: true}) %>
-      <% } %>
-  </div>
+```ejs
+<% if (post.toc === true && !post.encrypt) { %>
+  <div class="toc-article"><%- toc(post.content, {list_number: true}) %></div>
 <% } %>
 <%- post.content %>
 ```
+
+加密文章的目录应在 `hexo-blog-decrypt` 回调中，使用解密后的
+`#hexo-blog-encrypt` 内容和主题的客户端目录功能生成，而不是发布隐藏的明文目录。
 
 ### 禁用 Log
 If you want to disable the logging, you can add a silent property in `_config.yml` and set it to true.

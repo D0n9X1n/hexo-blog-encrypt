@@ -436,3 +436,42 @@ test('docs/RELEASING.md documents both registries and the OIDC + GH Packages flo
     );
   }
 });
+
+test('maintainer docs describe the actual production package and IIFE bundle', () => {
+  for (const file of ['docs/ARCHITECTURE.md', '.github/copilot-instructions.md']) {
+    const body = read(path.join(repoRoot, file));
+    const section = body.slice(body.search(/Tarball whitelist|Don't ship dev-only/));
+    assert.ok(section.includes('`src/server/`'), `${file} must retain server runtime sources`);
+    assert.ok(section.includes('`src/browser/`'), `${file} must distinguish browser build sources`);
+  }
+  const architecture = read(path.join(repoRoot, 'docs/ARCHITECTURE.md'));
+  assert.match(architecture, /IIFE/);
+  assert.doesNotMatch(architecture, /single ESM bundle|Browser side is ESM/);
+});
+
+test('PR checklist matches the current theme and crypto module contract', () => {
+  const body = read(prTemplate);
+  assert.ok(body.includes(REQUIRED_PLACEHOLDERS.length + ' `{{hbe...}}`'));
+  assert.match(body, /7 `data-\*`/);
+  assert.doesNotMatch(body, /`lib\/hbe\.js`/);
+  assert.ok(body.includes('src/server/crypto.js'));
+  assert.ok(body.includes('src/browser/crypto.js'));
+});
+
+test('release guidance follows the automated GitHub Release job', () => {
+  const body = read(path.join(repoRoot, 'docs/RELEASING.md'));
+  assert.match(body, /automatically (?:creates|create).*GitHub Release|GitHub Release.*automatically/i);
+  assert.doesNotMatch(body, /gh release create|workflow only publishes/);
+  assert.match(body, /re-?run[^\n]*same (?:tagged )?commit|same (?:tagged )?commit[^\n]*re-?run/i);
+});
+
+test('both READMEs document script readiness and the encrypted dependency demo', () => {
+  for (const name of ['ReadMe.md', 'ReadMe.zh.md']) {
+    const body = read(path.join(repoRoot, name));
+    assert.ok(body.includes('/demo/script-order/'), `${name}: script-order demo link`);
+    assert.ok(body.includes('async'), `${name}: async script semantics`);
+    assert.ok(body.includes('15'), `${name}: bounded load wait`);
+    assert.ok(body.includes('type="module"'), `${name}: inline module limitation`);
+    assert.doesNotMatch(body, /toc\(post\.origin/, `${name}: must not publish plaintext TOC`);
+  }
+});

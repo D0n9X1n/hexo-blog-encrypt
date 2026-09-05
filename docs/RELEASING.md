@@ -17,28 +17,24 @@ exact tagged commit.
 
 ## Pre-flight checklist (before tagging)
 
-Single commit on `master`, two file changes:
+Prepare these changes on a feature branch, then merge after the PR checks pass:
 
 1. **`CHANGELOG.md`** — change `## [x.y.z] — Unreleased` → `## [x.y.z] — YYYY-MM-DD`.
    The release workflow's regex `^## \[VERSION\] — [0-9]{4}-[0-9]{2}-[0-9]{2}` will
    fail closed if the date is missing.
-2. **`demo/package.json`** — flip `"hexo-blog-encrypt": "file:.."` →
-   `"hexo-blog-encrypt": "^x.y.z"`. The release workflow refuses to
-   publish if a `file:` reference remains.
+2. **`demo/package.json`** — use a published semver range such as `^x.y.z`,
+   never `file:..`. Raise the minimum when the demo exercises the new fix.
+   The release workflow rejects `file:` references; it does not require an
+   exact demo-version match.
 3. **`package.json` `version`** — should already match the tag from your
    bump commit; the workflow re-verifies.
 
-```sh
-git -c user.email=you@example.com -c user.name=You commit -am "release: prepare vX.Y.Z
+Run `npm test`, `npm pack --dry-run --json > pack.json`, and
+`node build/verify-pack.js pack.json` before pushing. Keep the generated
+`pack.json`, lockfiles and bundles out of commits. Merge the release changes
+only after the `Tests` workflow passes; create the tag from that exact commit.
 
-- CHANGELOG date YYYY-MM-DD
-- demo/package.json: file:.. → ^X.Y.Z (release.yml requires this)
-
-deploy-demo will temporarily fail until X.Y.Z publishes; retrigger after."
-git push origin master
-```
-
-> **Heads-up: deploy-demo will fail on this commit.** The Pages deploy
+> **Heads-up: deploy-demo can fail before publication.** The Pages deploy
 > runs `npm install` against the demo site, which now wants
 > `hexo-blog-encrypt@^X.Y.Z` from npmjs — and that version doesn't
 > exist yet. This is expected. Retrigger deploy-demo once the release
@@ -69,8 +65,10 @@ gh run list --workflow=release.yml --limit 1
 gh run list --workflow=publish-gh-packages.yml --limit 1
 ```
 
-The `publish-gh-packages.yml` job is **idempotent** — it skips publish
-if the version already exists. Re-runs are safe.
+The `publish-gh-packages.yml` job skips publish if the version already exists.
+The canonical npm publish step does not: if npm succeeded but GitHub Release
+creation failed, re-run only the failed job, not the successful publish job.
+Every re-run uses the same tagged commit; newer master changes do not apply.
 
 ## Post-publish
 
@@ -81,14 +79,13 @@ if the version already exists. Re-runs are safe.
      | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['version'])"
    ```
 
-2. **Create the GitHub Release** (the workflow only publishes the
-   tarball; the user-facing release notes are a separate step):
+2. **Verify the GitHub Release.** After npm publication, `release.yml`
+   automatically creates or updates the GitHub Release in its `github-release`
+   job. Notes contain the version's CHANGELOG section and commits since the
+   previous tag. Do not create a duplicate release manually.
 
    ```sh
-   gh release create vX.Y.Z \
-     --title "vX.Y.Z — <headline>" \
-     --notes-file path/to/release-notes.md \
-     --latest
+   gh release view vX.Y.Z
    ```
 
 3. **Retrigger deploy-demo** so the live site pulls the now-published
@@ -170,11 +167,11 @@ name (see Getting Started for the install snippet).
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
 | `ENEEDAUTH` from `npm publish` in release.yml | npm CLI < 11.5.1 (the `npm install -g npm@^11` step is missing or failed), OR trusted publisher misconfigured on npmjs.com | Verify the upgrade step ran; double-check the trusted-publisher fields match exactly (workflow filename `release.yml`, no environment). |
-| `release.yml` fails at "Verify CHANGELOG has dated entry" | You forgot to date the `## [x.y.z]` heading | Pre-flight commit + push, then re-run with `gh run rerun <id>` (the tag stays put). |
-| `release.yml` fails at "Verify demo references published package" | `demo/package.json` still says `file:..` | Pre-flight commit + push, re-run. |
+| `release.yml` fails at "Verify CHANGELOG has dated entry" | You forgot to date the `## [x.y.z]` heading | Fix the dated entry before tagging a new version; a re-run uses the same tagged commit, not newer master changes. |
+| `release.yml` fails at "Verify demo references published package" | `demo/package.json` still says `file:..` | Fix the manifest before tagging a new version; a re-run uses the same tagged commit. |
 | `publish-gh-packages.yml` fails with `403 Forbidden` | The runner's `GITHUB_TOKEN` lost `packages: write` (e.g. branch protection stripped it) | Restore `permissions: packages: write` at the workflow / job scope. |
 | GitHub Packages page returns 404 after publish | Eventually consistent; CDN catches up within seconds. | Wait, refresh. If still 404 after a few minutes, the publish step probably no-op'd — check the workflow log for the "Skip if … already exists" branch. |
-| Tag points at the wrong commit (you forgot a fix) | Squash merges drop late commits; the tag was created before the fix | `git tag -d vX.Y.Z && git push --delete origin vX.Y.Z`, fix on master, re-tag, re-push. The publish workflow is idempotent only at the tarball level — if you already published the bad version to npm, you must bump (npm versions are immutable). |
+| Tag points at the wrong commit (you forgot a fix) | Squash merges drop late commits; the tag was created before the fix | Do not move a published tag or overwrite an npm version. Apply the correction and release a new patch version. Inspect both registries before retrying any failed publication. |
 
 ## Lessons learned
 

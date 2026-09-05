@@ -6,6 +6,45 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [4.0.3] — 2026-09-04
+
+### Fixed
+
+* **Script dependency order after decryption** (#237) — attach decrypted
+  content before restoring its scripts, wait for ordinary external dependencies
+  before following initializers, and dispatch `hexo-blog-decrypt` after external
+  scripts load, fail, or reach a 15-second per-script deadline. Preserve existing
+  load/error handlers, CSP nonces, explicit `async` behavior, import maps, and skipped
+  `nomodule`/data blocks. Inline modules retain native asynchronous execution;
+  they do not produce a false load timeout. Inspired by
+  [WANG-Guangxin's DPlayer fix](https://github.com/WANG-Guangxin/hexo-blog-encrypt/commit/dab21f1c430c926cd4faadc70974cd6673d87d5a).
+* **Template substitution escaping** — replacement values containing another
+  `{{hbe…}}` token are now kept literal. A single pass over the template prevents
+  a later text substitution from bypassing attribute-context escaping.
+
+### Tests and demo
+
+* Added deterministic browser regressions for delayed dependencies, manual and
+  cached decryption, callbacks, errors, async scripts, modules, import maps, and
+  timeouts. Added a nested-placeholder escaping regression.
+* Added the [encrypted script-loading demo](https://d0n9x1n.github.io/hexo-blog-encrypt/demo/script-order/)
+  (password `hello`) with a local library, visible initialization checks, and a
+  saved-key reset button. The browser suite exercises its actual markup and
+  library under a held network request and cached reload.
+
+### Documentation
+
+* Replaced the unsafe hidden-TOC example that exposed encrypted headings through
+  `post.origin`; clarified plaintext integration boundaries in both READMEs.
+* Corrected callback usage, production packaging, IIFE architecture, current
+  theme checklist, and automated GitHub Release/retry guidance. Added regression
+  checks for these documentation contracts.
+
+No encryption, key-derivation, storage-default, or v4 wire-format changes.
+Rebuild the site to deploy the updated content-hashed browser bundle.
+
+---
+
 ## [4.0.2] — 2026-06-07
 
 ### Tests

@@ -48,7 +48,7 @@ function pageKey() {
 }
 
 async function reveal(mainElement, plaintext, mode) {
-  dom.swapInDecryptedDOM(mainElement, plaintext);
+  await dom.swapInDecryptedDOM(mainElement, plaintext);
   dispatchDecryptEvent(mode);
 }
 

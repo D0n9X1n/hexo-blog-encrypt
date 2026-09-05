@@ -2,8 +2,8 @@
 # Auto-deployed to https://d0n9x1n.github.io/hexo-blog-encrypt/ via .github/workflows/deploy-demo.yml
 
 # IMPORTANT: `root` MUST keep its trailing slash. The plugin string-concats
-# `${hexo.config.root}lib/hbe.js`, so `root: /hexo-blog-encrypt` (no slash) would
-# emit `/hexo-blog-encryptlib/hbe.js` and break asset loading.
+# root-prefixed asset URLs include `lib/hbe.<hash10>.js` and `css/hbe.style.css`.
+# Keep this directory prefix intact so both assets and demo links resolve.
 title: hexo-blog-encrypt — Live Demo
 subtitle: ''
 description: 'Live demo for the hexo-blog-encrypt Hexo plugin. Every theme, the callback hook, and tag-based encryption — all decrypted in your browser.'
@@ -48,8 +48,7 @@ highlight:
   wrap: true
   hljs: false
 
-# Show every demo post on the index (we ship 10 posts; default per_page: 10
-# would push the last one onto page 2).
+# Show every demo post on the index, including the script-loading regression.
 index_generator:
   path: ''
   per_page: 20
