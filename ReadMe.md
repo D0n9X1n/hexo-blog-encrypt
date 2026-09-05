@@ -264,35 +264,50 @@ It will be called after the blog is decrypted.
 Demo: [Callback Example](https://d0n9x1n.github.io/hexo-blog-encrypt/demo/callback/).
 
 ### After Decrypt Event
-Thanks to @[f-dong](https://github.com/f-dong), we now will trigger a event named `hexo-blog-decrypt`, so you can add a call back to listen to that event.
 
+The plugin dispatches `hexo-blog-decrypt` once on `window` after decryption.
+`event.detail.mode` is `manual` (password entered) or `cached` (saved key).
+Listen for the event rather than dispatching it yourself:
+
+```js
+window.addEventListener('hexo-blog-decrypt', function (event) {
+  // Reinitialize your theme's table of contents, syntax highlighting, etc.
+  console.log('Decrypted:', event.detail.mode);
+});
 ```
-// trigger event
-var event = new Event('hexo-blog-decrypt');
-window.dispatchEvent(event);
-```
+
+Since **4.0.3**, ordinary external scripts load in document order before the
+following inline scripts run. This fixes library-dependent initialization such
+as DPlayer. The decrypt event waits for restored external scripts to load, fail,
+or reach a **15-second per-script deadline**. Existing `onload` / `onerror`
+handlers are preserved. A timeout does not cancel a script; it can execute later.
+Explicit `async` scripts still load independently; restored `defer` scripts do
+not recreate a document parsing phase. Inline `type="module"` scripts and
+asynchronous work inside scripts retain native scheduling and are not guaranteed
+to finish before the decrypt event. Use their own readiness signals when needed.
+
+Try the [script-loading demo](https://d0n9x1n.github.io/hexo-blog-encrypt/demo/script-order/)
+(password `hello`) for both manual and cached-key decryption.
 
 ### Encrypt TOC
 
-If you has a post with TOC, you should change the code of your template. Take the default theme 'landscape' as an example:
+**Do not render an encrypted post's `post.origin` into generated HTML.** It is
+plaintext retained for legacy Hexo integrations. Hiding a generated TOC with
+`display:none` still exposes its headings. Search and feed integrations must also
+exclude plaintext fields from encrypted posts.
 
-+ You should find the `article.ejs` file located at `hexo/themes/landscape/layout/_partial/article.ejs`.
-+ Find the code like <% post.content %>, which is usually at line 30.
-+ Replace the <% post.content %> with the following code block:
+Generate a server-side TOC only for unencrypted posts. For example:
 
-```
-<% if(post.toc == true){ %>
-  <div id="toc-div" class="toc-article" <% if (post.encrypt == true) { %>style="display:none" <% } %>>
-    <strong class="toc-title">Index</strong>
-      <% if (post.encrypt == true) { %>
-        <%- toc(post.origin, {list_number: true}) %>
-      <% } else { %>
-        <%- toc(post.content, {list_number: true}) %>
-      <% } %>
-  </div>
+```ejs
+<% if (post.toc === true && !post.encrypt) { %>
+  <div class="toc-article"><%- toc(post.content, {list_number: true}) %></div>
 <% } %>
 <%- post.content %>
 ```
+
+For encrypted posts, use your theme's client-side TOC initializer inside the
+`hexo-blog-decrypt` callback, reading the revealed `#hexo-blog-encrypt` content
+rather than publishing a hidden plaintext TOC.
 
 ### Disable logging
 If you want to disable the logging, you can add a silent property in `_config.yml` and set it to true.

@@ -45,6 +45,8 @@ const PLACEHOLDERS = [
   { token: '{{hbeEncryptedData}}',     field: 'ciphertext',     mode: 'hex' },
 ];
 
+const PLACEHOLDER_RE = new RegExp(PLACEHOLDERS.map(({ token }) => token).join('|'), 'g');
+
 function valueOf(opts, field) {
   const v = opts[field];
   if (field === 'kdfIterations') return String(v);
@@ -53,7 +55,7 @@ function valueOf(opts, field) {
 }
 
 function substitute(template, opts) {
-  let out = template;
+  const replacements = new Map();
   for (const { token, field, mode } of PLACEHOLDERS) {
     const raw = valueOf(opts, field);
     let replacement;
@@ -67,9 +69,11 @@ function substitute(template, opts) {
       }
       replacement = s;
     }
-    out = out.split(token).join(replacement);
+    replacements.set(token, replacement);
   }
-  return out;
+  // Match only the original template. Replacement text may contain tokens of
+  // its own and must never be expanded again in a different escaping context.
+  return template.replace(PLACEHOLDER_RE, (token) => replacements.get(token));
 }
 
 function discoverThemes(templateDir) {

@@ -39,8 +39,9 @@ them in seconds.
 
 ## Branch protection
 
-`master` requires the `Tests` status check to pass. The staged rollout
-process for adding new required checks is documented in
+The `Tests` workflow runs `lint-and-server` and sharded `e2e` jobs. All must
+pass before merging or releasing. Repository branch-protection settings may
+vary; the staged rollout process for required checks is documented in
 [`.github/CONTRIBUTING.md`](../.github/CONTRIBUTING.md).
 
 CODEOWNERS (`.github/CODEOWNERS`) makes `@D0n9X1n` the default reviewer

@@ -212,3 +212,15 @@ test('createRenderer with no logger arg works (default no-op logger covers fallb
   const out = r.render(baseOpts({ theme: 'no-such-theme' }));
   assert.ok(out.includes('hexo-blog-encrypt') || out.length > 0);
 });
+
+test('replacement values remain literal instead of expanding other placeholders', () => {
+  const r = createRenderer({ templateDir: FIXTURES });
+  const out = r.render(baseOpts({
+    wpm: '{{hbeMessage}}',
+    message: '" data-injected="yes',
+    buttonText: '{{hbeEncryptedData}} $&',
+  }));
+  assert.ok(out.includes('data-wpm="{{hbeMessage}}"'), 'attribute value stays literal');
+  assert.ok(!out.includes('data-wpm="" data-injected="yes"'), 'no cross-context attribute injection');
+  assert.ok(out.includes('{{hbeEncryptedData}} $&'), 'replacement tokens and dollar signs stay literal');
+});

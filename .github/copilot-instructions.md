@@ -36,8 +36,8 @@ These are the rules that never bend, regardless of scope or
   guards this for the "Why upgrade" section. Apply user-facing docs
   changes to BOTH.
 - **Don't ship dev-only paths in the npm tarball.** `package.json`'s
-  `files` whitelist limits the tarball to `index.js` + `lib/`. Don't
-  add `tests/`, `demo/`, `.github/`, or `src/` — the bundle in `lib/`
-  is what ships, not the sources.
+  `files` whitelist includes `index.js`, `src/server/`, and `lib/`.
+  Server sources are production runtime code. Do not add `src/browser/`,
+  `build/`, `tests/`, `demo/`, or `.github/` to the published package.
 - **Run `npm test` before pushing** anything that touches `src/`,
   `lib/`, or `tests/`. CI will reject regressions; locally is faster.
