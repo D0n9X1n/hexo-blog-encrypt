@@ -1,7 +1,6 @@
 # Created by .ignore support plugin (hsz.mobi)
 ### *.iml template
 node_modules/
-package-lock.json
 coverage/
 .nyc_output/
 tests/e2e/playwright-report/
@@ -180,3 +179,4 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+tests/fixtures/hexo-site/package-lock.json

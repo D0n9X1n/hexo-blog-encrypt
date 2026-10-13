@@ -15,7 +15,7 @@ That's it. No submodules, no extra steps.
 | Command | What it runs |
 | --- | --- |
 | `npm test` | Lint + server tests (`tests/server/*.test.js`, `tests/docs.test.js`) + Playwright e2e against all 8 themes. The full suite CI runs. |
-| `npm run lint` | ESLint over `src/` + `tests/`. |
+| `npm run lint` | ESLint (flat config, `eslint.config.js`) over the whole repo except `demo/` and build outputs. |
 | `npm run test:server` | Server-side Node tests only. Fast (no browser). |
 | `npm run test:e2e` | Playwright e2e only. Spins up a real Hexo build of `tests/fixtures/hexo-site/`, serves it, drives Chromium. |
 | `npm run build` | Rebuild the browser bundle (`lib/hbe.bundle.js`) via esbuild. Runs as `prepack` automatically before `npm publish`. |
