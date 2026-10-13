@@ -168,6 +168,29 @@ for (const theme of themes) {
       expect(cacheCount).toBe(0);
     });
 
+    test('typed password stays visible after blur; retry refocuses and selects (#255)', async ({ page }) => {
+      await page.goto(`/encrypted-${theme}/`);
+      const input = page.locator('#hbePass');
+      await input.fill('wrongpw');
+      await input.blur();
+      // One filled-state class on the theme's .hbe-input wrapper.
+      await expect(page.locator('#hexo-blog-encrypt .hbe-input')).toHaveClass(/\bhbe-input--filled\b/);
+      // Some themes hide the unfocused field with opacity:0; filled must override it.
+      await expect.poll(() => input.evaluate((el) => getComputedStyle(el).opacity)).toBe('1');
+      await expect(input).toBeVisible();
+
+      // A failed attempt puts the caret back with the old value selected.
+      await input.press('Enter');
+      await expect(page.locator('#hexo-blog-encrypt [role="alert"]')).toHaveText(WRONG_PASS_MESSAGE);
+      await expect(input).toBeFocused();
+      expect(await input.evaluate((el) => [el.selectionStart, el.selectionEnd]))
+        .toEqual([0, 'wrongpw'.length]);
+
+      // Clearing the field drops the filled state.
+      await input.fill('');
+      await expect(page.locator('#hexo-blog-encrypt .hbe-input')).not.toHaveClass(/\bhbe-input--filled\b/);
+    });
+
     test('reload re-prompts when autoSave default-off (criterion 13)', async ({ page }) => {
       // Decrypt once.
       await page.goto(`/encrypted-${theme}/`);

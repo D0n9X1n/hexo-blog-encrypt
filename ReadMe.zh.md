@@ -155,6 +155,13 @@ encrypt: # hexo-blog-encrypt
 变化不会提前删除缓存; 浏览器会使用缓存密钥配合当前页面的 nonce 与密文尝试
 解密. 如果 AES-GCM 认证失败, 该缓存条目会被清除, 访客需要重新输入密码.
 
+**已保存的密钥及其暴露面.** 保存的密钥位于 `localStorage` 的
+`hbe.v4.<页面路径>`, 在被删除前可在本设备上解锁该文章. 同源运行的任何脚本
+(主题、统计、评论组件或被注入的脚本) 都能读取它, 因此只有在信任站点上所有脚本时
+才开启 `autoSave`. 文章通过已保存的密钥显示后, 上方的 **忘记已保存的密钥**
+按钮可删除该条目. 对某篇文章关闭 `autoSave` 后, 下次访问时会删除该文章已保存的
+密钥; v3 遗留的 `hexo-blog-encrypt:#…` 条目会被自动清除.
+
 ### 配置项一览
 
 | 配置项 | 默认值 | 说明 |
@@ -195,15 +202,27 @@ password: ""
 
 ### 解密后事件
 
-文章显示后, 插件会在 `window` 上触发一次 `hexo-blog-decrypt`.
-`event.detail.mode` 为 `manual` (输入密码) 或 `cached` (已缓存的密钥).
+每篇文章显示后, 插件会在 `window` 上触发一次 `hexo-blog-decrypt`.
+`event.detail.mode` 为 `manual` (输入密码) 或 `cached` (已缓存的密钥),
+`event.detail.element` 是显示出的容器 (首页同时展示多篇加密文章时可用来区分).
 监听它来重新执行需要扫描正文的代码:
 
 ```js
 window.addEventListener('hexo-blog-decrypt', function (event) {
   // 重新初始化主题的目录、代码高亮等.
-  console.log('Decrypted:', event.detail.mode);
+  console.log('Decrypted:', event.detail.mode, event.detail.element);
 });
+```
+
+### PJAX 与单页应用主题
+
+脚本会初始化页面上的每一篇加密文章, 且每篇只初始化一次. 在 `document` 上触发
+`pjax:complete`, `pjax:success`, `swup:contentReplaced` 或 `turbo:load` 时会自动
+重新扫描. 其他路由方案可在替换内容后调用幂等的初始化函数:
+
+```js
+window.hexoBlogEncrypt.init();          // 整个文档
+window.hexoBlogEncrypt.init(container); // 仅某个子树
 ```
 
 ### 加密文章中的脚本
@@ -271,7 +290,8 @@ window.addEventListener('hexo-blog-decrypt', function (event) {
 最低版本依据 Web Crypto 与语言特性支持; CI 运行的是当前的 Playwright
 浏览器版本, 而非这些最低版本.
 
-在非 localhost 的纯 HTTP 站点上, `crypto.subtle` 为 `undefined`, 解密会失败.
+在非 localhost 的纯 HTTP 站点上, `crypto.subtle` 为 `undefined`, 无法解密;
+文章会提示 "请通过 HTTPS 打开此页面", 而不是显示密码错误.
 生产环境请始终使用 HTTPS.
 
 ## 为什么要从 v3 升级

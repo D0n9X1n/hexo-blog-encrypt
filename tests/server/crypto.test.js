@@ -188,3 +188,15 @@ test('#252: ciphertext semantics unchanged (independent pbkdf2Sync derivation de
   const pt = Buffer.concat([decipher.update(ciphertext.subarray(0, ciphertext.length - 16)), decipher.final()]);
   assert.equal(pt.toString('utf8'), PLAINTEXT);
 });
+
+test('browser KDF fallback equals the single server default (#260)', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const { DEFAULT_ITERATIONS } = require('../../src/server/crypto');
+  const src = fs.readFileSync(path.join(__dirname, '../../src/browser/main.js'), 'utf8');
+  const match = src.match(/const FALLBACK_KDF_ITERATIONS = (\d+);/);
+  assert.ok(match, 'src/browser/main.js must declare FALLBACK_KDF_ITERATIONS');
+  assert.equal(Number(match[1]), DEFAULT_ITERATIONS);
+  // The literal appears only in that declaration.
+  assert.equal(src.split(String(DEFAULT_ITERATIONS)).length - 1, 1);
+});

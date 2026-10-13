@@ -161,6 +161,15 @@ the browser tries the cached key with the current page nonce and ciphertext.
 If AES-GCM authentication fails, the cache entry is cleared and the visitor is
 asked for the password again.
 
+**Saved keys and their exposure.** A saved key lives in `localStorage` under
+`hbe.v4.<page path>` and unlocks that post on this device until it is removed.
+Any script running on the same origin (your theme, analytics, comment
+widgets, or an injected script) can read it, so enable `autoSave` only when
+you trust every script on the site. After a post is revealed with a saved
+key, a **Forget saved key** button above it deletes the entry. Turning
+`autoSave` off for a post deletes that post's saved key on the next visit,
+and leftover v3 `hexo-blog-encrypt:#…` entries are removed automatically.
+
 ### Option reference
 
 | Option | Default | Description |
@@ -201,15 +210,29 @@ password: ""
 
 ### After-decrypt event
 
-The plugin dispatches `hexo-blog-decrypt` once on `window` after a post is
+The plugin dispatches `hexo-blog-decrypt` once on `window` after each post is
 revealed. `event.detail.mode` is `manual` (password entered) or `cached`
-(saved key). Listen for it to re-run anything that scans the post body:
+(saved key), and `event.detail.element` is the revealed container (useful when
+an index page shows several encrypted posts). Listen for it to re-run anything
+that scans the post body:
 
 ```js
 window.addEventListener('hexo-blog-decrypt', function (event) {
   // Reinitialize your theme's table of contents, syntax highlighting, etc.
-  console.log('Decrypted:', event.detail.mode);
+  console.log('Decrypted:', event.detail.mode, event.detail.element);
 });
+```
+
+### PJAX and SPA themes
+
+The bundle initializes every encrypted post on the page once. It re-scans
+automatically on `pjax:complete`, `pjax:success`, `swup:contentReplaced` and
+`turbo:load` (dispatched on `document`). For other routers, call the idempotent
+initializer after swapping content:
+
+```js
+window.hexoBlogEncrypt.init();          // whole document
+window.hexoBlogEncrypt.init(container); // only a subtree
 ```
 
 ### Scripts inside encrypted posts
@@ -281,8 +304,9 @@ context**: HTTPS or `http://localhost`.
 Minimum versions come from Web Crypto and language feature support; CI runs
 the current Playwright builds, not these minimums.
 
-On plain HTTP from a non-localhost host, `crypto.subtle` is `undefined` and
-decryption fails. Always serve production sites over HTTPS.
+On plain HTTP from a non-localhost host, `crypto.subtle` is `undefined`, so
+decryption cannot run; the post shows an "open this page over HTTPS" message
+instead of the wrong-password error. Always serve production sites over HTTPS.
 
 ## Why upgrade from v3?
 

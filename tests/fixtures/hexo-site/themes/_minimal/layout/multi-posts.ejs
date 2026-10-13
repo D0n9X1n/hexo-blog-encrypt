@@ -1,0 +1,15 @@
+---
+layout: false
+---
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title><%= page.title %></title></head>
+<body>
+<% site.posts.sort('slug').toArray().filter(function (p) { return /^multi-post-/.test(p.slug); }).forEach(function (p) { %>
+<article class="fixture-post" data-slug="<%= p.slug %>">
+<h2><%= p.title %></h2>
+<%- p.content %>
+</article>
+<% }); %>
+</body>
+</html>

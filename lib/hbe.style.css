@@ -272,7 +272,7 @@
 }
 
 .hbe-input-field-up:focus,
-.input--filled .hbe-input-field-up {
+.hbe-input--filled .hbe-input-field-up {
 	cursor: text;
 	opacity: 1;
 	-webkit-transition: opacity 0s 0.4s;
@@ -280,7 +280,7 @@
 }
 
 .hbe-input-field-up:focus + .hbe-input-label-up::before,
-.input--filled .hbe-input-label-up::before {
+.hbe-input--filled .hbe-input-label-up::before {
 	-webkit-transition-delay: 0.05s;
 	transition-delay: 0.05s;
 	-webkit-transform: translate3d(0, -3.3em, 0);
@@ -288,7 +288,7 @@
 }
 
 .hbe-input-field-up:focus + .hbe-input-label-up .hbe-input-label-content-up,
-.input--filled .hbe-input-label-content-up {
+.hbe-input--filled .hbe-input-label-content-up {
 	color: #6B6E6E;
 	-webkit-transform: translate3d(0, -3.3em, 0) scale3d(0.81, 0.81, 1);
 	transform: translate3d(0, -3.3em, 0) scale3d(0.81, 0.81, 1);
@@ -337,14 +337,14 @@
 }
 
 .hbe-input-field-wave:focus + .hbe-input-label-wave,
-.input--filled .hbe-input-label-wave {
+.hbe-input--filled .hbe-input-label-wave {
 	color: #333;
 	-webkit-transform: translate3d(0, -1.25em, 0) scale3d(0.75, 0.75, 1);
 	transform: translate3d(0, -1.25em, 0) scale3d(0.75, 0.75, 1);
 }
 
 .hbe-input-field-wave:focus ~ .hbe-graphic-wave,
-.input--filled .graphic-wave {
+.hbe-input--filled .hbe-graphic-wave {
 	stroke: #333;
 	-webkit-transform: translate3d(-66.6%, 0, 0);
 	transform: translate3d(-66.6%, 0, 0);
@@ -400,19 +400,19 @@
 }
 
 .hbe-input-field-flip:focus + .hbe-input-label-flip,
-.input--filled .hbe-input-label-flip {
+.hbe-input--filled .hbe-input-label-flip {
 	-webkit-transform: translate3d(0, 0, 0);
 	transform: translate3d(0, 0, 0);
 }
 
 .hbe-input-field-flip:focus + .hbe-input-label-flip .hbe-input-label-content-flip,
-.input--filled .hbe-input-label-content-flip {
+.hbe-input--filled .hbe-input-label-content-flip {
 	-webkit-transform: translate3d(0, 100%, 0);
 	transform: translate3d(0, 100%, 0);
 }
 
-.hbe-input-field-flip:focus + .hbe-input-field-flip,
-.input--filled .hbe-input-field-flip {
+.hbe-input-field-flip:focus,
+.hbe-input--filled .hbe-input-field-flip {
 	background-color: transparent;
 	border-color: #666666;
 }
@@ -466,14 +466,14 @@
 }
 
 .hbe-input-field-xray:focus + .hbe-input-label-xray,
-.input--filled .hbe-input-label-xray {
+.hbe-input--filled .hbe-input-label-xray {
 	color: #84AF9B ;
 	-webkit-transform: translate3d(0, 3.5em, 0) scale3d(0.85, 0.85, 1);
 	transform: translate3d(0, 3.5em, 0) scale3d(0.85, 0.85, 1);
 }
 
 .hbe-input-field-xray:focus ~ .hbe-graphic-xray,
-.input--filled .graphic-xray {
+.hbe-input--filled .hbe-graphic-xray {
 	stroke: #84AF9B ;
 	-webkit-transform: translate3d(-66.6%, 0, 0);
 	transform: translate3d(-66.6%, 0, 0);
@@ -523,18 +523,18 @@
 }
 
 .hbe-input-field-blink:focus,
-.input--filled .hbe-input-field-blink {
+.hbe-input--filled .hbe-input-field-blink {
 	border-color: #8781bd ;
 }
 
 .hbe-input-field-blink:focus + .hbe-input-label-blink,
-.input--filled .hbe-input-label-blink {
+.hbe-input--filled .hbe-input-label-blink {
 	-webkit-animation: anim-blink-1 0.25s forwards;
 	animation: anim-blink-1 0.25s forwards;
 }
 
 .hbe-input-field-blink:focus + .hbe-input-label-blink .hbe-input-label-content-blink,
-.input--filled .hbe-input-label-content-blink {
+.hbe-input--filled .hbe-input-label-content-blink {
 	-webkit-animation: anim-blink-2 0.25s forwards ease-in;
 	animation: anim-blink-2 0.25s forwards ease-in;
 }
@@ -663,14 +663,14 @@
 }
 
 .hbe-input-field-surge:focus,
-.input--filled .hbe-input-field-surge {
+.hbe-input--filled .hbe-input-field-surge {
 	-webkit-transition: opacity 0s 0.35s;
 	transition: opacity 0s 0.35s;
 	opacity: 1;
 }
 
 .hbe-input-field-surge:focus + .hbe-input-label-surge,
-.input--filled .hbe-input-label-surge {
+.hbe-input--filled .hbe-input-label-surge {
 	-webkit-transition-delay: 0.15s;
 	transition-delay: 0.15s;
 	-webkit-transform: translate3d(0, 0, 0);
@@ -678,7 +678,7 @@
 }
 
 .hbe-input-field-surge:focus + .hbe-input-label-surge .hbe-input-label-content-surge,
-.input--filled .hbe-input-label-content-surge {
+.hbe-input--filled .hbe-input-label-content-surge {
 	-webkit-transition-delay: 0.15s;
 	transition-delay: 0.15s;
 	-webkit-transform: translate3d(0, -100%, 0);
@@ -686,7 +686,7 @@
 }
 
 .hbe-input-field-surge:focus ~ .hbe-graphic-surge,
-.input--filled .graphic-surge {
+.hbe-input--filled .hbe-graphic-surge {
 	fill: #2C3E50;
 	-webkit-transform: translate3d(-66.6%, 0, 0);
 	transform: translate3d(-66.6%, 0, 0);
@@ -734,14 +734,14 @@
 }
 
 .hbe-input-field-shrink:focus + .hbe-input-label-shrink::after,
-.input--filled .hbe-input-label-shrink::after {
+.hbe-input--filled .hbe-input-label-shrink::after {
 	background: #84AF9B;
 	-webkit-transform: scale3d(1, 0.25, 1);
 	transform: scale3d(1, 0.25, 1);
 }
 
 .hbe-input-field-shrink:focus + .hbe-input-label-shrink .hbe-input-label-content-shrink,
-.input--filled .hbe-input-label-shrink .hbe-input-label-content-shrink {
+.hbe-input--filled .hbe-input-label-shrink .hbe-input-label-content-shrink {
 	color: #84AF9B;
 	-webkit-transform: translate3d(0, 2em, 0) scale3d(0.655, 0.655, 1);
 	transform: translate3d(0, 2em, 0) scale3d(0.655, 0.655, 1);
@@ -849,6 +849,36 @@ background: transparent;
 .hbe-error:not(:empty) {
 background: rgba(176, 0, 32, 0.08);
 border-radius: 4px;
+}
+
+/* "Forget saved key" control, shown above a post revealed with a saved key. */
+.hbe-forget {
+	margin: 0 0 1em;
+	font-size: 0.85rem;
+	font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+	text-align: right;
+}
+
+.hbe-forget-button {
+	padding: 0.3em 0.8em;
+	font: inherit;
+	color: inherit;
+	background: transparent;
+	border: 1px solid currentColor;
+	border-radius: 4px;
+	opacity: 0.75;
+	cursor: pointer;
+}
+
+.hbe-forget-button:hover,
+.hbe-forget-button:focus {
+	opacity: 1;
+}
+
+.hbe-forget-button:focus-visible,
+.hbe-forget [role="status"]:focus-visible {
+	outline: 2px solid #2a7ae2;
+	outline-offset: 2px;
 }
 
 @media (prefers-color-scheme: dark) {

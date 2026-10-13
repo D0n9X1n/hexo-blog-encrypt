@@ -41,7 +41,7 @@ async function makeKey() {
 
 async function saveFixtureEntry() {
   await storage.save({
-    pageKey: PAGE_KEY,
+    id: PAGE_KEY,
     key: await makeKey(),
     saltHex: SALT_A,
     nonceHex: NONCE_A,
@@ -62,7 +62,7 @@ test('storage.load returns cached key when salt matches, even if stored nonce is
   assert.equal(rawEntry.nonce, NONCE_A);
 
   const loaded = await storage.load({
-    pageKey: PAGE_KEY,
+    id: PAGE_KEY,
     expectedSaltHex: SALT_A,
     expectedNonceHex: NONCE_B,
   });
@@ -76,7 +76,7 @@ test('storage.load clears salt mismatch', async () => {
   await saveFixtureEntry();
 
   const loaded = await storage.load({
-    pageKey: PAGE_KEY,
+    id: PAGE_KEY,
     expectedSaltHex: SALT_B,
   });
 

@@ -13,6 +13,7 @@ const TAG_ONLY_TEMPLATE_REL = path.join('templates', 'tag-encrypted-post.md');
 const CALLBACK_TEMPLATE_REL = path.join('templates', 'callback-post.md');
 const NON_ASCII_BUTTON_TEMPLATE_REL = path.join('templates', 'non-ascii-button-post.md');
 const HIDDEN_BUTTON_TEMPLATE_REL = path.join('templates', 'hidden-button-post.md');
+const MULTI_POST_TEMPLATES = ['multi-post-alpha.md', 'multi-post-bravo.md'];
 const POSTS_REL = path.join('source', '_posts');
 
 /**
@@ -122,6 +123,17 @@ function materializePosts(fixtureDir, themes) {
   const hiddenButtonDest = path.join(postsDir, 'hidden-button-default.md');
   fs.writeFileSync(hiddenButtonDest, hiddenButtonBody, 'utf8');
   written.push(hiddenButtonDest);
+
+  // Two posts with different passwords, rendered together in full by the
+  // `multi-posts` fixture page (source/multi-posts/index.md). That page
+  // carries two encrypted wrappers and two bundle <script> tags — the
+  // multi-post / bundle-executed-twice regression (#246).
+  for (const name of MULTI_POST_TEMPLATES) {
+    const body = fs.readFileSync(path.join(fixtureDir, 'templates', name), 'utf8');
+    const dest = path.join(postsDir, name);
+    fs.writeFileSync(dest, body, 'utf8');
+    written.push(dest);
+  }
 
   return written;
 }

@@ -15,15 +15,24 @@ The 8 themes that ship today are: `default`, `blink`, `flip`, `shrink`,
 1. Create `lib/hbe.<name>.html` containing:
    - All 11 `{{hbe...}}` placeholders (see below) — the server-side filter
      substitutes them at render time.
-   - A wrapper element with `id="hexo-blog-encrypt"` (the browser bundle finds
-     it by id) carrying the seven `data-*` attributes listed below.
-   - A form `<form id="hbeForm">` containing:
-     - A password input `<input id="hbePass" type="password">`.
+   - A wrapper element with `id="hexo-blog-encrypt"` and class
+     `hbe-container`, carrying the seven `data-*` attributes listed below.
+     The bundle initializes **every** `[data-hbe-format]` / `.hbe-container`
+     on the page once, so index pages may show several encrypted posts.
+   - A form `<form id="hbeForm" class="hbe-form">` containing:
+     - A password input `<input id="hbePass" class="hbe-input-field" type="password">`
+       and a `<label for="hbePass">`. Lookups are scoped to the wrapper; when
+       several posts share a page the bundle renames duplicate input ids and
+       re-points that post's label. Wrap the input and label in an
+       `.hbe-input` element: the bundle toggles `hbe-input--filled` on it
+       while the field has a value (style the filled state with that class).
      - A submit button with class `hbe-button`.
      - An empty alert region: `<div role="alert" aria-live="polite">…</div>`.
-     - **No `onsubmit` JS** — the bundle attaches a `submit` listener that
-       prevents default; an inline `onsubmit="return false"` is harmless but
-       unnecessary.
+     - **No inline event handlers** (`onsubmit`, `onclick`, …). The bundle
+       attaches a `submit` listener that calls `preventDefault()`. Inline
+       handlers are blocked by a strict Content-Security-Policy
+       (`script-src` / `script-src-attr` without `'unsafe-inline'`), and the
+       e2e CSP test fails on them.
    - A `<script id="hbeData" type="hbeData">{{hbeEncryptedData}}</script>`
      element whose body is the AES-256-GCM ciphertext (with the 16-byte auth
      tag appended) as hex.
@@ -73,6 +82,16 @@ page. The browser uses `data-salt` to validate cached `autoSave` keys,
 then always decrypts with the current page's `data-nonce` and
 ciphertext. If AES-GCM authentication fails, the cache is cleared.
 
+## PJAX / SPA themes
+
+The bundle is injected once per encrypted post (`<script data-pjax>`), so it
+may execute many times; each wrapper is initialized only once. The first
+execution exposes `window.hexoBlogEncrypt.init(root = document)`, which is
+idempotent, and re-runs it on `pjax:complete`, `pjax:success`,
+`swup:contentReplaced` and `turbo:load` (listened for on `document`). Routers
+that fire other events (or jQuery-only events) should call
+`window.hexoBlogEncrypt.init()` after swapping content.
+
 ## Forbidden
 
 To keep the one-file-drop contract intact:
@@ -84,9 +103,11 @@ To keep the one-file-drop contract intact:
   implicit wire format and the version is bumped via `{{hbeFormat}}`.
 - **Don’t** rename or remove any of the 11 placeholders. Existing themes —
   and every encrypted post in the wild — depend on them.
-- **Don’t** move or rename the `#hexo-blog-encrypt` wrapper, the `#hbeForm`
-  form, the `#hbePass` input, the `.hbe-button` submit button, or the
-  `[role="alert"]` region. The bundle selects them by id / class / role.
+- **Don’t** move or rename the `#hexo-blog-encrypt` / `.hbe-container`
+  wrapper, the `#hbeForm` / `.hbe-form` form, the `#hbePass` /
+  `.hbe-input-field` input, the `.hbe-button` submit button, or the
+  `[role="alert"]` region. The bundle selects them inside each wrapper by
+  id / class / role.
 - **Don’t** ship a theme without running `npm run test`. The harness guards
   the contract; CI will reject regressions.
 

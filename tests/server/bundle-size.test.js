@@ -6,7 +6,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const BUNDLE_PATH = path.resolve(__dirname, '../../lib/hbe.bundle.js');
-const MAX_BYTES = 8192;
+// 10 KiB minified (~4 KiB gzipped). Raised from 8 KiB in v4.1.0: the bundle
+// now handles several posts per page, PJAX re-init, a Web Crypto capability
+// check, filled-state/retry UX, saved-key cleanup with a "forget" control,
+// and en/zh browser messages (#246 #248 #253 #254 #255 #259).
+const MAX_BYTES = 10240;
 
 if (!fs.existsSync(BUNDLE_PATH)) {
   test.skip('lib/hbe.bundle.js missing — run `npm run build` first');
