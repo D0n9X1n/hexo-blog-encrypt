@@ -13,6 +13,7 @@ const ui = require('./ui');
 const cryptoMod = require('./crypto');
 const dom = require('./dom');
 const storage = require('./storage');
+const i18n = require('./i18n');
 
 const SUPPORTED_FORMAT = '4';
 // The iteration count always comes from `data-kdf-iterations`, which the
@@ -26,10 +27,6 @@ const FALLBACK_KDF_ITERATIONS = 250000;
 // position (and storage id) stable after earlier posts are revealed.
 const WRAPPER = '[data-hbe-format],.hbe-container,#hexo-blog-encrypt';
 const INIT_FLAG = '__hbeInit';
-const NO_CRYPTO_MESSAGE =
-  'hexo-blog-encrypt: this browser cannot decrypt here because Web Crypto is unavailable. ' +
-  'Open the page over HTTPS (or localhost) in an up-to-date browser.';
-const FORGET_LABELS = { forget: 'Forget saved key', forgotten: 'Saved key forgotten.' };
 
 function webCryptoAvailable() {
   return !!(window.isSecureContext && window.crypto && window.crypto.subtle);
@@ -78,13 +75,10 @@ function setup(el) {
   if (el[INIT_FLAG] || el.classList.contains('hbe-decrypted-content')) return;
   el[INIT_FLAG] = true;
   const wire = readWireFormat(el);
+  const text = i18n.messages();
 
   if (wire.format !== SUPPORTED_FORMAT) {
-    ui.showError(
-      el,
-      'hexo-blog-encrypt: this page was built with an incompatible plugin version. ' +
-      'Rebuild the site after upgrading the plugin.'
-    );
+    ui.showError(el, text.incompatible);
     return;
   }
 
@@ -101,9 +95,8 @@ function setup(el) {
   // it every attempt would fail, so say why instead of "wrong password",
   // and never attempt a derivation.
   if (!webCryptoAvailable()) {
-    const message = NO_CRYPTO_MESSAGE;
-    ui.showError(el, message);
-    ui.attachSubmit(form, () => ui.showError(el, message));
+    ui.showError(el, text.noCrypto);
+    ui.attachSubmit(form, () => ui.showError(el, text.noCrypto));
     return;
   }
 
@@ -115,7 +108,7 @@ function setup(el) {
     revealed = true;
     const decrypted = await dom.swapInDecryptedDOM(el, plaintext);
     if (mode === 'cached') {
-      ui.addForgetButton(decrypted, FORGET_LABELS, () => storage.clear(id));
+      ui.addForgetButton(decrypted, text, () => storage.clear(id));
     }
     dispatchDecryptEvent(mode, decrypted);
   };

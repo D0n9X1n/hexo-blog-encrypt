@@ -391,3 +391,55 @@ test.describe('saved keys (#248)', () => {
     await expect(post(page, BRAVO.slug)).toContainText(BRAVO.secret);
   });
 });
+
+// Serve `path` with <html lang="...">, optionally mutating the body further.
+async function serveWithLang(page, path, lang, mutate = (b) => b) {
+  await page.route(`**${path}`, async (route) => {
+    const response = await route.fetch();
+    const body = mutate((await response.text()).replace(/<html[^>]*>/, `<html lang="${lang}">`));
+    await route.fulfill({ response, body });
+  });
+}
+
+test.describe('localized browser messages (#259)', () => {
+  test.afterEach(async ({ page }) => {
+    await page.evaluate(() => localStorage.clear()).catch(() => {});
+  });
+
+  test('zh-CN: incompatible-version message', async ({ page }) => {
+    await serveWithLang(page, '/encrypted-default/', 'zh-CN',
+      (b) => b.replace('data-hbe-format="4"', 'data-hbe-format="3"'));
+    await page.goto('/encrypted-default/');
+    await expect(page.locator('#hexo-blog-encrypt [role="alert"]')).toContainText('插件版本不兼容');
+  });
+
+  test('zh-TW falls back to the Chinese Web Crypto message', async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(window.crypto, 'subtle', { value: undefined, configurable: true });
+    });
+    await serveWithLang(page, '/encrypted-default/', 'zh-TW');
+    await page.goto('/encrypted-default/');
+    await expect(page.locator('#hexo-blog-encrypt [role="alert"]')).toContainText('HTTPS');
+    await expect(page.locator('#hexo-blog-encrypt [role="alert"]')).toContainText('Web Crypto 不可用');
+  });
+
+  test('zh: forget-key control and confirmation', async ({ page }) => {
+    await serveWithLang(page, '/autosave-default/', 'zh');
+    await page.goto('/autosave-default/');
+    await page.locator('#hbePass').fill('hello');
+    await page.locator('#hbePass').press('Enter');
+    await expect(page.locator('body')).toContainText('THE SECRET IS BUTTERFLY');
+    await page.reload();
+    const forget = page.getByRole('button', { name: '忘记已保存的密钥' });
+    await expect(forget).toBeVisible();
+    await forget.click();
+    await expect(page.locator('.hbe-forget [role="status"]')).toHaveText('已忘记保存的密钥.');
+  });
+
+  test('unsupported language falls back to English', async ({ page }) => {
+    await serveWithLang(page, '/encrypted-default/', 'fr',
+      (b) => b.replace('data-hbe-format="4"', 'data-hbe-format="3"'));
+    await page.goto('/encrypted-default/');
+    await expect(page.locator('#hexo-blog-encrypt [role="alert"]')).toContainText('incompatible plugin version');
+  });
+});
