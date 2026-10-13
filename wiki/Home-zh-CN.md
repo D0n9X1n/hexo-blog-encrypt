@@ -20,6 +20,7 @@
 | **可选的 `stableSalt`** | 默认关闭. 从文章永久链接派生 salt, 使其在干净重建后保持不变, 从而让 `autoSave` 缓存在 Cloudflare Pages / Vercel / Netlify / GitHub Actions 上保持有效. nonce 仍是随机的. 见[安全模型](Security-Model-zh-CN). |
 | **按标签加密** | 在 `_config.yml` 中定义 `{name, password}` 列表; 带有匹配标签的文章会用列表中的密码加密. |
 | **解密回调** | `window.addEventListener('hexo-blog-decrypt', fn)`: 文章显示后重新初始化 MathJax / hljs / 目录 (TOC) 等. |
+| **Claude Code skill** | [`hexo-encrypt-toc`](https://github.com/D0n9X1n/hexo-blog-encrypt/blob/master/skills/hexo-encrypt-toc/SKILL.md) 让 Claude Code 为任意主题修复加密文章的目录, 且不泄露标题. 见[加密文章目录](Encrypted-TOC-zh-CN). |
 | **完整测试** | 在 Node 18–26 和 Hexo 7/8 上服务端覆盖率 100 %, 并在 Chromium, Firefox 和 WebKit 上对全部 8 个主题运行 Playwright 端到端测试. |
 
 ---
@@ -44,7 +45,7 @@
 
 **有问题?** → [常见问题](FAQ-zh-CN).
 
-**加密文章的目录 (TOC) 为空或泄露了标题?** → [加密文章目录](Encrypted-TOC-zh-CN).
+**加密文章的目录 (TOC) 为空或泄露了标题?** → [加密文章目录](Encrypted-TOC-zh-CN), 或用 `hexo-encrypt-toc` skill 让 Claude Code 修复你的主题.
 
 ## 维护者
 
