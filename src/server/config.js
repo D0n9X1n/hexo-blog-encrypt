@@ -121,6 +121,31 @@ function normalizeBooleans(picked, prefix, log) {
   return out;
 }
 
+// Resolve a password value (#251). Literals (string/number/boolean) are used
+// as-is; `{ env: NAME }` reads process.env[NAME] at build time. A missing or
+// empty variable fails the build. Error messages name the variable, never the
+// value, and the resolved value is never logged.
+function resolvePasswordRef(value, postTitle) {
+  if (typeof value !== 'object') return String(value);
+  if (Array.isArray(value) || typeof value.env !== 'string' || value.env === '') {
+    throw new Error(
+      'hexo-blog-encrypt: password must be a string, a number, or { env: NAME } ' +
+      '(an object with a non-empty "env" variable name).'
+    );
+  }
+  const secret = process.env[value.env];
+  if (typeof secret !== 'string' || secret === '') {
+    const where = typeof postTitle === 'string' && postTitle.trim()
+      ? ` for post "${postTitle.trim()}"`
+      : '';
+    throw new Error(
+      `hexo-blog-encrypt: password references environment variable ${value.env}${where}, ` +
+      'but it is not set or is empty. Set it in the build environment.'
+    );
+  }
+  return secret;
+}
+
 function resolve(hexoConfig, postData, logger) {
   // Only `warn` is ever called from this module; keep the no-op default minimal.
   const log = logger || { warn: () => {} };
@@ -159,7 +184,7 @@ function resolve(hexoConfig, postData, logger) {
 
   // Password: undefined or empty-string disables encryption (caller short-circuits).
   if (merged.password === undefined || merged.password === null) return null;
-  merged.password = String(merged.password);
+  merged.password = resolvePasswordRef(merged.password, post.title);
   if (merged.password === '') return null;
 
   // KDF iteration floor + warn band. (deepMerge always populates merged.kdf

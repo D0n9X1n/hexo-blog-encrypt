@@ -290,3 +290,89 @@ test('#249: boolean normalisation does not mutate the caller\'s decryptButton ob
   resolve(site, { password: 'pw' }, fakeLogger());
   assert.equal(site.encrypt.decryptButton.show, 'false');
 });
+
+// ---------------------------------------------------------------------------
+// #251 — password: { env: NAME } reads the password from the environment.
+// ---------------------------------------------------------------------------
+const ENV_NAME = 'HBE_TEST_PASSWORD_251';
+const ENV_VALUE = 'env-secret-value-251';
+
+function withEnv(value, fn) {
+  const had = Object.prototype.hasOwnProperty.call(process.env, ENV_NAME);
+  const prev = process.env[ENV_NAME];
+  if (value === undefined) delete process.env[ENV_NAME];
+  else process.env[ENV_NAME] = value;
+  try {
+    return fn();
+  } finally {
+    if (had) process.env[ENV_NAME] = prev;
+    else delete process.env[ENV_NAME];
+  }
+}
+
+test('#251: front-matter password { env } resolves from process.env', () => {
+  withEnv(ENV_VALUE, () => {
+    const out = resolve({}, { password: { env: ENV_NAME } }, fakeLogger());
+    assert.equal(out.password, ENV_VALUE);
+  });
+});
+
+test('#251: site-level encrypt.password { env } resolves from process.env', () => {
+  withEnv(ENV_VALUE, () => {
+    const out = resolve({ encrypt: { password: { env: ENV_NAME } } }, {}, fakeLogger());
+    assert.equal(out.password, ENV_VALUE);
+  });
+});
+
+for (const [label, value] of [['missing', undefined], ['empty', '']]) {
+  test(`#251: ${label} env var fails the build, naming the variable and post`, () => {
+    withEnv(value, () => {
+      assert.throws(
+        () => resolve({}, { title: 'Diary', password: { env: ENV_NAME } }, fakeLogger()),
+        (err) => err.message.includes(ENV_NAME)
+          && /not set or is empty/.test(err.message)
+          && err.message.includes('"Diary"'),
+      );
+    });
+  });
+}
+
+test('#251: env error without a post title still names the variable', () => {
+  withEnv(undefined, () => {
+    assert.throws(
+      () => resolve({}, { password: { env: ENV_NAME } }),
+      (err) => err.message.includes(ENV_NAME) && !err.message.includes('post "'),
+    );
+  });
+});
+
+for (const [label, bad] of [
+  ['object without env', { name: 'X' }],
+  ['empty env name', { env: '' }],
+  ['non-string env name', { env: 42 }],
+  ['array', ['pw']],
+]) {
+  test(`#251: password as ${label} is rejected with a clear error`, () => {
+    assert.throws(
+      () => resolve({}, { password: bad }, fakeLogger()),
+      /password must be a string, a number, or \{ env: NAME \}/,
+    );
+  });
+}
+
+test('#251: resolved env value never appears in warnings', () => {
+  withEnv(ENV_VALUE, () => {
+    const log = fakeLogger();
+    resolve({}, { password: { env: ENV_NAME }, template: 'flip', autoSave: 'true' }, log);
+    assert.ok(log.events.length > 0);
+    for (const e of log.events) assert.ok(!e.msg.includes(ENV_VALUE));
+  });
+});
+
+test('#251: env resolution does not mutate the caller\'s front matter', () => {
+  withEnv(ENV_VALUE, () => {
+    const post = { password: { env: ENV_NAME } };
+    resolve({}, post, fakeLogger());
+    assert.deepEqual(post.password, { env: ENV_NAME });
+  });
+});
