@@ -45,6 +45,7 @@
 | **8 个主题** | `default`, `blink`, `flip`, `shrink`, `surge`, `up`, `wave`, `xray`. 放入一个 HTML 文件即可新增主题. |
 | **脚本照常运行** | 解密后文章中的脚本按文档顺序执行. 文章显示后触发 `hexo-blog-decrypt` 事件. |
 | **默认保护隐私** | 除非用 `autoSave` 开启, 否则不保存密码或密钥. |
+| **Claude Code skill** | [`hexo-encrypt-toc`](https://github.com/D0n9X1n/hexo-blog-encrypt/blob/master/skills/hexo-encrypt-toc/SKILL.md) 为任意主题修复加密文章的目录, 且不泄露标题. |
 | **完整测试** | 服务端 100% 行 / 分支 / 函数覆盖, 并用 Playwright 对每个主题做端到端测试. |
 
 ## 在线演示
@@ -258,6 +259,21 @@ window.hexoBlogEncrypt.init(container); // 仅某个子树
 
 对加密文章, 在 `hexo-blog-decrypt` 回调中根据解密后的 `#hexo-blog-encrypt`
 内容在浏览器端生成目录.
+
+#### 让 Claude Code 修复你的主题
+
+[`hexo-encrypt-toc`](https://github.com/D0n9X1n/hexo-blog-encrypt/blob/master/skills/hexo-encrypt-toc/SKILL.md) skill 适用于任意 Hexo 主题: 找到主题的目录实现,
+移除明文来源, 在解密后重建目录, 并对生成的站点做泄露检查. 它只是一个文件,
+保存为 [Claude Code](https://claude.com/claude-code) skill 即可:
+
+```bash
+mkdir -p ~/.claude/skills/hexo-encrypt-toc
+curl -fsSL https://raw.githubusercontent.com/D0n9X1n/hexo-blog-encrypt/master/skills/hexo-encrypt-toc/SKILL.md \
+  -o ~/.claude/skills/hexo-encrypt-toc/SKILL.md
+```
+
+然后在博客目录中让 Claude Code *"修复我主题中加密文章的目录"*, 或运行
+`/hexo-encrypt-toc`. 详见 [wiki: Encrypted TOC](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki/Encrypted-TOC).
 
 ### 加密主题
 

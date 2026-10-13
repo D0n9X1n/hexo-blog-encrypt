@@ -46,6 +46,7 @@ English · [中文说明](./ReadMe.zh.md) · [Wiki](https://github.com/D0n9X1n/h
 | **Eight themes** | `default`, `blink`, `flip`, `shrink`, `surge`, `up`, `wave`, `xray`. Add your own by dropping in one HTML file. |
 | **Scripts keep working** | Scripts inside a decrypted post run in document order. A `hexo-blog-decrypt` event fires when the post is revealed. |
 | **Privacy by default** | Passwords and keys are not stored unless you opt in with `autoSave`. |
+| **Claude Code skill** | [`hexo-encrypt-toc`](https://github.com/D0n9X1n/hexo-blog-encrypt/blob/master/skills/hexo-encrypt-toc/SKILL.md) fixes any theme's table of contents for encrypted posts without leaking headings. |
 | **Tested** | 100% server line, branch and function coverage, plus Playwright end-to-end tests across every theme. |
 
 ## Live demo
@@ -272,6 +273,23 @@ Render a server-side TOC only for unencrypted posts:
 
 For encrypted posts, build the TOC in the browser inside the
 `hexo-blog-decrypt` handler from the revealed `#hexo-blog-encrypt` content.
+
+#### Let Claude Code fix your theme
+
+The [`hexo-encrypt-toc`](https://github.com/D0n9X1n/hexo-blog-encrypt/blob/master/skills/hexo-encrypt-toc/SKILL.md) skill does this for any Hexo theme: it finds
+the theme's TOC, removes plaintext sources, rebuilds the TOC after decryption,
+and runs a leak check on the generated site. It is a single file. Save it as a
+[Claude Code](https://claude.com/claude-code) skill:
+
+```bash
+mkdir -p ~/.claude/skills/hexo-encrypt-toc
+curl -fsSL https://raw.githubusercontent.com/D0n9X1n/hexo-blog-encrypt/master/skills/hexo-encrypt-toc/SKILL.md \
+  -o ~/.claude/skills/hexo-encrypt-toc/SKILL.md
+```
+
+Then, in your blog's directory, ask Claude Code to *"fix the TOC for encrypted
+posts in my theme"* or run `/hexo-encrypt-toc`. Details:
+[wiki: Encrypted TOC](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki/Encrypted-TOC).
 
 ### Encryption themes
 
