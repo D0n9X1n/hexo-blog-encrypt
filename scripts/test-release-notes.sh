@@ -67,51 +67,26 @@ NOTES_SH="$TMP/scripts/release-notes.sh"
   git config commit.gpgsign false
   git config tag.gpgsign false
 
-  cat > CHANGELOG.md <<'MD'
-# Changelog
-
-## [1.0.0] — 2026-01-01
-
-### Added
-
-* First public release.
-MD
-  git add CHANGELOG.md
+  echo one > file.txt
+  git add file.txt
   git commit -q -m "feat: initial release"
   git tag v1.0.0
 
-  cat > CHANGELOG.md <<'MD'
-# Changelog
-
-## [1.1.0] — 2026-02-01
-
-### Fixed
-
-* Polished the palette (closes #7).
-
-## [1.0.0] — 2026-01-01
-
-### Added
-
-* First public release.
-MD
+  echo two >> file.txt
   git commit -qam "fix: polish palette"
   echo extra > extra.txt
   git add extra.txt
   git commit -qm "docs: mention 1.1.0"
   git tag v1.1.0
 
-  # --- 1. Normal release: CHANGELOG section, issues, commits since prev tag.
+  # --- 1. Normal release: install/registry links, issues, commits since prev tag.
   bash "$NOTES_SH" v1.1.0 > notes.md
   head -n 1 notes.md | grep -qx '# hexo-blog-encrypt v1.1.0' || fail "title line"
   grep -qF 'npm install hexo-blog-encrypt@1.1.0' notes.md || fail "install line"
   grep -qF 'https://www.npmjs.com/package/hexo-blog-encrypt/v/1.1.0' notes.md || fail "npm link"
   grep -qF '@d0n9x1n/hexo-blog-encrypt' notes.md || fail "GitHub Packages name"
   grep -qF 'https://github.com/owner/repo/pkgs/npm/hexo-blog-encrypt' notes.md || fail "GitHub Packages link"
-  grep -qF '## [1.1.0] — 2026-02-01' notes.md || fail "CHANGELOG heading"
-  grep -qF 'Polished the palette' notes.md || fail "CHANGELOG body"
-  ! grep -qF '## [1.0.0]' notes.md || fail "CHANGELOG extraction leaked the previous section"
-  ! grep -qF 'First public release.' notes.md || fail "CHANGELOG extraction leaked previous body"
+  ! grep -qi 'changelog' notes.md || fail "notes must not reference a CHANGELOG"
   grep -qx '## Resolved issues' notes.md || fail "resolved issues heading"
   grep -qF 'No linked issues resolved' notes.md || fail "empty resolved-issues text"
   grep -qx '## Changes since v1.0.0' notes.md || fail "changes heading"
@@ -125,30 +100,20 @@ MD
   grep -qF 'Playwright' notes.md || fail "verification: e2e"
   grep -qF 'provenance' notes.md || fail "verification: provenance"
   ! grep -qiE 'download|SHA256SUMS|release-assets' notes.md || fail "no binary asset section expected"
-  # Section order: CHANGELOG -> Resolved issues -> Changes -> Verification.
-  order="$(grep -nE '^## (\[1\.1\.0\]|Resolved issues|Changes since|Verification)' notes.md | cut -d: -f1 | tr '\n' ' ')"
-  [[ "$order" =~ ^[0-9]+\ [0-9]+\ [0-9]+\ [0-9]+\ $ ]] || fail "missing sections: $order"
-  read -r a b c d <<< "$order"
-  (( a < b && b < c && c < d )) || fail "section order: $order"
+  # Section order: title -> install -> Resolved issues -> Changes -> compare -> Verification.
+  order="$(grep -nE '^(# hexo-blog-encrypt |npm install |## Resolved issues|## Changes since|\*\*Full diff:\*\*|## Verification)' notes.md | cut -d: -f1 | tr '\n' ' ')"
+  [[ "$order" =~ ^([0-9]+\ ){6}$ ]] || fail "missing sections: $order"
+  read -r a b c d e f <<< "$order"
+  (( a < b && b < c && c < d && d < e && e < f )) || fail "section order: $order"
 
-  # --- 2. Missing CHANGELOG section fails with no notes.
-  git commit -q --allow-empty -m "chore: release without changelog"
-  git tag v1.2.0
-  if bash "$NOTES_SH" v1.2.0 > nochangelog.md 2> nochangelog.txt; then
-    fail "missing CHANGELOG section unexpectedly succeeded"
-  fi
-  [[ ! -s nochangelog.md ]] || fail "missing CHANGELOG section produced partial notes"
-  grep -qF 'no section for 1.2.0' nochangelog.txt || fail "missing CHANGELOG error message"
-  git tag -d v1.2.0 >/dev/null
-
-  # --- 3. Collector (GitHub API) failure fails with no partial notes.
+  # --- 2. Collector (GitHub API) failure fails with no partial notes.
   if HBE_RELEASE_FIXTURE_FAILURE=1 bash "$NOTES_SH" v1.1.0 > failed.md 2> failed.txt; then
     fail "metadata failure unexpectedly succeeded"
   fi
   [[ ! -s failed.md ]] || fail "metadata failure produced partial notes"
   grep -qF 'release issue lookup failed' failed.txt || fail "metadata failure message"
 
-  # --- 4. Missing predecessor must not silently broaden to full history.
+  # --- 3. Missing predecessor must not silently broaden to full history.
   git tag -d v1.0.0 >/dev/null
   if bash "$NOTES_SH" v1.1.0 > missing.md 2> missing.txt; then
     fail "missing predecessor unexpectedly succeeded"
@@ -156,7 +121,7 @@ MD
   [[ ! -s missing.md ]] || fail "missing predecessor produced partial notes"
   grep -qF 'predecessor' missing.txt || fail "missing predecessor message"
 
-  # --- 5. Explicit first release: full history, no compare link.
+  # --- 4. Explicit first release: full history, no compare link.
   RELEASE_FIRST=1 bash "$NOTES_SH" v1.1.0 > first.md
   grep -qx '## Changes' first.md || fail "first release changes heading"
   grep -qF 'feat: initial release' first.md || fail "first release includes full history"
@@ -168,7 +133,7 @@ MD
   [[ ! -s conflict.md ]] || fail "conflict produced partial notes"
   grep -qF 'conflicts' conflict.txt || fail "conflict message"
 
-  # --- 6. Explicit PREVIOUS_TAG is honoured; invalid/nonancestor bases fail closed.
+  # --- 5. Explicit PREVIOUS_TAG is honoured; invalid/nonancestor bases fail closed.
   first_commit="$(git rev-list --max-parents=0 HEAD)"
   PREVIOUS_TAG="$first_commit" bash "$NOTES_SH" v1.1.0 > explicit.md
   grep -qF "## Changes since ${first_commit}" explicit.md || fail "explicit PREVIOUS_TAG heading"
@@ -186,7 +151,7 @@ MD
     grep -qF 'release issue lookup failed' invalid.txt || fail "invalid base message"
   done
 
-  # --- 7. Shallow clones are rejected even in first-release mode.
+  # --- 6. Shallow clones are rejected even in first-release mode.
   git clone --quiet --depth=1 --no-local "file://$TMP" "$TMP/shallow"
   git -C "$TMP/shallow" fetch --quiet --depth=1 origin tag v1.1.0
   if (cd "$TMP/shallow" && RELEASE_FIRST=1 bash "$NOTES_SH" v1.1.0) > shallow.md 2> shallow.txt; then
@@ -195,7 +160,7 @@ MD
   [[ ! -s shallow.md ]] || fail "shallow history produced partial notes"
   grep -qF 'shallow' shallow.txt || fail "shallow message"
 
-  # --- 8. Usage error without a tag.
+  # --- 7. Usage error without a tag.
   if GITHUB_REF_NAME= bash "$NOTES_SH" > usage.md 2> usage.txt; then
     fail "missing tag unexpectedly succeeded"
   fi

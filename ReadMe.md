@@ -19,7 +19,7 @@
 [![npm provenance](https://img.shields.io/badge/npm-provenance-blue?logo=npm)](https://www.npmjs.com/package/hexo-blog-encrypt#provenance)
 [![GitHub stars](https://img.shields.io/github/stars/D0n9X1n/hexo-blog-encrypt?style=flat&logo=github)](https://github.com/D0n9X1n/hexo-blog-encrypt/stargazers)
 
-English · [中文说明](./ReadMe.zh.md) · [Wiki](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki) · [Changelog](./CHANGELOG.md)
+English · [中文说明](./ReadMe.zh.md) · [Wiki](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki) · [Releases](https://github.com/D0n9X1n/hexo-blog-encrypt/releases)
 
 ## Contents
 
@@ -316,8 +316,10 @@ read v3 output and v3 cannot read v4 output.
 4. Optional: remove `wrong_hash_message` from your config and front matter. It
    is deprecated in v4 and will be removed in v5.
 
-Your source `.md` files are not touched. See [CHANGELOG.md](./CHANGELOG.md)
-for the full list of breaking changes.
+Your source `.md` files are not touched. See the
+[v4.0.0 release notes](https://github.com/D0n9X1n/hexo-blog-encrypt/releases/tag/v4.0.0)
+and [Releases](https://github.com/D0n9X1n/hexo-blog-encrypt/releases) for the
+full list of breaking changes.
 
 ## Contributing
 

@@ -18,7 +18,7 @@
 [![npm provenance](https://img.shields.io/badge/npm-provenance-blue?logo=npm)](https://www.npmjs.com/package/hexo-blog-encrypt#provenance)
 [![GitHub stars](https://img.shields.io/github/stars/D0n9X1n/hexo-blog-encrypt?style=flat&logo=github)](https://github.com/D0n9X1n/hexo-blog-encrypt/stargazers)
 
-[English](./ReadMe.md) · 中文说明 · [Wiki](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki) · [更新日志](./CHANGELOG.md)
+[English](./ReadMe.md) · 中文说明 · [Wiki](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki) · [Releases](https://github.com/D0n9X1n/hexo-blog-encrypt/releases)
 
 ## 目录
 
@@ -302,7 +302,7 @@ v4 修改了加密格式 (AES-GCM, 每篇独立 salt 和 nonce). v4 无法读取
 4. 可选: 从配置和文章信息头中删除 `wrong_hash_message`. 它在 v4 中已废弃,
    将在 v5 中删除.
 
-不会修改任何源 `.md` 文件. 完整的不兼容变更列表见 [CHANGELOG.md](./CHANGELOG.md).
+不会修改任何源 `.md` 文件. 完整的不兼容变更列表见 [v4.0.0 发布说明](https://github.com/D0n9X1n/hexo-blog-encrypt/releases/tag/v4.0.0) 和 [Releases](https://github.com/D0n9X1n/hexo-blog-encrypt/releases).
 
 ## 参与贡献
 

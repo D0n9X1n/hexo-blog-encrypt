@@ -19,7 +19,7 @@ browser bundle is built with esbuild (no runtime bundler).
 | `.github/workflows/` | CI: `test.yml` (every push/PR), `release.yml` (npm), `publish-gh-packages.yml` (GH Packages mirror), `deploy-demo.yml` (Pages). |
 | `demo/` | Live-demo Hexo site published to GitHub Pages. References the published npm package, NOT a `file:..` path. |
 | `ReadMe.md` / `ReadMe.zh.md` | User-facing README in English / 中文. **Both must be updated** when user-facing behavior changes. |
-| `CHANGELOG.md` | Keep-a-changelog format. Each release gets a dated `## [x.y.z] — YYYY-MM-DD` entry. |
+| `scripts/` | Release tooling (not shipped in the tarball): `release-notes.sh` builds GitHub Release notes from resolved issues + commits; `release-issues.py` collects issue provenance. Release history lives in [GitHub Releases](https://github.com/D0n9X1n/hexo-blog-encrypt/releases); there is no CHANGELOG file. |
 
 ## Server modules (`src/server/`)
 

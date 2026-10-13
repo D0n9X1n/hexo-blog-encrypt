@@ -6,14 +6,15 @@
 # Output (stdout, Markdown):
 #   # hexo-blog-encrypt <tag>
 #   install line + npm / GitHub Packages links
-#   the CHANGELOG.md section for this version (as of the tagged commit)
 #   ## Resolved issues            (scripts/release-issues.py, fail-closed)
+#   ## Manually closed issues     (only when present; unverified linkage)
 #   ## Changes since <prev tag>   (git log --no-merges) + compare link
 #   ## Verification
 #
-# Fail-closed: every lookup (CHANGELOG section, predecessor tag, issue
-# provenance via the GitHub API) completes BEFORE anything is printed, so a
-# failure exits non-zero with empty stdout instead of partial notes.
+# GitHub Releases are the project's release history (there is no CHANGELOG
+# file). Fail-closed: every lookup (predecessor tag, issue provenance via the
+# GitHub API, commit range) completes BEFORE anything is printed, so a failure
+# exits non-zero with empty stdout instead of partial notes.
 #
 # Environment:
 #   GITHUB_REPOSITORY  owner/repo (default D0n9X1n/hexo-blog-encrypt)
@@ -48,18 +49,6 @@ if [[ "${RELEASE_FIRST:-0}" != 1 && -z "$PREVIOUS_TAG" ]]; then
   fi
 fi
 
-# CHANGELOG section as recorded in the tagged commit: from `## [VERSION]` up to
-# (not including) the next `## [` heading. Literal match, so dots are not regex.
-CHANGELOG_SECTION="$(git show "${HEAD_COMMIT}:CHANGELOG.md" | awk -v head="## [${VERSION}]" '
-  index($0, head) == 1 { found = 1; print; next }
-  found && /^## \[/ { exit }
-  found { print }
-')"
-if [[ -z "$CHANGELOG_SECTION" ]]; then
-  echo "CHANGELOG.md has no section for ${VERSION} (expected a '## [${VERSION}]' heading)" >&2
-  exit 1
-fi
-
 # Complete all metadata lookups before emitting notes; an API error is not an empty release.
 ISSUES="$(python3 "$ROOT/release-issues.py" \
   --repo "$REPO" --head "$HEAD_COMMIT" --base "$PREVIOUS_TAG")"
@@ -81,7 +70,6 @@ NOTES="$(
   echo "- npm: https://www.npmjs.com/package/hexo-blog-encrypt/v/${VERSION}"
   echo "- GitHub Packages mirror (\`@d0n9x1n/hexo-blog-encrypt\`): https://github.com/${REPO}/pkgs/npm/hexo-blog-encrypt"
   echo
-  printf '%s\n\n' "$CHANGELOG_SECTION"
   printf '%s\n\n' "$ISSUES"
   if [[ -n "$PREVIOUS_TAG" ]]; then
     echo "## Changes since ${PREVIOUS_TAG}"
@@ -96,7 +84,7 @@ NOTES="$(
   fi
   echo
   if [[ -n "$PREVIOUS_TAG" ]]; then
-    echo "**Full changelog:** https://github.com/${REPO}/compare/${PREVIOUS_TAG}...${TAG}"
+    echo "**Full diff:** https://github.com/${REPO}/compare/${PREVIOUS_TAG}...${TAG}"
     echo
   fi
   echo "## Verification"

@@ -17,16 +17,17 @@ exact tagged commit.
 
 ## Pre-flight checklist (before tagging)
 
-Prepare these changes on a feature branch, then merge after the PR checks pass:
+Prepare these changes on a feature branch, then merge after the PR checks pass.
+There is no CHANGELOG file to update: the GitHub Release generated on tag push
+is the release history. Make sure the PRs in the release link their issues
+with `Closes #N` so they appear under "Resolved issues" (see
+[Release notes](#release-notes)).
 
-1. **`CHANGELOG.md`** — change `## [x.y.z] — Unreleased` → `## [x.y.z] — YYYY-MM-DD`.
-   The release workflow's regex `^## \[VERSION\] — [0-9]{4}-[0-9]{2}-[0-9]{2}` will
-   fail closed if the date is missing.
-2. **`demo/package.json`** — use a published semver range such as `^x.y.z`,
+1. **`demo/package.json`** — use a published semver range such as `^x.y.z`,
    never `file:..`. Raise the minimum when the demo exercises the new fix.
    The release workflow rejects `file:` references; it does not require an
    exact demo-version match.
-3. **`package.json` `version`** — should already match the tag from your
+2. **`package.json` `version`** — should already match the tag from your
    bump commit; the workflow re-verifies.
 
 Run `npm test`, `npm pack --dry-run --json > pack.json`, and
@@ -47,7 +48,7 @@ git tag -a vX.Y.Z -m "hexo-blog-encrypt vX.Y.Z
 
 <one-paragraph release summary>
 
-Migration / changelog links."
+Migration notes / links."
 git push origin vX.Y.Z
 ```
 
@@ -104,20 +105,19 @@ Every re-run uses the same tagged commit; newer master changes do not apply.
 ## Release notes
 
 The `github-release` job runs `bash scripts/release-notes.sh "$GITHUB_REF_NAME"`
-(the same approach as SonicTerm). The generated notes contain, in order:
+(the same approach as SonicTerm). GitHub Releases are the project's release
+history; there is no CHANGELOG file. The generated notes contain, in order:
 
 1. `# hexo-blog-encrypt vX.Y.Z`, the `npm install hexo-blog-encrypt@X.Y.Z`
    line, and links to npmjs.com and the GitHub Packages mirror
    (`@d0n9x1n/hexo-blog-encrypt`).
-2. This version's `CHANGELOG.md` section (`## [X.Y.Z] …` up to the next
-   `## [` heading), read from the tagged commit. A missing section fails the job.
-3. `## Resolved issues` — issues proven closed by non-reverted commits or merged
+2. `## Resolved issues` — issues proven closed by non-reverted commits or merged
    PRs in the tag range, collected by `scripts/release-issues.py`. Issues closed
    by hand (no closing commit or PR recorded by GitHub) are listed separately
    under *Manually closed issues (unverified release linkage)*.
-4. `## Changes since <previous tag>` — `git log --no-merges` subjects with
+3. `## Changes since <previous tag>` — `git log --no-merges` subjects with
    short SHAs, plus a compare link.
-5. `## Verification` — lint, 100% server coverage, Playwright e2e, and npm
+4. `## Verification` — lint, 100% server coverage, Playwright e2e, and npm
    provenance.
 
 **For an issue to appear under "Resolved issues", link it with a closing
@@ -217,7 +217,8 @@ name (see Getting Started for the install snippet).
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
 | `ENEEDAUTH` from `npm publish` in release.yml | npm CLI < 11.5.1 (the `npm install -g npm@^11` step is missing or failed), OR trusted publisher misconfigured on npmjs.com | Verify the upgrade step ran; double-check the trusted-publisher fields match exactly (workflow filename `release.yml`, no environment). |
-| `release.yml` fails at "Verify CHANGELOG has dated entry" | You forgot to date the `## [x.y.z]` heading | Fix the dated entry before tagging a new version; a re-run uses the same tagged commit, not newer master changes. |
+| `github-release` job fails at "Generate release notes" | GitHub API error/rate limit, missing `issues: read` / `pull-requests: read`, or a shallow checkout | npm is already published — re-run only the failed `github-release` job; a re-run uses the same tagged commit, not newer master changes. |
+| An issue is missing from "Resolved issues" | Its PR or commit did not use a closing keyword (`Closes #N`), or it was closed by hand | Link issues with `Closes #N` in future PRs; manual closures appear only in the unverified section. |
 | `release.yml` fails at "Verify demo references published package" | `demo/package.json` still says `file:..` | Fix the manifest before tagging a new version; a re-run uses the same tagged commit. |
 | `publish-gh-packages.yml` fails with `403 Forbidden` | The runner's `GITHUB_TOKEN` lost `packages: write` (e.g. branch protection stripped it) | Restore `permissions: packages: write` at the workflow / job scope. |
 | GitHub Packages page returns 404 after publish | Eventually consistent; CDN catches up within seconds. | Wait, refresh. If still 404 after a few minutes, the publish step probably no-op'd — check the workflow log for the "Skip if … already exists" branch. |
@@ -243,4 +244,5 @@ name (see Getting Started for the install snippet).
 - [`docs/DEVELOPMENT.md`](DEVELOPMENT.md) — workflow rules + commands.
 - [`.github/workflows/release.yml`](../.github/workflows/release.yml) — npmjs publish workflow.
 - [`.github/workflows/publish-gh-packages.yml`](../.github/workflows/publish-gh-packages.yml) — GH Packages mirror workflow.
-- [`CHANGELOG.md`](../CHANGELOG.md) — release history.
+- [GitHub Releases](https://github.com/D0n9X1n/hexo-blog-encrypt/releases) — release history.
+- [`scripts/release-notes.sh`](../scripts/release-notes.sh) — release-notes generator.
