@@ -67,14 +67,13 @@ jobs:
         with:
           node-version: 20.x
 
-      # This repo gitignores package-lock.json, so `cache: 'npm'` on setup-node
-      # would fail. Cache ~/.npm manually instead.
+      # Cache ~/.npm manually: the demo site has no lockfile of its own.
       - name: Cache npm packages
         if: steps.freshness.outputs.stale != 'true'
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-npm-demo-${{ hashFiles('package.json', 'demo/package.json') }}
+          key: ${{ runner.os }}-npm-demo-${{ hashFiles('package-lock.json', 'demo/package.json') }}
           restore-keys: |
             ${{ runner.os }}-npm-demo-
             ${{ runner.os }}-npm-
@@ -83,7 +82,7 @@ jobs:
       # (this repo as a package) is resolvable.
       - name: Install root (plugin) dependencies
         if: steps.freshness.outputs.stale != 'true'
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       # v4: the browser bundle is built from `src/browser/` via esbuild and
       # is gitignored. Without this step, hexo generate would crash with

@@ -271,11 +271,15 @@ To add a theme, see [docs/THEMES.md](./docs/THEMES.md).
 Decryption uses Web Crypto (`crypto.subtle`), which requires a **secure
 context**: HTTPS or `http://localhost`.
 
-| Browser | Minimum | Notes |
+| Browser | Minimum | Tested |
 | --- | --- | --- |
-| Chromium / Edge | 92+ | Tested in CI with Playwright |
-| Firefox | 90+ | |
-| Safari (macOS / iOS) | 14+ | Manual smoke test at release time |
+| Chromium / Edge | 92+ | Automated: Playwright Chromium in CI, Hexo 7 and 8 |
+| Firefox | 90+ | Automated: Playwright Firefox in CI |
+| Safari (macOS) | 14+ | Automated: Playwright WebKit in CI (WebKit engine, not Safari itself) |
+| Safari (iOS) | 14+ | Manual only |
+
+Minimum versions come from Web Crypto and language feature support; CI runs
+the current Playwright builds, not these minimums.
 
 On plain HTTP from a non-localhost host, `crypto.subtle` is `undefined` and
 decryption fails. Always serve production sites over HTTPS.

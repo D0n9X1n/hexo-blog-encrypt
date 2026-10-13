@@ -17,7 +17,7 @@ That's it. No submodules, no extra steps.
 | `npm test` | Lint + server tests (`tests/server/*.test.js`, `tests/docs.test.js`) + Playwright e2e against all 8 themes. The full suite CI runs. |
 | `npm run lint` | ESLint (flat config, `eslint.config.js`) over the whole repo except `demo/` and build outputs. |
 | `npm run test:server` | Server-side Node tests only. Fast (no browser). |
-| `npm run test:e2e` | Playwright e2e only. Spins up a real Hexo build of `tests/fixtures/hexo-site/`, serves it, drives Chromium. |
+| `npm run test:e2e` | Playwright e2e only. Spins up a real Hexo build of `tests/fixtures/hexo-site/`, serves it, drives Chromium, Firefox and WebKit (`--project=chromium` to run one). |
 | `npm run build` | Rebuild the browser bundle (`lib/hbe.bundle.js`) via esbuild. Runs as `prepack` automatically before `npm publish`. |
 
 Run `npm test` BEFORE you push anything that touches `src/`, `lib/`, or
@@ -40,7 +40,16 @@ them in seconds.
 ## Branch protection
 
 The `Tests` workflow runs `lint-and-server` and sharded `e2e` jobs. All must
-pass before merging or releasing. Repository branch-protection settings may
+pass before merging or releasing.
+
+| Job | Matrix |
+| --- | --- |
+| `lint-and-server` | Node 18, 20, 22, 24, 26 with the Hexo 7 fixture, plus Node 24 with Hexo 8. Lint runs once (Node 22). Node 18 runs plain `node --test` without the coverage gate, because c8 and ESLint need Node 20.19+. |
+| `e2e` | Chromium, Firefox and WebKit against the Hexo 7 fixture, plus Chromium against Hexo 8; two shards each. |
+
+CI installs the root with `npm ci` from the committed `package-lock.json`.
+The fixture site has no lockfile: CI sets its `hexo` dependency to the
+matrix major before `npm install`. Repository branch-protection settings may
 vary; the staged rollout process for required checks is documented in
 [`.github/CONTRIBUTING.md`](../.github/CONTRIBUTING.md).
 
