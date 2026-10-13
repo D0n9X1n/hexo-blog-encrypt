@@ -376,11 +376,10 @@ test('publish-gh-packages.yml uses GITHUB_TOKEN, not a long-lived PAT', () => {
 
 test('docs/ source-of-truth files exist and cross-link cleanly', () => {
   // The repo's contract: docs/ is the source of truth for project
-  // details. .github/copilot-instructions.md is a thin pointer file
-  // that orients agents to docs/ and lists the non-negotiables.
-  // This test guards the contract: the three core docs must exist,
-  // copilot-instructions must point to them, and copilot-instructions
-  // must stay short (so it stays a pointer, not a duplicate).
+  // details. CLAUDE.md is a thin pointer file that orients Claude Code
+  // to docs/ and lists the non-negotiables. This test guards the
+  // contract: the three core docs must exist, CLAUDE.md must point to
+  // them, and CLAUDE.md must stay short (a pointer, not a duplicate).
   const docsDir = path.join(repoRoot, 'docs');
   const required = ['ARCHITECTURE.md', 'RELEASING.md', 'DEVELOPMENT.md'];
   for (const name of required) {
@@ -393,15 +392,15 @@ test('docs/ source-of-truth files exist and cross-link cleanly', () => {
     );
   }
 
-  const copilot = path.join(repoRoot, '.github', 'copilot-instructions.md');
-  assert.ok(fs.existsSync(copilot), '.github/copilot-instructions.md must exist');
-  const body = read(copilot);
+  const claudeMd = path.join(repoRoot, 'CLAUDE.md');
+  assert.ok(fs.existsSync(claudeMd), 'CLAUDE.md must exist');
+  const body = read(claudeMd);
 
   // Must link to each of the three core docs.
   for (const name of required) {
     assert.ok(
       body.includes(`docs/${name}`),
-      `.github/copilot-instructions.md must link to docs/${name}`
+      `CLAUDE.md must link to docs/${name}`
     );
   }
 
@@ -410,7 +409,7 @@ test('docs/ source-of-truth files exist and cross-link cleanly', () => {
   const lines = body.split('\n').length;
   assert.ok(
     lines <= 100,
-    `.github/copilot-instructions.md must stay ≤ 100 lines (a pointer file), got ${lines}`
+    `CLAUDE.md must stay ≤ 100 lines (a pointer file), got ${lines}`
   );
 });
 
@@ -438,7 +437,7 @@ test('docs/RELEASING.md documents both registries and the OIDC + GH Packages flo
 });
 
 test('maintainer docs describe the actual production package and IIFE bundle', () => {
-  for (const file of ['docs/ARCHITECTURE.md', '.github/copilot-instructions.md']) {
+  for (const file of ['docs/ARCHITECTURE.md', 'CLAUDE.md']) {
     const body = read(path.join(repoRoot, file));
     const section = body.slice(body.search(/Tarball whitelist|Don't ship dev-only/));
     assert.ok(section.includes('`src/server/`'), `${file} must retain server runtime sources`);
@@ -474,4 +473,22 @@ test('both READMEs document script readiness and the encrypted dependency demo',
     assert.ok(body.includes('type="module"'), `${name}: inline module limitation`);
     assert.doesNotMatch(body, /toc\(post\.origin/, `${name}: must not publish plaintext TOC`);
   }
+});
+
+test('Claude Code config is limited to CLAUDE.md and the user-facing skill', () => {
+  // Only CLAUDE.md configures Claude Code in this repo. No committed
+  // settings, plugin manifests, or other coding-CLI instruction files.
+  for (const rel of [
+    '.claude/settings.json',
+    '.claude-plugin',
+    'plugins',
+    '.github/copilot-instructions.md',
+    'AGENTS.md',
+    '.cursorrules',
+    'GEMINI.md',
+  ]) {
+    assert.ok(!fs.existsSync(path.join(repoRoot, rel)), `${rel} must not be committed`);
+  }
+  assert.deepEqual(fs.readdirSync(path.join(repoRoot, 'skills')), ['hexo-encrypt-toc']);
+  assert.deepEqual(fs.readdirSync(path.join(repoRoot, 'skills', 'hexo-encrypt-toc')), ['SKILL.md']);
 });

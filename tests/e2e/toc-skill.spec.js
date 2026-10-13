@@ -1,12 +1,15 @@
 'use strict';
 
-// Browser regression for plugins/hexo-encrypt/skills/hexo-encrypt-toc/scripts/hbe-toc.js. Uses
-// static markup that mimics the plugin's decrypted DOM, so it needs no site.
+// Browser regression for the hbe-toc.js builder embedded in
+// skills/hexo-encrypt-toc/SKILL.md (Appendix A). Uses static markup that
+// mimics the plugin's decrypted DOM, so it needs no site.
 
+const fs = require('fs');
 const path = require('path');
 const { test, expect } = require('@playwright/test');
 
-const BUILDER = path.resolve(__dirname, '..', '..', 'plugins', 'hexo-encrypt', 'skills', 'hexo-encrypt-toc', 'scripts', 'hbe-toc.js');
+const SKILL = fs.readFileSync(path.resolve(__dirname, '..', '..', 'skills', 'hexo-encrypt-toc', 'SKILL.md'), 'utf8');
+const BUILDER = /^## Appendix A: hbe-toc\.js\n[\s\S]*?^````js\n([\s\S]*?)^````$/m.exec(SKILL)[1];
 
 const LOCKED = `
   <aside><div id="toc" style="display:none"></div></aside>
@@ -32,7 +35,7 @@ test.describe('hexo-encrypt-toc builder', () => {
   test('builds a nested Hexo-style TOC after the decrypt event', async ({ page }) => {
     await page.setContent(LOCKED);
     await page.evaluate(() => { window.HBE_TOC = { onRender: () => { window.__rendered = (window.__rendered || 0) + 1; } }; });
-    await page.addScriptTag({ path: BUILDER });
+    await page.addScriptTag({ content: BUILDER });
 
     await expect(page.locator('#toc li')).toHaveCount(0);
     await decrypt(page);
@@ -59,7 +62,7 @@ test.describe('hexo-encrypt-toc builder', () => {
     await page.setContent(LOCKED);
     await decrypt(page);
     await page.evaluate(() => { window.HBE_TOC = { className: 'nav', listNumber: true }; });
-    await page.addScriptTag({ path: BUILDER });
+    await page.addScriptTag({ content: BUILDER });
 
     await expect(page.locator('#toc > ol.nav > li.nav-item')).toHaveCount(2);
     await expect(page.locator('#toc span.nav-number').first()).toHaveText('1.');
@@ -68,7 +71,7 @@ test.describe('hexo-encrypt-toc builder', () => {
 
   test('does nothing while the post is still locked', async ({ page }) => {
     await page.setContent(LOCKED);
-    await page.addScriptTag({ path: BUILDER });
+    await page.addScriptTag({ content: BUILDER });
     await expect(page.locator('#toc')).toBeHidden();
     await expect(page.locator('#toc *')).toHaveCount(0);
   });
