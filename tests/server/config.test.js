@@ -220,3 +220,73 @@ test('resolve() with primitive kdf override (e.g. kdf="oops") throws integer-val
     /kdf\.iterations must be an integer/
   );
 });
+
+// ---------------------------------------------------------------------------
+// #249 — boolean options are validated, not coerced by truthiness.
+// ---------------------------------------------------------------------------
+const BOOL_OPTS = ['autoSave', 'stableSalt', 'silent'];
+
+for (const name of BOOL_OPTS) {
+  test(`#249: quoted "false" for site-level ${name} resolves to false and warns`, () => {
+    const log = fakeLogger();
+    const out = resolve({ encrypt: { [name]: 'false' } }, { password: 'pw' }, log);
+    assert.equal(out[name], false);
+    const warns = log.events.filter((e) => e.level === 'warn').map((e) => e.msg);
+    assert.ok(warns.some((m) => m.includes(`encrypt.${name}`) && /string/.test(m)),
+      `expected a quoted-boolean warning; got ${JSON.stringify(warns)}`);
+  });
+
+  test(`#249: quoted " TRUE " for post-level ${name} resolves to true and warns`, () => {
+    const log = fakeLogger();
+    const out = resolve({}, { password: 'pw', [name]: ' TRUE ' }, log);
+    assert.equal(out[name], true);
+    assert.ok(log.events.some((e) => e.level === 'warn' && e.msg.includes(`front-matter ${name}`)));
+  });
+
+  for (const [label, bad] of [['number 0', 0], ['number 1', 1], ['object', { a: 1 }], ['array', [true]], ['string "yes"', 'yes']]) {
+    test(`#249: ${label} for ${name} is rejected at site and post level`, () => {
+      assert.throws(
+        () => resolve({ encrypt: { [name]: bad } }, { password: 'pw' }, fakeLogger()),
+        (err) => err.message.includes(`encrypt.${name}`) && /must be a boolean/.test(err.message),
+      );
+      assert.throws(
+        () => resolve({}, { password: 'pw', [name]: bad }, fakeLogger()),
+        (err) => err.message.includes(`front-matter ${name}`) && /must be a boolean/.test(err.message),
+      );
+    });
+  }
+
+  test(`#249: real booleans for ${name} pass without warnings`, () => {
+    const log = fakeLogger();
+    const out = resolve({ encrypt: { [name]: true } }, { password: 'pw', [name]: false }, log);
+    assert.equal(out[name], false);
+    assert.equal(log.events.filter((e) => e.level === 'warn' && e.msg.includes(name)).length, 0);
+  });
+}
+
+test('#249: decryptButton.show "false" (quoted) resolves to false and warns', () => {
+  const log = fakeLogger();
+  const out = resolve({ encrypt: { decryptButton: { show: 'false', text: 'Open' } } }, { password: 'pw' }, log);
+  assert.equal(out.decryptButton.show, false);
+  assert.equal(out.decryptButton.text, 'Open');
+  assert.ok(log.events.some((e) => e.level === 'warn' && e.msg.includes('encrypt.decryptButton.show')));
+});
+
+test('#249: decryptButton.show non-boolean is rejected', () => {
+  assert.throws(
+    () => resolve({}, { password: 'pw', decryptButton: { show: 0 } }, fakeLogger()),
+    /front-matter decryptButton\.show must be a boolean/,
+  );
+});
+
+test('#249: decryptButton without show, or null, keeps defaults', () => {
+  assert.equal(resolve({}, { password: 'pw', decryptButton: { text: 'Go' } }).decryptButton.show, true);
+  assert.equal(resolve({}, { password: 'pw', decryptButton: null }).decryptButton.show, true);
+  assert.equal(resolve({}, { password: 'pw', decryptButton: [1] }).decryptButton.length, 1);
+});
+
+test('#249: boolean normalisation does not mutate the caller\'s decryptButton object', () => {
+  const site = { encrypt: { decryptButton: { show: 'false' } } };
+  resolve(site, { password: 'pw' }, fakeLogger());
+  assert.equal(site.encrypt.decryptButton.show, 'false');
+});

@@ -81,6 +81,46 @@ const KNOWN_KEYS = [
   'tags',
 ];
 
+const BOOLEAN_KEYS = ['autoSave', 'stableSalt', 'silent'];
+
+// Strict boolean parsing (#249). YAML `autoSave: "false"` is a truthy string;
+// treating it by truthiness would silently enable key storage.
+function toBoolean(value, label, log) {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') {
+    const s = value.trim().toLowerCase();
+    if (s === 'true' || s === 'false') {
+      log.warn(
+        `hexo-blog-encrypt: ${label} is the string ${JSON.stringify(value)}; ` +
+        `treating it as ${s}. Remove the quotes to use a YAML boolean.`
+      );
+      return s === 'true';
+    }
+  }
+  throw new Error(
+    `hexo-blog-encrypt: ${label} must be a boolean (true or false), got ${JSON.stringify(value)}.`
+  );
+}
+
+// Returns a shallow copy of `picked` with boolean options validated.
+// `prefix` names the config layer in messages ("encrypt." or "front-matter ").
+function normalizeBooleans(picked, prefix, log) {
+  const out = Object.assign({}, picked);
+  for (const key of BOOLEAN_KEYS) {
+    if (out[key] !== undefined && out[key] !== null) {
+      out[key] = toBoolean(out[key], `${prefix}${key}`, log);
+    }
+  }
+  const btn = out.decryptButton;
+  if (btn && typeof btn === 'object' && !Array.isArray(btn)
+    && btn.show !== undefined && btn.show !== null) {
+    out.decryptButton = Object.assign({}, btn, {
+      show: toBoolean(btn.show, `${prefix}decryptButton.show`, log),
+    });
+  }
+  return out;
+}
+
 function resolve(hexoConfig, postData, logger) {
   // Only `warn` is ever called from this module; keep the no-op default minimal.
   const log = logger || { warn: () => {} };
@@ -97,13 +137,13 @@ function resolve(hexoConfig, postData, logger) {
   const post = postData || {};
 
   // Layer 1: defaults → hexo encrypt block (for top-level shared keys, NOT password/theme overrides per-post).
-  let merged = deepMerge(DEFAULTS, shallowPickKnown(hexoEncrypt, KNOWN_KEYS));
+  let merged = deepMerge(DEFAULTS, normalizeBooleans(shallowPickKnown(hexoEncrypt, KNOWN_KEYS), 'encrypt.', log));
 
   // Layer 2: post front-matter wins. Use POST_KNOWN_KEYS (which excludes
   // `tags`) to avoid pulling Hexo's Warehouse Query for `post.tags` into
   // the deep-merge — `structuredClone` would throw DataCloneError on the
   // function-bearing internals.
-  merged = deepMerge(merged, shallowPickKnown(post, POST_KNOWN_KEYS));
+  merged = deepMerge(merged, normalizeBooleans(shallowPickKnown(post, POST_KNOWN_KEYS), 'front-matter ', log));
 
   // Deprecation: template → theme.
   if (merged.template !== undefined && merged.template !== null) {

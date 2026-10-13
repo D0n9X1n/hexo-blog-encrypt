@@ -716,6 +716,22 @@ test('data-auto-save reflects autoSave: true when user opts in', async () => {
   assert.equal(p.autoSave, 'true');
 });
 
+test('#249: quoted autoSave: "false" renders data-auto-save="false" (no key storage)', async () => {
+  hexo.config.encrypt = { autoSave: 'false' };
+  const data = makeSyntheticData({ title: 'as-quoted-false', password: 'p' });
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  assert.equal(extractPayload(data.content).autoSave, 'false');
+});
+
+test('#249: non-boolean autoSave fails the build', async () => {
+  hexo.config.encrypt = {};
+  const data = makeSyntheticData({ title: 'as-number', password: 'p', autoSave: 1 });
+  await assert.rejects(
+    hexo.execFilter('after_post_render', data, { context: hexo }),
+    /front-matter autoSave must be a boolean/,
+  );
+});
+
 // ---------------------------------------------------------------------------
 // v4 NEW: data-whm defaulting (whm := wpm when user did not set whm)
 // ---------------------------------------------------------------------------
