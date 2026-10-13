@@ -1,5 +1,7 @@
 # Development
 
+[简体中文](Development-zh-CN)
+
 How to work on this project — setup, test commands, and basic workflow rules.
 
 ## Setup (after a fresh clone)
@@ -51,25 +53,25 @@ CI installs the root with `npm ci` from the committed `package-lock.json`.
 The fixture site has no lockfile: CI sets its `hexo` dependency to the
 matrix major before `npm install`. Repository branch-protection settings may
 vary; the staged rollout process for required checks is documented in
-[`.github/CONTRIBUTING.md`](../.github/CONTRIBUTING.md).
+[`.github/CONTRIBUTING.md`](https://github.com/D0n9X1n/hexo-blog-encrypt/blob/master/.github/CONTRIBUTING.md).
 
 CODEOWNERS (`.github/CODEOWNERS`) makes `@D0n9X1n` the default reviewer
 on every PR.
 
 ## Adding a theme
 
-See [`docs/THEMES.md`](THEMES.md). It's a one-file drop — no edits to
+See [Theme Authoring](Theme-Authoring). It's a one-file drop — no edits to
 `src/server/` or `src/browser/` needed.
 
 ## Cutting a release
 
-See [`docs/RELEASING.md`](RELEASING.md). Pre-flight checklist + tag
+See [Release Process](Release-Process). Pre-flight checklist + tag
 flow + GH Packages mirror + troubleshooting all in one place.
 
 ## See also
 
-- [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) — codebase orientation.
-- [`docs/RELEASING.md`](RELEASING.md) — release procedure.
-- [`docs/THEMES.md`](THEMES.md) — theme contract.
-- [`.github/CONTRIBUTING.md`](../.github/CONTRIBUTING.md) — contributor
+- [Architecture](Architecture) — codebase orientation.
+- [Release Process](Release-Process) — release procedure.
+- [Theme Authoring](Theme-Authoring) — theme contract.
+- [`.github/CONTRIBUTING.md`](https://github.com/D0n9X1n/hexo-blog-encrypt/blob/master/.github/CONTRIBUTING.md) — contributor
   guidelines + branch-protection rollout.

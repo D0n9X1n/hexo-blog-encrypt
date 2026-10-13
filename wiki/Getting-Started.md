@@ -1,5 +1,7 @@
 # Getting Started
 
+[简体中文](Getting-Started-zh-CN)
+
 This guide gets you from **clean Hexo site** to **first encrypted post** in about a minute.
 
 ## 1. Install

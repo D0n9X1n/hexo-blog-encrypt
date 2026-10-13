@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const repoRoot = path.resolve(__dirname, '..');
-const themesDoc = path.join(repoRoot, 'docs', 'THEMES.md');
+const themesDoc = path.join(repoRoot, 'wiki', 'Theme-Authoring.md');
 const contributing = path.join(repoRoot, '.github', 'CONTRIBUTING.md');
 const codeowners = path.join(repoRoot, '.github', 'CODEOWNERS');
 const prTemplate = path.join(repoRoot, '.github', 'PULL_REQUEST_TEMPLATE.md');
@@ -39,49 +39,49 @@ function read(file) {
   return fs.readFileSync(file, 'utf8');
 }
 
-test('docs/THEMES.md exists and encodes the v4 one-file theme drop contract', () => {
-  assert.ok(fs.existsSync(themesDoc), 'docs/THEMES.md must exist');
+test('wiki/Theme-Authoring.md exists and encodes the v4 one-file theme drop contract', () => {
+  assert.ok(fs.existsSync(themesDoc), 'wiki/Theme-Authoring.md must exist');
   const body = read(themesDoc);
   assert.ok(
     body.includes('`lib/hbe.<name>.html`'),
-    'docs/THEMES.md must reference the literal `lib/hbe.<name>.html` drop path'
+    'wiki/Theme-Authoring.md must reference the literal `lib/hbe.<name>.html` drop path'
   );
   assert.ok(
     /^##\s+Required placeholders\s*$/m.test(body),
-    'docs/THEMES.md must contain a "## Required placeholders" heading'
+    'wiki/Theme-Authoring.md must contain a "## Required placeholders" heading'
   );
   for (const placeholder of REQUIRED_PLACEHOLDERS) {
     assert.ok(
       body.includes(placeholder),
-      `docs/THEMES.md must list placeholder ${placeholder}`
+      `wiki/Theme-Authoring.md must list placeholder ${placeholder}`
     );
   }
   for (const attrName of REQUIRED_DATA_ATTR_NAMES) {
     assert.ok(
       body.includes(attrName),
-      `docs/THEMES.md must reference v4 data attribute "${attrName}"`
+      `wiki/Theme-Authoring.md must reference v4 data attribute "${attrName}"`
     );
   }
   // The v3 IIFE was removed in v4; the doc must NOT advertise it as the
   // browser-side asset path or theme authors will follow a dead link.
   assert.ok(
     !/`lib\/hbe\.js`/.test(body),
-    'docs/THEMES.md must not reference the deleted v3 `lib/hbe.js` asset'
+    'wiki/Theme-Authoring.md must not reference the deleted v3 `lib/hbe.js` asset'
   );
   // Likewise the v3-only HMAC/CBC placeholders must not be re-introduced.
   for (const stale of ['{{hbeHmacDigest}}', '{{hbeKeySalt}}', '{{hbeIvSalt}}']) {
     assert.ok(
       !body.includes(stale),
-      `docs/THEMES.md must not reference removed v3 placeholder ${stale}`
+      `wiki/Theme-Authoring.md must not reference removed v3 placeholder ${stale}`
     );
   }
 });
 
-test('docs/THEMES.md stays focused (≤ 200 lines)', () => {
+test('wiki/Theme-Authoring.md stays focused (≤ 200 lines)', () => {
   const lines = read(themesDoc).split('\n').length;
   assert.ok(
     lines <= 200,
-    `docs/THEMES.md must be ≤ 200 lines (found ${lines})`
+    `wiki/Theme-Authoring.md must be ≤ 200 lines (found ${lines})`
   );
 });
 
@@ -374,38 +374,43 @@ test('publish-gh-packages.yml uses GITHUB_TOKEN, not a long-lived PAT', () => {
   }
 });
 
-test('docs/ source-of-truth files exist and cross-link cleanly', () => {
-  // The repo's contract: docs/ is the source of truth for project
-  // details. CLAUDE.md is a thin pointer file that orients Claude Code
-  // to docs/ and lists the non-negotiables. This test guards the
-  // contract: the three core docs must exist, CLAUDE.md must point to
-  // them, and CLAUDE.md must stay short (a pointer, not a duplicate).
-  const docsDir = path.join(repoRoot, 'docs');
-  const required = ['ARCHITECTURE.md', 'RELEASING.md', 'DEVELOPMENT.md'];
+test('wiki/ is the only documentation source and CLAUDE.md points at it', () => {
+  // The repo's contract: wiki/ at the repository root is the only
+  // documentation source (no docs/ folder). CLAUDE.md is a thin pointer that
+  // orients Claude Code to the English wiki pages and lists the
+  // non-negotiables. Pairs, links and Home navigation are checked by
+  // scripts/check-wiki.py.
+  assert.ok(!fs.existsSync(path.join(repoRoot, 'docs')), 'docs/ must not exist; use wiki/');
+  const wikiDir = path.join(repoRoot, 'wiki');
+  const required = ['Architecture.md', 'Release-Process.md', 'Development.md', 'Theme-Authoring.md'];
   for (const name of required) {
-    const p = path.join(docsDir, name);
-    assert.ok(fs.existsSync(p), `docs/${name} must exist (source-of-truth doc)`);
+    const p = path.join(wikiDir, name);
+    assert.ok(fs.existsSync(p), `wiki/${name} must exist (source-of-truth page)`);
     const body = read(p);
     assert.ok(
       body.length > 500,
-      `docs/${name} must contain real content (> 500 bytes), got ${body.length}`
+      `wiki/${name} must contain real content (> 500 bytes), got ${body.length}`
     );
+    const chinese = name.replace(/\.md$/, '-zh-CN.md');
+    assert.ok(fs.existsSync(path.join(wikiDir, chinese)), `wiki/${chinese} must exist`);
   }
 
   const claudeMd = path.join(repoRoot, 'CLAUDE.md');
   assert.ok(fs.existsSync(claudeMd), 'CLAUDE.md must exist');
   const body = read(claudeMd);
 
-  // Must link to each of the three core docs.
+  // Must link to each core English page, and never to Chinese pages
+  // (routine agent context loads English only).
   for (const name of required) {
     assert.ok(
-      body.includes(`docs/${name}`),
-      `CLAUDE.md must link to docs/${name}`
+      body.includes(`wiki/${name}`),
+      `CLAUDE.md must link to wiki/${name}`
     );
   }
+  assert.doesNotMatch(body.split('**Canonical')[0], /-zh-CN\.md/, 'CLAUDE.md read-first list must be English only');
 
   // Must stay a pointer, not a duplicate. ≤ 100 lines keeps it skimmable
-  // and forces details into docs/.
+  // and forces details into wiki/.
   const lines = body.split('\n').length;
   assert.ok(
     lines <= 100,
@@ -413,12 +418,12 @@ test('docs/ source-of-truth files exist and cross-link cleanly', () => {
   );
 });
 
-test('docs/RELEASING.md documents both registries and the OIDC + GH Packages flows', () => {
-  // RELEASING.md is the single maintainer-facing reference. It must
+test('wiki/Release-Process.md documents both registries and the OIDC + GH Packages flows', () => {
+  // Release-Process.md is the single maintainer-facing reference. It must
   // cover BOTH publish targets (npmjs canonical + GH Packages mirror)
   // and call out the OIDC trusted-publishing setup that release.yml
   // depends on. Reviewers should be able to reach for one doc, not two.
-  const body = read(path.join(repoRoot, 'docs', 'RELEASING.md'));
+  const body = read(path.join(repoRoot, 'wiki', 'Release-Process.md'));
   const required = [
     /npmjs\.com/i,
     /github packages/i,
@@ -431,19 +436,19 @@ test('docs/RELEASING.md documents both registries and the OIDC + GH Packages flo
   for (const re of required) {
     assert.ok(
       re.test(body),
-      `docs/RELEASING.md must mention ${re}`
+      `wiki/Release-Process.md must mention ${re}`
     );
   }
 });
 
 test('maintainer docs describe the actual production package and IIFE bundle', () => {
-  for (const file of ['docs/ARCHITECTURE.md', 'CLAUDE.md']) {
+  for (const file of ['wiki/Architecture.md', 'CLAUDE.md']) {
     const body = read(path.join(repoRoot, file));
     const section = body.slice(body.search(/Tarball whitelist|Don't ship dev-only/));
     assert.ok(section.includes('`src/server/`'), `${file} must retain server runtime sources`);
     assert.ok(section.includes('`src/browser/`'), `${file} must distinguish browser build sources`);
   }
-  const architecture = read(path.join(repoRoot, 'docs/ARCHITECTURE.md'));
+  const architecture = read(path.join(repoRoot, 'wiki/Architecture.md'));
   assert.match(architecture, /IIFE/);
   assert.doesNotMatch(architecture, /single ESM bundle|Browser side is ESM/);
 });
@@ -458,7 +463,7 @@ test('PR checklist matches the current theme and crypto module contract', () => 
 });
 
 test('release guidance follows the automated GitHub Release job', () => {
-  const body = read(path.join(repoRoot, 'docs/RELEASING.md'));
+  const body = read(path.join(repoRoot, 'wiki/Release-Process.md'));
   assert.match(body, /automatically (?:creates|create).*GitHub Release|GitHub Release.*automatically/i);
   assert.doesNotMatch(body, /gh release create|workflow only publishes/);
   assert.match(body, /re-?run[^\n]*same (?:tagged )?commit|same (?:tagged )?commit[^\n]*re-?run/i);

@@ -1,5 +1,7 @@
 # Troubleshooting
 
+[简体中文](Troubleshooting-zh-CN)
+
 If something's wrong, work through these in order. The first match usually pinpoints the cause.
 
 ## Symptom: "decryption failed" on every attempt, every browser

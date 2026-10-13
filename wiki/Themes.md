@@ -1,5 +1,7 @@
 # Themes
 
+[简体中文](Themes-zh-CN)
+
 Eight reveal-animation themes ship with the plugin. They differ only in CSS — the prompt structure (password field, button, error region) is identical across all themes, so any theme works with any feature (button, autoSave, callbacks, …).
 
 ## Gallery (live demo)

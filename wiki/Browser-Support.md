@@ -1,5 +1,7 @@
 # Browser Support
 
+[简体中文](Browser-Support-zh-CN)
+
 The browser-side decryption uses the **Web Crypto API** (`crypto.subtle`), which has two hard requirements:
 
 1. A modern browser

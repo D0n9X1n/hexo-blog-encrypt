@@ -11,7 +11,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/hexo-blog-encrypt?logo=npm&label=downloads)](https://www.npmjs.com/package/hexo-blog-encrypt)
 [![License](https://img.shields.io/npm/l/hexo-blog-encrypt?color=brightgreen)](./LICENSE)
 [![Tests](https://github.com/D0n9X1n/hexo-blog-encrypt/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/D0n9X1n/hexo-blog-encrypt/actions/workflows/test.yml)
-[![Coverage](https://img.shields.io/badge/server%20coverage-100%25-brightgreen)](./docs/DEVELOPMENT.md)
+[![Coverage](https://img.shields.io/badge/server%20coverage-100%25-brightgreen)](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki/Development)
 [![Live Demo](https://img.shields.io/badge/demo-online-brightgreen?logo=github)](https://d0n9x1n.github.io/hexo-blog-encrypt/)
 [![Node](https://img.shields.io/node/v/hexo-blog-encrypt?logo=node.js&color=brightgreen)](./package.json)
 [![Hexo](https://img.shields.io/npm/dependency-version/hexo-blog-encrypt/peer/hexo?logo=hexo&label=hexo)](https://hexo.io/)
@@ -305,7 +305,7 @@ Pick a theme per post with `theme:` in front matter, or for the whole site in
 [wave](https://d0n9x1n.github.io/hexo-blog-encrypt/demo/theme/wave/) ·
 [xray](https://d0n9x1n.github.io/hexo-blog-encrypt/demo/theme/xray/)
 
-To add a theme, see [docs/THEMES.md](./docs/THEMES.md).
+To add a theme, see [Theme Authoring](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki/Theme-Authoring).
 
 ## Browser support
 
@@ -378,10 +378,10 @@ Issues and pull requests are welcome. Please read
 [CONTRIBUTING.md](./.github/CONTRIBUTING.md) and include reproduction steps,
 logs and your configuration when reporting a bug.
 
-- [Architecture](./docs/ARCHITECTURE.md)
-- [Development](./docs/DEVELOPMENT.md)
-- [Releasing](./docs/RELEASING.md)
-- [Themes](./docs/THEMES.md)
+- [Architecture](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki/Architecture)
+- [Development](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki/Development)
+- [Releasing](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki/Release-Process)
+- [Themes](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki/Theme-Authoring)
 
 ## License
 

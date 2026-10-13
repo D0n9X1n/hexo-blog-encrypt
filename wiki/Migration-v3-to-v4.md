@@ -1,5 +1,7 @@
 # Migration v3 → v4
 
+[简体中文](Migration-v3-to-v4-zh-CN)
+
 v4 is a major version bump. The change is **not backward compatible at the wire level** but **is** mostly backward compatible at the config level.
 
 ## TL;DR

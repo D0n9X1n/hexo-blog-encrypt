@@ -1,4 +1,6 @@
-# Themes
+# Theme Authoring
+
+[简体中文](Theme-Authoring-zh-CN)
 
 A **theme** in `hexo-blog-encrypt` is the HTML wrapper that surrounds an
 encrypted post. The plugin auto-discovers themes by reading `lib/hbe.<name>.html`

@@ -1,5 +1,7 @@
 # Encrypted TOC
 
+[简体中文](Encrypted-TOC-zh-CN)
+
 Make any Hexo theme's table of contents work on encrypted posts **without
 publishing the encrypted headings**.
 
