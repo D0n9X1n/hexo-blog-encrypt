@@ -29,8 +29,6 @@
 
 **第一次使用?** → [入门指南](Getting-Started-zh-CN): 60 秒完成安装和第一篇加密文章.
 
-**从 v3 升级?** → [从 v3 迁移到 v4](Migration-v3-to-v4-zh-CN): 改了什么, 为什么改.
-
 **查找配置项?** → [配置参考](Configuration-Reference-zh-CN): 每个配置项及其默认值.
 
 **想要自定义外观?** → [主题](Themes-zh-CN): 8 个内置主题, 以及如何编写自己的主题.

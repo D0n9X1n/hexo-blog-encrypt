@@ -29,8 +29,6 @@
 
 **New here?** → [Getting Started](Getting-Started) — install + first encrypted post in 60 seconds.
 
-**Upgrading from v3?** → [Migration v3 → v4](Migration-v3-to-v4) — what changed and why.
-
 **Need a config option?** → [Configuration Reference](Configuration-Reference) — every key, every default.
 
 **Want a custom look?** → [Themes](Themes) — 8 built-in themes + how to roll your own.

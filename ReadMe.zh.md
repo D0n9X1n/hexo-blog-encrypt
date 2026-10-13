@@ -29,8 +29,6 @@
 - [配置](#配置)
 - [主题集成](#主题集成)
 - [浏览器支持](#浏览器支持)
-- [为什么要从 v3 升级](#为什么要从-v3-升级)
-- [从 v3 升级](#从-v3-升级)
 - [参与贡献](#参与贡献)
 - [许可](#许可)
 
@@ -309,45 +307,6 @@ curl -fsSL https://raw.githubusercontent.com/D0n9X1n/hexo-blog-encrypt/master/sk
 在非 localhost 的纯 HTTP 站点上, `crypto.subtle` 为 `undefined`, 无法解密;
 文章会提示 "请通过 HTTPS 打开此页面", 而不是显示密码错误.
 生产环境请始终使用 HTTPS.
-
-## 为什么要从 v3 升级
-
-v4 修复了 v3 真实存在的安全短板与体验问题:
-
-- **更强的密码学.** **AES-256-GCM** 自带认证标签, 取代了 v3 的 AES-CBC 加独立
-  HMAC: 单一原语、单一认证路径, 不存在 CBC padding-oracle 或 HMAC 比较漏洞.
-- **每篇独立 salt 和 nonce.** v3 所有文章共用同一个 salt, 同一个密码到处派生出
-  同一个密钥. v4 每篇独立派生密钥, 攻击者无法在使用相同密码的文章间复用 PBKDF2
-  计算.
-- **更强的 KDF 默认值.** v3 仅使用 **1,024** 轮 PBKDF2-SHA256. v4 默认
-  **250,000** 轮 (每次猜测约 240 倍工作量), 推荐 600,000 轮以上 (OWASP 2023).
-  可通过 `kdf.iterations` 按文章调整.
-- **默认保护隐私.** v3 总是把解密内容缓存到 `localStorage`, 之后使用该设备的人
-  可以再次阅读. v4 默认 `autoSave: false`, 按文章或全局开启.
-- **行内错误提示.** v3 在密码错误时弹出 `window.alert()`. v4 在输入框旁显示错误
-  (`role="alert"`).
-- **可选的解密按钮**, 方便不知道按 Enter 提交的读者.
-- **更小的体积.** 移除了 CryptoJS, 浏览器端 bundle 约 6 KB (minified).
-- **完整测试.** 每次推送都运行 100% 服务端覆盖测试及覆盖全部 8 个主题的
-  Playwright 测试.
-
-每项变化的详细原因见 wiki:
-[Migration v3 → v4](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki/Migration-v3-to-v4).
-
-## 从 v3 升级
-
-v4 修改了加密格式 (AES-GCM, 每篇独立 salt 和 nonce). v4 无法读取 v3 的产物,
-反之亦然.
-
-1. 升级插件: `npm install --save hexo-blog-encrypt@^4`.
-2. 从源文件重新生成: `hexo clean && hexo generate`.
-3. 如果使用 CDN, 请清空缓存. 每次加密都使用新的 nonce, 因此每次构建文章 HTML
-   都会变化. 运行时资源 `lib/hbe.<hash>.js` 按内容 hash 命名, 只有 bundle
-   改变时才会变化.
-4. 可选: 从配置和文章信息头中删除 `wrong_hash_message`. 它在 v4 中已废弃,
-   将在 v5 中删除.
-
-不会修改任何源 `.md` 文件. 完整的不兼容变更列表见 [v4.0.0 发布说明](https://github.com/D0n9X1n/hexo-blog-encrypt/releases/tag/v4.0.0) 和 [Releases](https://github.com/D0n9X1n/hexo-blog-encrypt/releases).
 
 ## 参与贡献
 
