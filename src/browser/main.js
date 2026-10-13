@@ -29,6 +29,7 @@ const INIT_FLAG = '__hbeInit';
 const NO_CRYPTO_MESSAGE =
   'hexo-blog-encrypt: this browser cannot decrypt here because Web Crypto is unavailable. ' +
   'Open the page over HTTPS (or localhost) in an up-to-date browser.';
+const FORGET_LABELS = { forget: 'Forget saved key', forgotten: 'Saved key forgotten.' };
 
 function webCryptoAvailable() {
   return !!(window.isSecureContext && window.crypto && window.crypto.subtle);
@@ -92,6 +93,9 @@ function setup(el) {
   ui.ensureUniqueId(el, input);
   ui.trackFilled(input);
   const id = storageId(el);
+  // autoSave turned off for this post (e.g. after a rebuild): forget any key
+  // saved while it was on, so it stops unlocking on this device.
+  if (!wire.autoSave) storage.clear(id);
 
   // Web Crypto only exists in secure contexts (HTTPS / localhost). Without
   // it every attempt would fail, so say why instead of "wrong password",
@@ -110,6 +114,9 @@ function setup(el) {
     if (revealed) return;
     revealed = true;
     const decrypted = await dom.swapInDecryptedDOM(el, plaintext);
+    if (mode === 'cached') {
+      ui.addForgetButton(decrypted, FORGET_LABELS, () => storage.clear(id));
+    }
     dispatchDecryptEvent(mode, decrypted);
   };
 
@@ -185,6 +192,7 @@ function init(root) {
 // ones just run init (wrappers are guarded per element).
 if (!window.hexoBlogEncrypt) {
   window.hexoBlogEncrypt = { init };
+  storage.purgeLegacy();
   const rerun = () => window.hexoBlogEncrypt.init();
   ['pjax:complete', 'pjax:success', 'swup:contentReplaced', 'turbo:load'].forEach((name) => {
     document.addEventListener(name, rerun);

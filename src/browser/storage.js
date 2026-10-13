@@ -109,10 +109,24 @@ function clear(id) {
   try { localStorage.removeItem(storageKey(id)); } catch (_e) { /* ignore */ }
 }
 
+// v3 stored decrypted keys under `hexo-blog-encrypt:#<path>`. v4 never reads
+// them; remove them once per page load. Scoped to that exact prefix so
+// unrelated entries (other apps, similarly named keys) are left alone.
+const LEGACY_V3_PREFIX = 'hexo-blog-encrypt:#';
+function purgeLegacy() {
+  try {
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k && k.indexOf(LEGACY_V3_PREFIX) === 0) localStorage.removeItem(k);
+    }
+  } catch (_e) { /* storage disabled — nothing to clean */ }
+}
+
 module.exports = {
   save,
   load,
   clear,
+  purgeLegacy,
   STORAGE_KEY_PREFIX,
   SCHEMA_VERSION,
 };

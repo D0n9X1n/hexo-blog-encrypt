@@ -88,6 +88,30 @@ function attachSubmit(form, handler) {
   });
 }
 
+// "Forget saved key" control, inserted just before a post that was revealed
+// with a saved key. Clicking runs `onForget`, then replaces the button with a
+// focused status message (so keyboard focus is not lost).
+function addForgetButton(decrypted, labels, onForget) {
+  const box = document.createElement('div');
+  box.className = 'hbe hbe-forget';
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'hbe hbe-forget-button';
+  button.textContent = labels.forget;
+  const status = document.createElement('span');
+  status.setAttribute('role', 'status');
+  status.tabIndex = -1;
+  button.addEventListener('click', () => {
+    onForget();
+    box.removeChild(button);
+    status.textContent = labels.forgotten;
+    status.focus();
+  });
+  box.appendChild(button);
+  box.appendChild(status);
+  decrypted.parentNode.insertBefore(box, decrypted);
+}
+
 module.exports = {
   findForm,
   findInput,
@@ -98,4 +122,5 @@ module.exports = {
   showError,
   clearError,
   attachSubmit,
+  addForgetButton,
 };

@@ -161,6 +161,15 @@ the browser tries the cached key with the current page nonce and ciphertext.
 If AES-GCM authentication fails, the cache entry is cleared and the visitor is
 asked for the password again.
 
+**Saved keys and their exposure.** A saved key lives in `localStorage` under
+`hbe.v4.<page path>` and unlocks that post on this device until it is removed.
+Any script running on the same origin (your theme, analytics, comment
+widgets, or an injected script) can read it, so enable `autoSave` only when
+you trust every script on the site. After a post is revealed with a saved
+key, a **Forget saved key** button above it deletes the entry. Turning
+`autoSave` off for a post deletes that post's saved key on the next visit,
+and leftover v3 `hexo-blog-encrypt:#…` entries are removed automatically.
+
 ### Option reference
 
 | Option | Default | Description |

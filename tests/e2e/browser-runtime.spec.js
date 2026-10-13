@@ -296,3 +296,98 @@ test.describe('missing Web Crypto (#254)', () => {
     await expect(page.locator('body')).not.toContainText('THE SECRET IS BUTTERFLY');
   });
 });
+
+const savedKeys = (page) => page.evaluate(() => Object.keys(localStorage).sort());
+
+async function unlock(page, input, password) {
+  await input.fill(password);
+  await input.press('Enter');
+}
+
+test.describe('saved keys (#248)', () => {
+  test.afterEach(async ({ page }) => {
+    await page.evaluate(() => localStorage.clear()).catch(() => {});
+  });
+
+  test('removes v3 leftovers and this post\'s entry when autoSave is off; keeps everything else', async ({ page }) => {
+    await page.goto('/encrypted-default/');
+    await page.evaluate(() => {
+      const entry = JSON.stringify({ version: 4, dk: 'AAAA', salt: 'aa', nonce: 'bb' });
+      localStorage.setItem('hexo-blog-encrypt:#/encrypted-default/', 'v3-key');
+      localStorage.setItem('hexo-blog-encrypt:#/some-other-post/', 'v3-key');
+      localStorage.setItem('hbe.v4./encrypted-default/', entry); // this post, autoSave off
+      localStorage.setItem('hbe.v4./multi-posts/', entry); // another post
+      localStorage.setItem('hexo-blog-encrypt-settings', 'keep'); // similar, not the v3 prefix
+      localStorage.setItem('other-app:token', 'keep');
+    });
+    await page.reload();
+    await expect(page.locator('#hbePass')).toBeVisible();
+    await expect.poll(() => savedKeys(page)).toEqual([
+      'hbe.v4./multi-posts/',
+      'hexo-blog-encrypt-settings',
+      'other-app:token',
+    ]);
+  });
+
+  test('turning autoSave off forgets a key saved earlier', async ({ page }) => {
+    await page.goto('/autosave-default/');
+    await unlock(page, page.locator('#hbePass'), 'hello');
+    await expect(page.locator('body')).toContainText('THE SECRET IS BUTTERFLY');
+    await expect.poll(() => savedKeys(page)).toEqual(['hbe.v4./autosave-default/']);
+
+    // Rebuild with autoSave: false.
+    await page.route('**/autosave-default/', async (route) => {
+      const response = await route.fetch();
+      const body = (await response.text()).replace('data-auto-save="true"', 'data-auto-save="false"');
+      await route.fulfill({ response, body });
+    });
+    await page.reload();
+    await expect(page.locator('#hbePass')).toBeVisible();
+    await expect(page.locator('body')).not.toContainText('THE SECRET IS BUTTERFLY');
+    await expect.poll(() => savedKeys(page)).toEqual([]);
+  });
+
+  test('"Forget saved key" appears after a cached decrypt and clears the entry', async ({ page }) => {
+    await page.goto('/autosave-default/');
+    await unlock(page, page.locator('#hbePass'), 'hello');
+    await expect(page.locator('body')).toContainText('THE SECRET IS BUTTERFLY');
+    const forget = page.getByRole('button', { name: 'Forget saved key' });
+    // Not offered after typing the password.
+    await expect(forget).toHaveCount(0);
+
+    await page.reload();
+    await expect(page.locator('body')).toContainText('THE SECRET IS BUTTERFLY');
+    await expect(forget).toBeVisible();
+    await forget.focus();
+    await page.keyboard.press('Enter');
+
+    await expect(forget).toHaveCount(0);
+    const status = page.locator('.hbe-forget [role="status"]');
+    await expect(status).toHaveText('Saved key forgotten.');
+    await expect(status).toBeFocused();
+    expect(await savedKeys(page)).toEqual([]);
+
+    await page.reload();
+    await expect(page.locator('#hbePass')).toBeVisible();
+    await expect(page.locator('body')).not.toContainText('THE SECRET IS BUTTERFLY');
+  });
+
+  test('forgetting one post on a multi-post page keeps the other post\'s key', async ({ page }) => {
+    await page.goto(MULTI);
+    await unlock(page, post(page, ALPHA.slug).locator('input[type="password"]'), ALPHA.password);
+    await unlock(page, post(page, BRAVO.slug).locator('input[type="password"]'), BRAVO.password);
+    await expect(post(page, BRAVO.slug)).toContainText(BRAVO.secret);
+    await expect.poll(async () => (await savedKeys(page)).length).toBe(2);
+
+    await page.reload();
+    await expect(post(page, ALPHA.slug)).toContainText(ALPHA.secret);
+    await expect(post(page, BRAVO.slug)).toContainText(BRAVO.secret);
+    const bravoKey = (await savedKeys(page)).find((k) => k.endsWith('#1'));
+    await post(page, ALPHA.slug).getByRole('button', { name: 'Forget saved key' }).click();
+    await expect.poll(() => savedKeys(page)).toEqual([bravoKey]);
+
+    await page.reload();
+    await expect(post(page, ALPHA.slug).locator('input[type="password"]')).toBeVisible();
+    await expect(post(page, BRAVO.slug)).toContainText(BRAVO.secret);
+  });
+});

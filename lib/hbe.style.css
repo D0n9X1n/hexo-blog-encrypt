@@ -851,6 +851,36 @@ background: rgba(176, 0, 32, 0.08);
 border-radius: 4px;
 }
 
+/* "Forget saved key" control, shown above a post revealed with a saved key. */
+.hbe-forget {
+	margin: 0 0 1em;
+	font-size: 0.85rem;
+	font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+	text-align: right;
+}
+
+.hbe-forget-button {
+	padding: 0.3em 0.8em;
+	font: inherit;
+	color: inherit;
+	background: transparent;
+	border: 1px solid currentColor;
+	border-radius: 4px;
+	opacity: 0.75;
+	cursor: pointer;
+}
+
+.hbe-forget-button:hover,
+.hbe-forget-button:focus {
+	opacity: 1;
+}
+
+.hbe-forget-button:focus-visible,
+.hbe-forget [role="status"]:focus-visible {
+	outline: 2px solid #2a7ae2;
+	outline-offset: 2px;
+}
+
 @media (prefers-color-scheme: dark) {
 .hbe-input-field {
 background: #2a2f36;
