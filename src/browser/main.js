@@ -90,6 +90,7 @@ function setup(el) {
   const form = ui.findForm(el);
   const input = ui.findInput(el);
   ui.ensureUniqueId(el, input);
+  ui.trackFilled(input);
   const id = storageId(el);
 
   // Web Crypto only exists in secure contexts (HTTPS / localhost). Without
@@ -117,6 +118,7 @@ function setup(el) {
     const password = input ? input.value : '';
     if (!password) {
       ui.showError(el, wire.wpm);
+      ui.refocus(input);
       return;
     }
     ui.setBusy(form, input, true);
@@ -134,6 +136,8 @@ function setup(el) {
     }
     if (!result.ok) {
       ui.showError(el, wire.wpm);
+      // Re-enabled by setBusy above, so focus/select work again.
+      ui.refocus(input);
       return;
     }
     if (wire.autoSave) {

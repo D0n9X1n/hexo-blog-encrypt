@@ -42,6 +42,26 @@ function setBusy(form, input, busy) {
   if (input) input.disabled = !!busy;
 }
 
+// Themes style the "has a value" state via `.hbe-input--filled` on the
+// `.hbe-input` wrapper (some hide an unfocused, empty field). Keep it in sync
+// on load (browser autofill / restored form state) and on every edit.
+function trackFilled(input) {
+  if (!input) return;
+  const box = input.closest('.hbe-input') || input.parentNode;
+  const sync = () => box.classList.toggle('hbe-input--filled', input.value !== '');
+  input.addEventListener('input', sync);
+  input.addEventListener('change', sync);
+  sync();
+}
+
+// After a failed attempt, put the caret back with the old value selected so
+// the reader can retype immediately.
+function refocus(input) {
+  if (!input) return;
+  input.focus();
+  input.select();
+}
+
 function showError(el, message) {
   let alert = el.querySelector('[role="alert"]');
   if (!alert) {
@@ -73,6 +93,8 @@ module.exports = {
   findInput,
   ensureUniqueId,
   setBusy,
+  trackFilled,
+  refocus,
   showError,
   clearError,
   attachSubmit,

@@ -232,6 +232,29 @@ test.describe('PJAX / SPA navigation (#253)', () => {
   });
 });
 
+test.describe('retry UX (#255)', () => {
+  for (const via of ['keyboard', 'click']) {
+    test(`wrong then right password via ${via}: typing replaces the selected attempt`, async ({ page }) => {
+      await page.goto('/encrypted-default/');
+      const input = page.locator('#hbePass');
+      const submit = () => (via === 'keyboard'
+        ? input.press('Enter')
+        : page.locator('#hexo-blog-encrypt .hbe-button').click());
+
+      await input.fill('wrongpw');
+      await submit();
+      await expect(page.locator('#hexo-blog-encrypt [role="alert"]')).toHaveText(WRONG_PASS_MESSAGE);
+      await expect(input).toBeFocused();
+
+      // No re-click needed: typing overwrites the selected wrong value.
+      await page.keyboard.type('hello');
+      await expect(input).toHaveValue('hello');
+      await submit();
+      await expect(page.locator('body')).toContainText('THE SECRET IS BUTTERFLY');
+    });
+  }
+});
+
 test.describe('missing Web Crypto (#254)', () => {
   const NO_CRYPTO = /HTTPS/;
 

@@ -23,7 +23,9 @@ The 8 themes that ship today are: `default`, `blink`, `flip`, `shrink`,
      - A password input `<input id="hbePass" class="hbe-input-field" type="password">`
        and a `<label for="hbePass">`. Lookups are scoped to the wrapper; when
        several posts share a page the bundle renames duplicate input ids and
-       re-points that post's label.
+       re-points that post's label. Wrap the input and label in an
+       `.hbe-input` element: the bundle toggles `hbe-input--filled` on it
+       while the field has a value (style the filled state with that class).
      - A submit button with class `hbe-button`.
      - An empty alert region: `<div role="alert" aria-live="polite">…</div>`.
      - **No inline event handlers** (`onsubmit`, `onclick`, …). The bundle
