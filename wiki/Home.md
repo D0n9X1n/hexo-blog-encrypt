@@ -20,6 +20,7 @@
 | **Optional `stableSalt`** | Off by default. Derives the salt from the post permalink so it stays stable across clean rebuilds — keeps `autoSave` caches valid on Cloudflare Pages / Vercel / Netlify / GitHub Actions. Nonce stays random. See [Security Model](Security-Model#deterministic-salt-stablesalt-opt-in). |
 | **Tag-based encryption** | Define a `{name, password}` registry in `_config.yml`; matching post tags get encrypted with the registry password. |
 | **Decryption callback** | `window.addEventListener('hexo-blog-decrypt', fn)` — re-init MathJax / hljs / TOC / etc. after the post reveals. |
+| **Claude Code skill** | [`hexo-encrypt-toc`](https://github.com/D0n9X1n/hexo-blog-encrypt/blob/master/skills/hexo-encrypt-toc/SKILL.md) lets Claude Code fix any theme's table of contents for encrypted posts without leaking headings. See [Encrypted TOC](Encrypted-TOC). |
 | **Tested** | 100 % server coverage on Node 18–26 and Hexo 7/8, plus Playwright end-to-end tests on Chromium, Firefox and WebKit across all 8 themes. |
 
 ---
@@ -44,7 +45,7 @@
 
 **Have a question?** → [FAQ](FAQ).
 
-**TOC empty or leaking on encrypted posts?** → [Encrypted TOC](Encrypted-TOC).
+**TOC empty or leaking on encrypted posts?** → [Encrypted TOC](Encrypted-TOC), or let Claude Code fix your theme with the `hexo-encrypt-toc` skill.
 
 ## Maintainers
 

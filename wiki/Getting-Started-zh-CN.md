@@ -115,3 +115,4 @@ encrypt:
 - 浏览 8 个内置[主题](Themes-zh-CN)
 - 配置[回调与 MathJax](Callbacks-and-MathJax-zh-CN)，在解密后进行语法高亮 / 公式渲染
 - 阅读[安全模型](Security-Model-zh-CN)，了解哪些内容受保护、哪些不受保护
+- 如果你的主题显示目录 (TOC)，安装 `hexo-encrypt-toc` Claude Code skill 为加密文章修复它：见[加密文章目录](Encrypted-TOC-zh-CN)

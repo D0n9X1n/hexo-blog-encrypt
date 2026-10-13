@@ -115,7 +115,7 @@ YAML / Hexo 在一些意想不到的地方区分大小写. `tags: [Diary]` 与 `
 
 ## 症状: 目录 (TOC) 组件为空 / 什么都不显示
 
-根本原因同上: 目录扫描器在页面加载时运行, 没看到任何标题 (标题都在密文里). 不要通过渲染 `toc(post.origin)` 来解决: 这样即使隐藏, 也会发布明文标题. 请按照 [加密目录](Encrypted-TOC-zh-CN) 在解密后重建目录.
+根本原因同上: 目录扫描器在页面加载时运行, 没看到任何标题 (标题都在密文里). 不要通过渲染 `toc(post.origin)` 来解决: 这样即使隐藏, 也会发布明文标题. 请按照 [加密目录](Encrypted-TOC-zh-CN) 在解密后重建目录, 或用该页介绍的 `hexo-encrypt-toc` skill 让 Claude Code 完成.
 
 ## 症状: `npm install hexo-blog-encrypt` 体积很大 / 很慢
 

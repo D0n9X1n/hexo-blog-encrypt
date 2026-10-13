@@ -115,7 +115,7 @@ They scanned the DOM at page load and missed the encrypted post (it was just cip
 
 ## Symptom: TOC widget shows empty / nothing
 
-Same root cause as above: the TOC scanner ran at page load and saw no headings (they were inside the ciphertext). Never fix this by rendering `toc(post.origin)`: that publishes plaintext headings, even when hidden. Follow [Encrypted TOC](Encrypted-TOC) to rebuild the TOC after decryption.
+Same root cause as above: the TOC scanner ran at page load and saw no headings (they were inside the ciphertext). Never fix this by rendering `toc(post.origin)`: that publishes plaintext headings, even when hidden. Follow [Encrypted TOC](Encrypted-TOC) to rebuild the TOC after decryption, or let Claude Code do it with the `hexo-encrypt-toc` skill described there.
 
 ## Symptom: `npm install hexo-blog-encrypt` is huge / slow
 

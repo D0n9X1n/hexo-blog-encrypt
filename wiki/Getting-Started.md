@@ -117,3 +117,4 @@ Any post tagged `diary` is now encrypted with `diary-secret`. See [Tag-Based Enc
 - Browse the 8 built-in [Themes](Themes)
 - Wire up [Callbacks & MathJax](Callbacks-and-MathJax) for syntax highlighting / math after decryption
 - Read the [Security Model](Security-Model) to understand what is and isn't protected
+- If your theme shows a table of contents, install the `hexo-encrypt-toc` Claude Code skill to fix it for encrypted posts: see [Encrypted TOC](Encrypted-TOC)
