@@ -27,6 +27,18 @@ test('DEFAULTS exposes the documented v4 keys + values', () => {
   assert.equal(typeof DEFAULTS.wrong_pass_message, 'string');
 });
 
+test('#260: server KDF default is defined once (crypto.js) and reused by config.js', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const { DEFAULT_ITERATIONS } = require('../../src/server/crypto');
+  assert.equal(DEFAULTS.kdf.iterations, DEFAULT_ITERATIONS);
+  const dir = path.resolve(__dirname, '..', '..', 'src', 'server');
+  const hits = fs.readdirSync(dir)
+    .filter((f) => f.endsWith('.js'))
+    .flatMap((f) => (fs.readFileSync(path.join(dir, f), 'utf8').match(/\b250_?000\b/g) || []).map(() => f));
+  assert.deepEqual(hits, ['crypto.js'], `default iteration literal must live only in crypto.js; found in ${hits}`);
+});
+
 test('resolve() returns a NEW object; inputs are not mutated', () => {
   const hexoConfig = { encrypt: { theme: 'shrink' } };
   const data = { password: 'pw' };
@@ -219,4 +231,225 @@ test('resolve() with primitive kdf override (e.g. kdf="oops") throws integer-val
     () => resolve({}, { password: 'p', kdf: 'oops' }),
     /kdf\.iterations must be an integer/
   );
+});
+
+// ---------------------------------------------------------------------------
+// #249 — boolean options are validated, not coerced by truthiness.
+// ---------------------------------------------------------------------------
+const BOOL_OPTS = ['autoSave', 'stableSalt', 'silent'];
+
+for (const name of BOOL_OPTS) {
+  test(`#249: quoted "false" for site-level ${name} resolves to false and warns`, () => {
+    const log = fakeLogger();
+    const out = resolve({ encrypt: { [name]: 'false' } }, { password: 'pw' }, log);
+    assert.equal(out[name], false);
+    const warns = log.events.filter((e) => e.level === 'warn').map((e) => e.msg);
+    assert.ok(warns.some((m) => m.includes(`encrypt.${name}`) && /string/.test(m)),
+      `expected a quoted-boolean warning; got ${JSON.stringify(warns)}`);
+  });
+
+  test(`#249: quoted " TRUE " for post-level ${name} resolves to true and warns`, () => {
+    const log = fakeLogger();
+    const out = resolve({}, { password: 'pw', [name]: ' TRUE ' }, log);
+    assert.equal(out[name], true);
+    assert.ok(log.events.some((e) => e.level === 'warn' && e.msg.includes(`front-matter ${name}`)));
+  });
+
+  for (const [label, bad] of [['number 0', 0], ['number 1', 1], ['object', { a: 1 }], ['array', [true]], ['string "yes"', 'yes']]) {
+    test(`#249: ${label} for ${name} is rejected at site and post level`, () => {
+      assert.throws(
+        () => resolve({ encrypt: { [name]: bad } }, { password: 'pw' }, fakeLogger()),
+        (err) => err.message.includes(`encrypt.${name}`) && /must be a boolean/.test(err.message),
+      );
+      assert.throws(
+        () => resolve({}, { password: 'pw', [name]: bad }, fakeLogger()),
+        (err) => err.message.includes(`front-matter ${name}`) && /must be a boolean/.test(err.message),
+      );
+    });
+  }
+
+  test(`#249: real booleans for ${name} pass without warnings`, () => {
+    const log = fakeLogger();
+    const out = resolve({ encrypt: { [name]: true } }, { password: 'pw', [name]: false }, log);
+    assert.equal(out[name], false);
+    assert.equal(log.events.filter((e) => e.level === 'warn' && e.msg.includes(name)).length, 0);
+  });
+}
+
+test('#249: decryptButton.show "false" (quoted) resolves to false and warns', () => {
+  const log = fakeLogger();
+  const out = resolve({ encrypt: { decryptButton: { show: 'false', text: 'Open' } } }, { password: 'pw' }, log);
+  assert.equal(out.decryptButton.show, false);
+  assert.equal(out.decryptButton.text, 'Open');
+  assert.ok(log.events.some((e) => e.level === 'warn' && e.msg.includes('encrypt.decryptButton.show')));
+});
+
+test('#249: decryptButton.show non-boolean is rejected', () => {
+  assert.throws(
+    () => resolve({}, { password: 'pw', decryptButton: { show: 0 } }, fakeLogger()),
+    /front-matter decryptButton\.show must be a boolean/,
+  );
+});
+
+test('#249: decryptButton without show, or null, keeps defaults', () => {
+  assert.equal(resolve({}, { password: 'pw', decryptButton: { text: 'Go' } }).decryptButton.show, true);
+  assert.equal(resolve({}, { password: 'pw', decryptButton: null }).decryptButton.show, true);
+  assert.equal(resolve({}, { password: 'pw', decryptButton: [1] }).decryptButton.length, 1);
+});
+
+test('#249: boolean normalisation does not mutate the caller\'s decryptButton object', () => {
+  const site = { encrypt: { decryptButton: { show: 'false' } } };
+  resolve(site, { password: 'pw' }, fakeLogger());
+  assert.equal(site.encrypt.decryptButton.show, 'false');
+});
+
+// ---------------------------------------------------------------------------
+// #251 — password: { env: NAME } reads the password from the environment.
+// ---------------------------------------------------------------------------
+const ENV_NAME = 'HBE_TEST_PASSWORD_251';
+const ENV_VALUE = 'env-secret-value-251';
+
+function withEnv(value, fn) {
+  const had = Object.prototype.hasOwnProperty.call(process.env, ENV_NAME);
+  const prev = process.env[ENV_NAME];
+  if (value === undefined) delete process.env[ENV_NAME];
+  else process.env[ENV_NAME] = value;
+  try {
+    return fn();
+  } finally {
+    if (had) process.env[ENV_NAME] = prev;
+    else delete process.env[ENV_NAME];
+  }
+}
+
+test('#251: front-matter password { env } resolves from process.env', () => {
+  withEnv(ENV_VALUE, () => {
+    const out = resolve({}, { password: { env: ENV_NAME } }, fakeLogger());
+    assert.equal(out.password, ENV_VALUE);
+  });
+});
+
+test('#251: site-level encrypt.password { env } resolves from process.env', () => {
+  withEnv(ENV_VALUE, () => {
+    const out = resolve({ encrypt: { password: { env: ENV_NAME } } }, {}, fakeLogger());
+    assert.equal(out.password, ENV_VALUE);
+  });
+});
+
+for (const [label, value] of [['missing', undefined], ['empty', '']]) {
+  test(`#251: ${label} env var fails the build, naming the variable and post`, () => {
+    withEnv(value, () => {
+      assert.throws(
+        () => resolve({}, { title: 'Diary', password: { env: ENV_NAME } }, fakeLogger()),
+        (err) => err.message.includes(ENV_NAME)
+          && /not set or is empty/.test(err.message)
+          && err.message.includes('"Diary"'),
+      );
+    });
+  });
+}
+
+test('#251: env error without a post title still names the variable', () => {
+  withEnv(undefined, () => {
+    assert.throws(
+      () => resolve({}, { password: { env: ENV_NAME } }),
+      (err) => err.message.includes(ENV_NAME) && !err.message.includes('post "'),
+    );
+  });
+});
+
+for (const [label, bad] of [
+  ['object without env', { name: 'X' }],
+  ['empty env name', { env: '' }],
+  ['non-string env name', { env: 42 }],
+  ['array', ['pw']],
+]) {
+  test(`#251: password as ${label} is rejected with a clear error`, () => {
+    assert.throws(
+      () => resolve({}, { password: bad }, fakeLogger()),
+      /password must be a string, a number, or \{ env: NAME \}/,
+    );
+  });
+}
+
+test('#251: resolved env value never appears in warnings', () => {
+  withEnv(ENV_VALUE, () => {
+    const log = fakeLogger();
+    resolve({}, { password: { env: ENV_NAME }, template: 'flip', autoSave: 'true' }, log);
+    assert.ok(log.events.length > 0);
+    for (const e of log.events) assert.ok(!e.msg.includes(ENV_VALUE));
+  });
+});
+
+test('#251: env resolution does not mutate the caller\'s front matter', () => {
+  withEnv(ENV_VALUE, () => {
+    const post = { password: { env: ENV_NAME } };
+    resolve({}, post, fakeLogger());
+    assert.deepEqual(post.password, { env: ENV_NAME });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// #259 — localized defaults from post lang/language or site language.
+// ---------------------------------------------------------------------------
+const ZH = {
+  abstract: '有东西被加密了, 请输入密码查看.',
+  message: '您好, 这里需要密码.',
+  wrong_pass_message: '抱歉, 这个密码看着不太对, 请再试试.',
+  button: '解密',
+};
+
+function assertZh(out) {
+  assert.equal(out.abstract, ZH.abstract);
+  assert.equal(out.message, ZH.message);
+  assert.equal(out.wrong_pass_message, ZH.wrong_pass_message);
+  assert.equal(out.wrong_hash_message, ZH.wrong_pass_message);
+  assert.equal(out.decryptButton.text, ZH.button);
+}
+
+function assertEn(out) {
+  assert.equal(out.abstract, DEFAULTS.abstract);
+  assert.equal(out.message, DEFAULTS.message);
+  assert.equal(out.wrong_pass_message, DEFAULTS.wrong_pass_message);
+  assert.equal(out.decryptButton.text, DEFAULTS.decryptButton.text);
+}
+
+for (const lang of ['zh-CN', 'zh-cn', 'zh_CN', 'zh-Hans', 'zh', ' ZH-HANS ', 'zh-Hans-CN']) {
+  test(`#259: site language ${JSON.stringify(lang)} selects Simplified Chinese defaults`, () => {
+    assertZh(resolve({ language: lang }, { password: 'pw' }));
+  });
+}
+
+test('#259: site language as an array uses the first entry', () => {
+  assertZh(resolve({ language: ['zh-CN', 'en'] }, { password: 'pw' }));
+  assertEn(resolve({ language: ['en', 'zh-CN'] }, { password: 'pw' }));
+});
+
+test('#259: post lang / language override the site language', () => {
+  assertZh(resolve({ language: 'en' }, { password: 'pw', lang: 'zh-CN' }));
+  assertZh(resolve({ language: 'en' }, { password: 'pw', language: 'zh-Hans' }));
+  assertEn(resolve({ language: 'zh-CN' }, { password: 'pw', lang: 'en' }));
+});
+
+for (const lang of [undefined, 'en', 'en-US', 'fr', 'zh-TW', 'zh-Hant', '', 42, [], null]) {
+  test(`#259: language ${JSON.stringify(lang)} falls back to English defaults`, () => {
+    assertEn(resolve({ language: lang }, { password: 'pw' }));
+  });
+}
+
+test('#259: explicit site and post config always win over localized defaults', () => {
+  const out = resolve(
+    { language: 'zh-CN', encrypt: { message: 'site msg', decryptButton: { text: 'Open' } } },
+    { password: 'pw', abstract: 'post abstract' },
+  );
+  assert.equal(out.message, 'site msg');
+  assert.equal(out.decryptButton.text, 'Open');
+  assert.equal(out.abstract, 'post abstract');
+  assert.equal(out.wrong_pass_message, ZH.wrong_pass_message);
+});
+
+test('#259: post lang is not treated as an encrypt option', () => {
+  const out = resolve({}, { password: 'pw', lang: 'zh-CN' });
+  assert.equal(out.lang, undefined);
+  assert.equal(out.language, undefined);
 });

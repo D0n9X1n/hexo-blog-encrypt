@@ -10,7 +10,7 @@ const PASSWORD = 'hello';
 // Keep the real generated page and decryptor. Only replace its encrypted payload,
 // so each case exercises the production password/cache/reveal paths.
 async function serveEncrypted(page, plaintext, autoSave = false, headers = {}) {
-  const wire = encrypt(plaintext, PASSWORD);
+  const wire = await encrypt(plaintext, PASSWORD);
   await page.route('**/encrypted-default/', async (route) => {
     const response = await route.fetch();
     const body = (await response.text())

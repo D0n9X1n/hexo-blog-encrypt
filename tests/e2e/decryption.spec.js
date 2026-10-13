@@ -355,13 +355,13 @@ test.describe('v4 UX (single-theme)', () => {
 
     // 2) Simulate a clean rebuild: recover the exact plaintext, then
     //    re-encrypt under the SAME salt → same salt, fresh nonce/ciphertext.
-    const plaintext = decrypt(
+    const plaintext = await decrypt(
       Buffer.from(wire.saltHex, 'hex'),
       Buffer.from(wire.nonceHex, 'hex'),
       Buffer.from(wire.ciphertextHex, 'hex'),
       PASSWORD
     );
-    const rebuilt = encrypt(plaintext, PASSWORD, { salt: Buffer.from(wire.saltHex, 'hex') });
+    const rebuilt = await encrypt(plaintext, PASSWORD, { salt: Buffer.from(wire.saltHex, 'hex') });
     const rebuiltNonceHex = rebuilt.nonce.toString('hex');
     const rebuiltCiphertextHex = rebuilt.ciphertext.toString('hex');
     expect(rebuilt.salt.toString('hex'), 'rebuild keeps the salt').toBe(wire.saltHex);

@@ -47,7 +47,7 @@ are string-substituted by `src/server/template.js` for each encrypted post:
 | `{{hbeWrongHashMessage}}`  | `whm`          | attr-escaped      | Deprecated under v4 (alias of `wpm`). Kept for forward-compat introspection. |
 | `{{hbeKdfIterations}}`     | `kdfIterations`| attr-escaped      | PBKDF2 iteration count used to derive the AES key. Default 250000; configurable per-post. |
 | `{{hbeAutoSave}}`          | `autoSave`     | attr-escaped      | `"true"` if the derived AES key should be persisted to `localStorage` so a subsequent reload auto-decrypts. Default `"false"`. |
-| `{{hbeMessage}}`           | `message`      | text-escaped      | Prompt label shown above the password input.                                   |
+| `{{hbeMessage}}`           | `message`      | attr-escaped      | Prompt label; safe in text and in attributes such as `data-content="…"`.       |
 | `{{hbeButtonClass}}`       | `buttonClass`  | attr-escaped      | Optional extra class suffix for the submit button (currently used to hide it when `decryptButton.show: false`). |
 | `{{hbeButtonText}}`        | `buttonText`   | text-escaped      | Visible label for the decrypt submit button.                                   |
 | `{{hbeSalt}}`              | `salt`         | hex (validated)   | Per-post 32-byte PBKDF2 salt as 64 hex chars.                                  |

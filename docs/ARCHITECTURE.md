@@ -26,10 +26,10 @@ browser bundle is built with esbuild (no runtime bundler).
 | Module | Responsibility |
 | --- | --- |
 | `index.js` | Composition root — wires config + crypto + template + generator into the Hexo filter callback. |
-| `config.js` | Deep-merge of `hexo.config.encrypt` with per-post front-matter; KDF-iterations floor; `wrong_hash_message` → `wrong_pass_message` defaulting. Tag-registry lookup lives in `index.js`. |
-| `crypto.js` | PBKDF2-SHA256 → AES-256-GCM. Per-post 32-byte salt + 12-byte nonce. With `stableSalt: true`, the salt is derived from the post permalink; the nonce is still random for every encryption. |
+| `config.js` | Deep-merge of `hexo.config.encrypt` with per-post front-matter; KDF-iterations floor; strict boolean options; `{ env: NAME }` password resolution; localized defaults from post/site language; `wrong_hash_message` → `wrong_pass_message` defaulting. Tag-registry lookup (and the fail-closed missing-tag-password check) lives in `index.js`. |
+| `crypto.js` | Async PBKDF2-SHA256 (libuv thread pool) → AES-256-GCM; owns the single server-side `DEFAULT_ITERATIONS`. Per-post 32-byte salt + 12-byte nonce. With `stableSalt: true`, the salt is derived from the post permalink; the nonce is still random for every encryption. |
 | `template.js` | Single allowlist of 11 `{{hbe…}}` placeholders + per-placeholder render mode (attr-escape / text-escape / hex-validated). The contract every theme HTML satisfies. |
-| `generator.js` | Hexo asset generator. Emits `css/hbe.style.css` + content-hashed `lib/hbe.<hex10>.js`. The hex10 is `sha256(bundle).slice(0, 10)`. |
+| `generator.js` | Hexo asset generator. Emits `css/hbe.style.css` + content-hashed `lib/hbe.<hex10>.js`. The hex10 is `sha256(bundle).slice(0, 10)`. When `lib/hbe.bundle.js.map` exists it is emitted as `lib/hbe.<hex10>.js.map` and the bundle's `sourceMappingURL` is rewritten to that name; otherwise the comment is stripped. |
 | `logger.js` | Hexo logger adapter with a verbosity gate; warnings and errors remain visible. |
 
 ## Browser bundle (`src/browser/`)

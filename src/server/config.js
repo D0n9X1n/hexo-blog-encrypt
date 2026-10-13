@@ -1,5 +1,7 @@
 'use strict';
 
+const { DEFAULT_ITERATIONS } = require('./crypto');
+
 const FLOOR = 100000;
 const RECOMMENDED = 600000;
 
@@ -19,9 +21,42 @@ const DEFAULTS = Object.freeze({
     text: 'Decrypt',
   }),
   kdf: Object.freeze({
-    iterations: 250000,
+    iterations: DEFAULT_ITERATIONS, // single server-side default (#260)
   }),
 });
+
+// Localized user-facing defaults (#259). English lives in DEFAULTS; other
+// locales override only these strings. Explicit config always wins.
+const LOCALIZED_DEFAULTS = Object.freeze({
+  'zh-CN': Object.freeze({
+    abstract: '有东西被加密了, 请输入密码查看.',
+    message: '您好, 这里需要密码.',
+    wrong_pass_message: '抱歉, 这个密码看着不太对, 请再试试.',
+    decryptButton: Object.freeze({ text: '解密' }),
+  }),
+});
+
+// Map a language tag to a supported locale key. `zh`, `zh-CN`, `zh_CN` and
+// `zh-Hans` select Simplified Chinese; everything else falls back to English.
+function pickLocale(lang) {
+  const tag = typeof lang === 'string' ? lang.trim().toLowerCase().replace(/_/g, '-') : '';
+  if (tag === 'zh' || tag === 'zh-cn' || tag === 'zh-hans' || tag.startsWith('zh-hans-')) return 'zh-CN';
+  return 'en';
+}
+
+// Post `lang` / `language` front matter wins over the site `language`
+// (which Hexo allows to be a list; the first entry is the primary language).
+function languageOf(hexoConfig, post) {
+  if (typeof post.lang === 'string' && post.lang) return post.lang;
+  if (typeof post.language === 'string' && post.language) return post.language;
+  const site = hexoConfig && hexoConfig.language;
+  return Array.isArray(site) ? site[0] : site;
+}
+
+function localizedDefaults(hexoConfig, post) {
+  const locale = pickLocale(languageOf(hexoConfig, post));
+  return locale === 'en' ? DEFAULTS : deepMerge(DEFAULTS, LOCALIZED_DEFAULTS[locale]);
+}
 
 function clone(value) {
   if (value === null || typeof value !== 'object') return value;
@@ -81,6 +116,71 @@ const KNOWN_KEYS = [
   'tags',
 ];
 
+const BOOLEAN_KEYS = ['autoSave', 'stableSalt', 'silent'];
+
+// Strict boolean parsing (#249). YAML `autoSave: "false"` is a truthy string;
+// treating it by truthiness would silently enable key storage.
+function toBoolean(value, label, log) {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') {
+    const s = value.trim().toLowerCase();
+    if (s === 'true' || s === 'false') {
+      log.warn(
+        `hexo-blog-encrypt: ${label} is the string ${JSON.stringify(value)}; ` +
+        `treating it as ${s}. Remove the quotes to use a YAML boolean.`
+      );
+      return s === 'true';
+    }
+  }
+  throw new Error(
+    `hexo-blog-encrypt: ${label} must be a boolean (true or false), got ${JSON.stringify(value)}.`
+  );
+}
+
+// Returns a shallow copy of `picked` with boolean options validated.
+// `prefix` names the config layer in messages ("encrypt." or "front-matter ").
+function normalizeBooleans(picked, prefix, log) {
+  const out = Object.assign({}, picked);
+  for (const key of BOOLEAN_KEYS) {
+    if (out[key] !== undefined && out[key] !== null) {
+      out[key] = toBoolean(out[key], `${prefix}${key}`, log);
+    }
+  }
+  const btn = out.decryptButton;
+  if (btn && typeof btn === 'object' && !Array.isArray(btn)
+    && btn.show !== undefined && btn.show !== null) {
+    out.decryptButton = Object.assign({}, btn, {
+      show: toBoolean(btn.show, `${prefix}decryptButton.show`, log),
+    });
+  }
+  return out;
+}
+
+// Resolve a password value (#251). Literals (string/number/boolean) are used
+// as-is; `{ env: NAME }` reads process.env[NAME] at build time. A missing or
+// empty variable fails the build. Error messages name the variable, never the
+// value, and the resolved value is never logged.
+function resolvePasswordRef(value, postTitle) {
+  if (typeof value !== 'object') return String(value);
+  if (Array.isArray(value) || typeof value.env !== 'string' || value.env === '') {
+    throw new Error(
+      'hexo-blog-encrypt: password must be a string, a number, or { env: NAME } ' +
+      '(an object with a non-empty "env" variable name).'
+    );
+  }
+  const secret = process.env[value.env];
+  if (typeof secret !== 'string' || secret === '') {
+    const where = typeof postTitle === 'string' && postTitle.trim()
+      ? ` for post "${postTitle.trim()}"`
+      : '';
+    throw new Error(
+      `hexo-blog-encrypt: password references environment variable ${value.env}${where}, ` +
+      'but it is not set or is empty. Set it in the build environment.'
+    );
+  }
+  return secret;
+}
+
 function resolve(hexoConfig, postData, logger) {
   // Only `warn` is ever called from this module; keep the no-op default minimal.
   const log = logger || { warn: () => {} };
@@ -97,13 +197,13 @@ function resolve(hexoConfig, postData, logger) {
   const post = postData || {};
 
   // Layer 1: defaults → hexo encrypt block (for top-level shared keys, NOT password/theme overrides per-post).
-  let merged = deepMerge(DEFAULTS, shallowPickKnown(hexoEncrypt, KNOWN_KEYS));
+  let merged = deepMerge(localizedDefaults(hexoConfig, post), normalizeBooleans(shallowPickKnown(hexoEncrypt, KNOWN_KEYS), 'encrypt.', log));
 
   // Layer 2: post front-matter wins. Use POST_KNOWN_KEYS (which excludes
   // `tags`) to avoid pulling Hexo's Warehouse Query for `post.tags` into
   // the deep-merge — `structuredClone` would throw DataCloneError on the
   // function-bearing internals.
-  merged = deepMerge(merged, shallowPickKnown(post, POST_KNOWN_KEYS));
+  merged = deepMerge(merged, normalizeBooleans(shallowPickKnown(post, POST_KNOWN_KEYS), 'front-matter ', log));
 
   // Deprecation: template → theme.
   if (merged.template !== undefined && merged.template !== null) {
@@ -119,7 +219,7 @@ function resolve(hexoConfig, postData, logger) {
 
   // Password: undefined or empty-string disables encryption (caller short-circuits).
   if (merged.password === undefined || merged.password === null) return null;
-  merged.password = String(merged.password);
+  merged.password = resolvePasswordRef(merged.password, post.title);
   if (merged.password === '') return null;
 
   // KDF iteration floor + warn band. (deepMerge always populates merged.kdf

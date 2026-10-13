@@ -92,6 +92,13 @@ test('HTML text escape: hbeMessage body containing markup is text-escaped', () =
   assert.ok(out.includes('&amp;amp;'), 'literal "&amp;" in source must double-escape to &amp;amp;');
 });
 
+test('HTML text escape: hbeButtonText containing markup is text-escaped', () => {
+  const r = createRenderer({ templateDir: FIXTURES });
+  const out = r.render(baseOpts({ buttonText: '<b>Open</b> & go' }));
+  assert.ok(!out.includes('<b>Open</b>'), 'raw markup must not appear in the button label');
+  assert.ok(out.includes('&lt;b&gt;Open&lt;/b&gt; &amp; go'), 'tag chars and & must be escaped');
+});
+
 test('HTML attribute escape: HTML-entity payload is preserved as literal text (double-escape attempt)', () => {
   const r = createRenderer({ templateDir: FIXTURES });
   const evil = '&quot;&gt;<script>alert(1)</script>';
@@ -224,3 +231,61 @@ test('replacement values remain literal instead of expanding other placeholders'
   assert.ok(!out.includes('data-wpm="" data-injected="yes"'), 'no cross-context attribute injection');
   assert.ok(out.includes('{{hbeEncryptedData}} $&'), 'replacement tokens and dollar signs stay literal');
 });
+
+// ---------------------------------------------------------------------------
+// #247 — {{hbeMessage}} is placed inside data-content="…" by some shipped
+// themes (blink, flip, surge), so it must be attribute-escaped everywhere.
+// Render EVERY shipped theme from lib/ with breakout payloads.
+// ---------------------------------------------------------------------------
+const SHIPPED = path.resolve(__dirname, '..', '..', 'lib');
+const ENTITY = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'", '&#96;': '`' };
+function decodeEntities(s) {
+  return s.replace(/&(?:amp|lt|gt|quot|#39|#96);/g, (e) => ENTITY[e]);
+}
+
+const MESSAGE_PAYLOADS = [
+  '"><img src=x onerror=alert(1)>',
+  '" onmouseover="alert(1)',
+  "' onfocus='alert(1)` & <b>bold</b>",
+];
+
+{
+  const shipped = createRenderer({ templateDir: SHIPPED });
+  const themes = shipped.listThemes();
+
+  test('#247: shipped theme list includes the attribute-context themes', () => {
+    for (const t of ['blink', 'flip', 'surge']) assert.ok(themes.includes(t), `missing theme ${t}`);
+  });
+
+  for (const theme of themes) {
+    for (const payload of MESSAGE_PAYLOADS) {
+      test(`#247: theme '${theme}' escapes message ${JSON.stringify(payload)} in every context`, () => {
+        const out = shipped.render(baseOpts({ theme, message: payload }));
+
+        // No raw quote/angle-bracket breakout survives anywhere.
+        assert.ok(!out.includes(payload), 'raw payload must not appear');
+        assert.ok(!/<img\b/i.test(out), 'no injected <img> element');
+        // Inspect real tags only: strip quoted attribute values, then collect
+        // event-handler attribute names. The set must equal the theme's own
+        // (e.g. the form's onsubmit) rendered with a benign message.
+        const handlers = (html) => html.match(/<[a-z][^>]*>/gi)
+          .map((tag) => tag.replace(/"[^"]*"|'[^']*'/g, '""'))
+          .flatMap((tag) => tag.match(/\son[a-z]+(?=\s*=)/gi) || []);
+        const baseline = shipped.render(baseOpts({ theme, message: 'benign' }));
+        assert.deepEqual(handlers(out), handlers(baseline), 'no injected event-handler attribute');
+
+        // Every data-content attribute decodes back to the exact message.
+        const attrs = [...out.matchAll(/data-content="([^"]*)"/g)].map((m) => decodeEntities(m[1]));
+        for (const v of attrs) assert.equal(v, payload, 'data-content must carry the exact message');
+        if (['blink', 'flip', 'surge'].includes(theme)) {
+          assert.equal(attrs.length, 1, `theme '${theme}' renders the message into data-content`);
+        }
+
+        // The visible label text decodes back to the exact message.
+        const label = out.match(/<span class="hbe hbe-input-label-content[^"]*"[^>]*>([^<]*)<\/span>/);
+        assert.ok(label, 'label span present');
+        assert.equal(decodeEntities(label[1]), payload, 'visible text must equal the message');
+      });
+    }
+  }
+}

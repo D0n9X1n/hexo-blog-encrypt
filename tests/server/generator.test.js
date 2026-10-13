@@ -59,7 +59,9 @@ test('createGenerator() emits bundle JS at lib/hbe.<hex10>.js with content-hash 
   const jsRoute = routes.find((r) => r.path === expectedPath);
   assert.ok(jsRoute, `js route at ${expectedPath} expected (got: ${routes.map((r) => r.path).join(', ')})`);
   const jsBytes = await readData(jsRoute);
-  assert.deepEqual(jsBytes, fs.readFileSync(REAL_BUNDLE));
+  // No sourcemap route → the dangling sourceMappingURL comment is stripped (#262).
+  const expected = fs.readFileSync(REAL_BUNDLE, 'utf8').replace(/\n?\/\/# sourceMappingURL=\S+\s*$/, '\n');
+  assert.equal(jsBytes.toString('utf8'), expected);
 });
 
 test('content hash is exactly 10 lowercase hex chars', () => {
@@ -145,6 +147,69 @@ test('CSS data is a Readable stream (matches Hexo v3 generator contract)', () =>
   const cssRoute = routes.find((r) => r.path === 'css/hbe.style.css');
   const value = typeof cssRoute.data === 'function' ? cssRoute.data() : cssRoute.data;
   assert.ok(value instanceof Readable, 'css data is a Readable');
+});
+
+// ---------------------------------------------------------------------------
+// #262 — the served bundle's sourceMappingURL must resolve to an emitted route.
+// ---------------------------------------------------------------------------
+function sourceMappingUrl(js) {
+  const m = String(js).match(/\/\/# sourceMappingURL=(\S+)\s*$/);
+  return m ? m[1] : null;
+}
+
+function resolveRoute(jsRoutePath, url) {
+  return path.posix.join(path.posix.dirname(jsRoutePath), url);
+}
+
+test('#262: real build — sourceMappingURL in served JS resolves to an emitted .map route', async () => {
+  const realMap = path.join(REPO_ROOT, 'lib', 'hbe.bundle.js.map');
+  assert.ok(fs.existsSync(realMap), 'npm run build must emit the sourcemap');
+  const gen = createGenerator({ bundlePath: REAL_BUNDLE, cssPath: REAL_CSS, sourcemapPath: realMap });
+  const routes = gen();
+  const jsRoute = routes.find((r) => /^lib\/hbe\.[0-9a-f]{10}\.js$/.test(r.path));
+  const url = sourceMappingUrl(await readData(jsRoute));
+  assert.ok(url, 'served JS keeps a sourceMappingURL when the map is emitted');
+  const target = resolveRoute(jsRoute.path, url);
+  assert.ok(routes.some((r) => r.path === target), `${target} must be an emitted route`);
+  assert.equal(target, jsRoute.path + '.map');
+});
+
+test('#262: sourceMappingURL is rewritten to the hashed map name', async () => {
+  const tmp = mkTmp();
+  const bundlePath = path.join(tmp, 'hbe.bundle.js');
+  const sourcemapPath = path.join(tmp, 'hbe.bundle.js.map');
+  fs.writeFileSync(bundlePath, '(()=>{})();\n//# sourceMappingURL=hbe.bundle.js.map\n');
+  fs.writeFileSync(sourcemapPath, '{"version":3,"sources":[]}');
+  const routes = createGenerator({ bundlePath, cssPath: REAL_CSS, sourcemapPath })();
+  const hash = hex10(fs.readFileSync(bundlePath));
+  const js = String(await readData(routes.find((r) => r.path === `lib/hbe.${hash}.js`)));
+  assert.equal(sourceMappingUrl(js), `hbe.${hash}.js.map`);
+  assert.ok(js.startsWith('(()=>{})();\n'), 'code before the comment is untouched');
+  assert.ok(!js.includes('hbe.bundle.js.map'));
+});
+
+test('#262: without an emitted map the sourceMappingURL comment is stripped', async () => {
+  const tmp = mkTmp();
+  const bundlePath = path.join(tmp, 'hbe.bundle.js');
+  fs.writeFileSync(bundlePath, '(()=>{})();\n//# sourceMappingURL=hbe.bundle.js.map\n');
+  for (const sourcemapPath of [undefined, path.join(tmp, 'missing.map')]) {
+    const routes = createGenerator({ bundlePath, cssPath: REAL_CSS, sourcemapPath })();
+    const js = String(await readData(routes.find((r) => /\.js$/.test(r.path))));
+    assert.equal(sourceMappingUrl(js), null, 'no dangling sourceMappingURL');
+    assert.ok(js.startsWith('(()=>{})();'));
+    assert.equal(routes.length, 2);
+  }
+});
+
+test('#262: bundle without a sourceMappingURL comment is served unchanged', async () => {
+  const tmp = mkTmp();
+  const bundlePath = path.join(tmp, 'hbe.bundle.js');
+  const sourcemapPath = path.join(tmp, 'hbe.bundle.js.map');
+  fs.writeFileSync(bundlePath, '(()=>{})();');
+  fs.writeFileSync(sourcemapPath, '{}');
+  const routes = createGenerator({ bundlePath, cssPath: REAL_CSS, sourcemapPath })();
+  const js = await readData(routes.find((r) => /\.js$/.test(r.path)));
+  assert.deepEqual(js, Buffer.from('(()=>{})();'));
 });
 
 test('throws when bundlePath option is missing', () => {

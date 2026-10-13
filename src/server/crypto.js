@@ -1,6 +1,9 @@
 'use strict';
 
 const crypto = require('node:crypto');
+const { promisify } = require('node:util');
+
+const pbkdf2 = promisify(crypto.pbkdf2);
 
 const DEFAULT_ITERATIONS = 250000;
 const SALT_BYTES = 32;
@@ -14,10 +17,12 @@ function deriveKey(password, salt, iterations) {
   const passwordBuf = typeof password === 'string'
     ? Buffer.from(password, 'utf8')
     : Buffer.from(String(password), 'utf8');
-  return crypto.pbkdf2Sync(passwordBuf, salt, iterations, KEY_BYTES, HASH);
+  // Async PBKDF2 (#252): runs on the libuv thread pool so a multi-post build
+  // does not block the event loop for each derivation.
+  return pbkdf2(passwordBuf, salt, iterations, KEY_BYTES, HASH);
 }
 
-function encrypt(plaintext, password, opts) {
+async function encrypt(plaintext, password, opts) {
   const iterations = (opts && Number.isInteger(opts.iterations) && opts.iterations > 0)
     ? opts.iterations
     : DEFAULT_ITERATIONS;
@@ -31,7 +36,7 @@ function encrypt(plaintext, password, opts) {
     salt = crypto.randomBytes(SALT_BYTES);
   }
   const nonce = crypto.randomBytes(NONCE_BYTES);
-  const dk = deriveKey(password, salt, iterations);
+  const dk = await deriveKey(password, salt, iterations);
   const cipher = crypto.createCipheriv(CIPHER, dk, nonce);
   const enc = Buffer.concat([
     cipher.update(Buffer.from(String(plaintext), 'utf8')),
@@ -42,7 +47,7 @@ function encrypt(plaintext, password, opts) {
   return { salt, nonce, ciphertext };
 }
 
-function decrypt(salt, nonce, ciphertext, password, opts) {
+async function decrypt(salt, nonce, ciphertext, password, opts) {
   const iterations = (opts && Number.isInteger(opts.iterations) && opts.iterations > 0)
     ? opts.iterations
     : DEFAULT_ITERATIONS;
@@ -55,7 +60,7 @@ function decrypt(salt, nonce, ciphertext, password, opts) {
   if (!Buffer.isBuffer(ciphertext) || ciphertext.length < TAG_BYTES) {
     throw new Error('ciphertext must be a Buffer of length ≥ 16');
   }
-  const dk = deriveKey(password, salt, iterations);
+  const dk = await deriveKey(password, salt, iterations);
   const enc = ciphertext.slice(0, ciphertext.length - TAG_BYTES);
   const tag = ciphertext.slice(ciphertext.length - TAG_BYTES);
   const decipher = crypto.createDecipheriv(CIPHER, dk, nonce);
