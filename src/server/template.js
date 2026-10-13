@@ -37,7 +37,8 @@ const PLACEHOLDERS = [
   { token: '{{hbeWrongHashMessage}}',  field: 'whm',            mode: 'attr' },
   { token: '{{hbeKdfIterations}}',     field: 'kdfIterations',  mode: 'attr' },
   { token: '{{hbeAutoSave}}',          field: 'autoSave',       mode: 'attr' },
-  { token: '{{hbeMessage}}',           field: 'message',        mode: 'text' },
+  // attr (#247): some themes place the message inside data-content="…".
+  { token: '{{hbeMessage}}',           field: 'message',        mode: 'attr' },
   { token: '{{hbeButtonClass}}',       field: 'buttonClass',    mode: 'attr' },
   { token: '{{hbeButtonText}}',        field: 'buttonText',     mode: 'text' },
   { token: '{{hbeSalt}}',              field: 'salt',           mode: 'hex' },
