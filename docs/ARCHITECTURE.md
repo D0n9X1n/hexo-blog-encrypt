@@ -79,7 +79,7 @@ self-heal re-prompts.
 
 - **Node CommonJS** (`require` / `module.exports`) on the server side; no
   transpilation. Browser sources also use CommonJS; esbuild emits an IIFE.
-- **ESLint** config at `.eslintrc.js`; **EditorConfig** at `.editorconfig`
+- **ESLint** flat config at `eslint.config.js`; **EditorConfig** at `.editorconfig`
   — match existing style.
 - **Backward-compatible config.** New options must default safely.
   Existing encrypted posts in the wild must still decrypt with the same

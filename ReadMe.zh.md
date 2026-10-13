@@ -261,11 +261,15 @@ window.addEventListener('hexo-blog-decrypt', function (event) {
 解密使用 Web Crypto (`crypto.subtle`), 需要 **安全上下文**: HTTPS 或
 `http://localhost`.
 
-| 浏览器 | 最低版本 | 备注 |
+| 浏览器 | 最低版本 | 测试方式 |
 | --- | --- | --- |
-| Chromium / Edge | 92+ | CI 中通过 Playwright 自动测试 |
-| Firefox | 90+ | |
-| Safari (macOS / iOS) | 14+ | 发版前手动冒烟测试 |
+| Chromium / Edge | 92+ | 自动: CI 中 Playwright Chromium, Hexo 7 与 8 |
+| Firefox | 90+ | 自动: CI 中 Playwright Firefox |
+| Safari (macOS) | 14+ | 自动: CI 中 Playwright WebKit (WebKit 引擎, 非 Safari 本身) |
+| Safari (iOS) | 14+ | 仅手动测试 |
+
+最低版本依据 Web Crypto 与语言特性支持; CI 运行的是当前的 Playwright
+浏览器版本, 而非这些最低版本.
 
 在非 localhost 的纯 HTTP 站点上, `crypto.subtle` 为 `undefined`, 解密会失败.
 生产环境请始终使用 HTTPS.

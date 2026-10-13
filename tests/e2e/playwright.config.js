@@ -25,10 +25,20 @@ module.exports = {
   use: {
     trace: 'retain-on-failure',
   },
+  // One project per engine. CI runs each in its own job with
+  // `--project=<name>`; locally, `npm run test:e2e` runs all three.
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
     },
   ],
 };

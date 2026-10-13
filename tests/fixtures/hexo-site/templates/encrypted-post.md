@@ -21,6 +21,6 @@ THE SECRET IS BUTTERFLY
 const x = 42;
 ```
 
-![](https://example.com/x.png)
+![](/images/x.svg)
 
 <script>window.__seenScript = true;</script>

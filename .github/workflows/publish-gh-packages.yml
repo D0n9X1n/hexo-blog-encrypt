@@ -12,7 +12,8 @@
 #   npm install @d0n9x1n/hexo-blog-encrypt --registry=https://npm.pkg.github.com
 #
 # Triggers:
-#   - Tag push (`v*`):   automatic, runs in parallel with release.yml
+#   - Tag push (`v*`):   automatic, runs in parallel with release.yml and
+#                        applies the same gates before publishing
 #   - workflow_dispatch: manual backfill for an already-pushed tag
 #                        (e.g. `gh workflow run publish-gh-packages.yml \
 #                                  --ref master -f tag=v4.0.0`)
@@ -20,6 +21,15 @@
 # Auth:
 #   GITHUB_TOKEN provided automatically by Actions, scoped via the
 #   `permissions: packages: write` block below. No long-lived secrets.
+#
+# Gates (same as release.yml, so a version that fails canonical validation
+# never reaches the mirror):
+#   - package.json version matches the tag
+#   - `npm test` (lint + server tests with coverage + e2e)
+#   - `build/verify-pack.js` on the `npm pack --dry-run` file list
+# The workflow keeps its own tag-push trigger instead of `workflow_run` on
+# release.yml: under `workflow_run`, GITHUB_SHA is master's HEAD, so the
+# provenance attestation would name the wrong commit.
 #
 # Idempotency:
 #   The job skips publish if the version already exists on GitHub Packages,
@@ -52,7 +62,7 @@ jobs:
   publish:
     name: Publish ${{ inputs.tag || github.ref_name }} to GitHub Packages
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
       - name: Resolve ref + version
@@ -85,16 +95,15 @@ jobs:
         # Node 20 ships with npm 10.x; provenance attestations need >= 11.5.1.
         run: npm install -g npm@^11
 
-      - name: Cache npm cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node20-${{ hashFiles('**/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node20-
-
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        # Tags before the lockfile was committed (backfill via
+        # workflow_dispatch) fall back to npm install.
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
 
       - name: Verify package.json version matches tag
         run: |
@@ -116,6 +125,16 @@ jobs:
             echo "Not yet published; will publish."
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Run full test suite (lint + server + e2e)
+        if: steps.skip.outputs.skip != 'true'
+        run: npm test
+
+      - name: Verify tarball contents
+        if: steps.skip.outputs.skip != 'true'
+        run: |
+          npm pack --dry-run --json > pack.json
+          node build/verify-pack.js pack.json
 
       - name: Rewrite package.json name to scoped form
         if: steps.skip.outputs.skip != 'true'
