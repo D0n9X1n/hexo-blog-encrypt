@@ -231,3 +231,45 @@ test.describe('PJAX / SPA navigation (#253)', () => {
     await expect.poll(() => events(page)).toEqual([{ mode: 'manual', slug: ALPHA.slug, connected: true }]);
   });
 });
+
+test.describe('missing Web Crypto (#254)', () => {
+  const NO_CRYPTO = /HTTPS/;
+
+  test('crypto.subtle undefined: actionable message instead of "wrong password"', async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(window.crypto, 'subtle', { value: undefined, configurable: true });
+    });
+    await page.goto('/encrypted-default/');
+    const alert = page.locator('#hexo-blog-encrypt [role="alert"]');
+    // Shown up front, before the reader types anything.
+    await expect(alert).toContainText(NO_CRYPTO);
+
+    await page.locator('#hbePass').fill('hello');
+    await page.locator('#hbePass').press('Enter');
+    await expect(alert).toContainText(NO_CRYPTO);
+    await expect(alert).not.toHaveText(WRONG_PASS_MESSAGE);
+    await expect(page.locator('body')).not.toContainText('THE SECRET IS BUTTERFLY');
+  });
+
+  test('insecure context: message shown and no key derivation attempted', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.__subtleCalls = 0;
+      for (const name of ['importKey', 'deriveKey', 'decrypt']) {
+        const original = SubtleCrypto.prototype[name];
+        SubtleCrypto.prototype[name] = function (...args) {
+          window.__subtleCalls += 1;
+          return original.apply(this, args);
+        };
+      }
+      Object.defineProperty(window, 'isSecureContext', { value: false, configurable: true });
+    });
+    await page.goto('/autosave-default/');
+    const alert = page.locator('#hexo-blog-encrypt [role="alert"]');
+    await expect(alert).toContainText(NO_CRYPTO);
+    await page.locator('#hbePass').fill('hello');
+    await page.locator('#hbePass').press('Enter');
+    await expect(alert).toContainText(NO_CRYPTO);
+    expect(await page.evaluate(() => window.__subtleCalls)).toBe(0);
+    await expect(page.locator('body')).not.toContainText('THE SECRET IS BUTTERFLY');
+  });
+});

@@ -20,6 +20,13 @@ const SUPPORTED_FORMAT = '4';
 // position (and storage id) stable after earlier posts are revealed.
 const WRAPPER = '[data-hbe-format],.hbe-container,#hexo-blog-encrypt';
 const INIT_FLAG = '__hbeInit';
+const NO_CRYPTO_MESSAGE =
+  'hexo-blog-encrypt: this browser cannot decrypt here because Web Crypto is unavailable. ' +
+  'Open the page over HTTPS (or localhost) in an up-to-date browser.';
+
+function webCryptoAvailable() {
+  return !!(window.isSecureContext && window.crypto && window.crypto.subtle);
+}
 
 function readWireFormat(el) {
   const ds = el.dataset;
@@ -78,6 +85,16 @@ function setup(el) {
   const input = ui.findInput(el);
   ui.ensureUniqueId(el, input);
   const id = storageId(el);
+
+  // Web Crypto only exists in secure contexts (HTTPS / localhost). Without
+  // it every attempt would fail, so say why instead of "wrong password",
+  // and never attempt a derivation.
+  if (!webCryptoAvailable()) {
+    const message = NO_CRYPTO_MESSAGE;
+    ui.showError(el, message);
+    ui.attachSubmit(form, () => ui.showError(el, message));
+    return;
+  }
 
   // Single-shot reveal guard: with autoSave on, the cached-key attempt runs
   // in parallel with the submit handler; whichever wins mutates the DOM.

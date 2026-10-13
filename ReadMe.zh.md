@@ -283,7 +283,8 @@ window.hexoBlogEncrypt.init(container); // 仅某个子树
 最低版本依据 Web Crypto 与语言特性支持; CI 运行的是当前的 Playwright
 浏览器版本, 而非这些最低版本.
 
-在非 localhost 的纯 HTTP 站点上, `crypto.subtle` 为 `undefined`, 解密会失败.
+在非 localhost 的纯 HTTP 站点上, `crypto.subtle` 为 `undefined`, 无法解密;
+文章会提示 "请通过 HTTPS 打开此页面", 而不是显示密码错误.
 生产环境请始终使用 HTTPS.
 
 ## 为什么要从 v3 升级

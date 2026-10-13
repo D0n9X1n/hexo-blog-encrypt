@@ -295,8 +295,9 @@ context**: HTTPS or `http://localhost`.
 Minimum versions come from Web Crypto and language feature support; CI runs
 the current Playwright builds, not these minimums.
 
-On plain HTTP from a non-localhost host, `crypto.subtle` is `undefined` and
-decryption fails. Always serve production sites over HTTPS.
+On plain HTTP from a non-localhost host, `crypto.subtle` is `undefined`, so
+decryption cannot run; the post shows an "open this page over HTTPS" message
+instead of the wrong-password error. Always serve production sites over HTTPS.
 
 ## Why upgrade from v3?
 
