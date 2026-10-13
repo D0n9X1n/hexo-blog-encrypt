@@ -165,7 +165,8 @@ asked for the password again.
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `password` | none | Encrypts the post. `""` disables encryption, including tag encryption. |
+| `password` | none | Encrypts the post. `""` disables encryption, including tag encryption. A matching tag entry without a password fails the build. |
+| `password: { env: NAME }` | none | Reads the password from environment variable `NAME` at build time (front matter, `encrypt.password` or `encrypt.tags[].password`). A missing or empty variable fails the build; the value is never logged or rendered. This keeps passwords out of config files, not out of plaintext Markdown you commit publicly. |
 | `abstract` | `Here's something encrypted…` | Excerpt shown on index and archive pages. |
 | `message` | `Hey, password is required here.` | Label of the password field. |
 | `wrong_pass_message` | `Oh, this is an invalid password…` | Inline error after a failed attempt. |
@@ -178,6 +179,10 @@ asked for the password again.
 | `silent` | `false` | Suppress build-time info logs. Warnings and errors still print. |
 | `wrong_hash_message` | `wrong_pass_message` | Deprecated alias. AES-GCM reports wrong passwords and tampering the same way. |
 | `template` | none | Deprecated alias of `theme`. |
+
+Boolean options (`autoSave`, `stableSalt`, `silent`, `decryptButton.show`) must be `true` or `false`. Quoted `"true"`/`"false"` are accepted with a warning; any other value fails the build.
+
+The default `abstract`, `message`, `wrong_pass_message` and `decryptButton.text` follow the post's `lang`/`language`, else the site `language`. `zh`, `zh-CN` and `zh-Hans` use Simplified Chinese; everything else uses English. Explicit values always win.
 
 ### Disable tag encryption for one post
 

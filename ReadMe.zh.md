@@ -159,7 +159,8 @@ encrypt: # hexo-blog-encrypt
 
 | 配置项 | 默认值 | 说明 |
 | --- | --- | --- |
-| `password` | 无 | 加密该文章. `""` 表示不加密, 包括不使用标签加密. |
+| `password` | 无 | 加密该文章. `""` 表示不加密, 包括不使用标签加密. 匹配到的标签条目若没有密码, 构建会失败. |
+| `password: { env: NAME }` | 无 | 构建时从环境变量 `NAME` 读取密码 (可用于文章信息头、`encrypt.password` 或 `encrypt.tags[].password`). 变量缺失或为空时构建失败; 密码值不会被打印或渲染. 这只能让密码不出现在配置文件中, 不能保护公开提交的明文 Markdown. |
 | `abstract` | `Here's something encrypted…` | 首页和归档页显示的摘要. |
 | `message` | `Hey, password is required here.` | 密码输入框的提示文字. |
 | `wrong_pass_message` | `Oh, this is an invalid password…` | 密码错误时的行内提示. |
@@ -172,6 +173,10 @@ encrypt: # hexo-blog-encrypt
 | `silent` | `false` | 隐藏构建时的 info 日志. warning 和 error 仍会输出. |
 | `wrong_hash_message` | `wrong_pass_message` | 已废弃的别名. AES-GCM 对错误密码和篡改给出同样的结果. |
 | `template` | 无 | `theme` 的已废弃别名. |
+
+布尔配置项 (`autoSave`、`stableSalt`、`silent`、`decryptButton.show`) 必须是 `true` 或 `false`. 带引号的 `"true"`/`"false"` 会被接受并打印 warning; 其他值会使构建失败.
+
+`abstract`、`message`、`wrong_pass_message` 和 `decryptButton.text` 的默认值跟随文章的 `lang`/`language`, 否则跟随站点 `language`. `zh`、`zh-CN` 和 `zh-Hans` 使用简体中文, 其他语言使用英文. 显式配置始终优先.
 
 ### 对单篇文章禁用标签加密
 
