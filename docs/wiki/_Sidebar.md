@@ -23,4 +23,4 @@
 
 ---
 
-🔗 [Live demo](https://d0n9x1n.github.io/hexo-blog-encrypt/) · [npm](https://www.npmjs.com/package/hexo-blog-encrypt) · [Source](https://github.com/D0n9X1n/hexo-blog-encrypt) · [Changelog](https://github.com/D0n9X1n/hexo-blog-encrypt/blob/master/CHANGELOG.md)
+🔗 [Live demo](https://d0n9x1n.github.io/hexo-blog-encrypt/) · [npm](https://www.npmjs.com/package/hexo-blog-encrypt) · [Source](https://github.com/D0n9X1n/hexo-blog-encrypt) · [Releases](https://github.com/D0n9X1n/hexo-blog-encrypt/releases)
