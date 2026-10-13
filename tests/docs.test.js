@@ -138,54 +138,6 @@ test('.github/PULL_REQUEST_TEMPLATE.md adds an `npm run test` checklist item', (
   );
 });
 
-test('Both READMEs explain WHY to upgrade from v3 BEFORE explaining HOW', () => {
-  // The "Upgrading from v3" section is the procedural how-to. The
-  // "why upgrade" section motivates the upgrade with concrete, named
-  // benefits (security + UX) so a reader can decide whether the rebuild
-  // is worth their time. Order matters: motivation precedes mechanics.
-  for (const readme of ['ReadMe.md', 'ReadMe.zh.md']) {
-    const body = read(path.join(repoRoot, readme));
-
-    const whyMatch = body.search(
-      /^##\s+(?:Why upgrade(?: from v3)?\??|为什么.*升级|为什么要升级.*v3)\s*$/m
-    );
-    const howMatch = body.search(/^##\s+(?:Upgrading from v3|从\s*v3\s*升级)\s*$/m);
-
-    assert.ok(
-      whyMatch >= 0,
-      `${readme} must contain a "Why upgrade from v3" section explaining benefits`
-    );
-    assert.ok(
-      howMatch >= 0,
-      `${readme} must contain an "Upgrading from v3" procedural section`
-    );
-    assert.ok(
-      whyMatch < howMatch,
-      `${readme}: the "Why upgrade" section must appear BEFORE the "Upgrading from v3" steps`
-    );
-
-    // The why-section must call out at least the four headline reasons
-    // (auth-encryption upgrade, per-post salt, stronger KDF, privacy
-    // default) so we don't accidentally publish a vague paragraph that
-    // satisfies the heading check without saying anything substantive.
-    const sectionEnd = body.indexOf('\n## ', whyMatch + 1);
-    const whySection = body.slice(whyMatch, sectionEnd > 0 ? sectionEnd : body.length);
-
-    const required = [
-      /AES[- ]?256[- ]?GCM|AES-GCM/i,            // auth-encryption upgrade
-      /salt/i,                                    // per-post salt
-      /PBKDF2|iteration|600[_,]?000|250[_,]?000/i, // stronger KDF defaults
-      /autoSave|localStorage/i                    // privacy-default flip
-    ];
-    for (const re of required) {
-      assert.ok(
-        re.test(whySection),
-        `${readme} "Why upgrade" section must mention ${re} (regex)`
-      );
-    }
-  }
-});
-
 test('Both READMEs document stableSalt clean-build autoSave semantics', () => {
   const cases = [
     {

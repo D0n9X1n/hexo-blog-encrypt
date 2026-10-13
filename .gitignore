@@ -21,6 +21,10 @@ tests/fixtures/hexo-site/db.json
 tests/fixtures/hexo-site/package-lock.json
 tests/fixtures/hexo-site/source/_posts/*.md
 
+# Demo site: deploy-demo.yml installs it with `npm install` from a semver
+# range, so its lockfile stays untracked.
+demo/package-lock.json
+
 # Browser bundle, built by `npm run build` (prepare / prepack)
 lib/hbe.bundle.js
 lib/hbe.bundle.js.map

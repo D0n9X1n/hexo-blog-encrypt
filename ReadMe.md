@@ -30,8 +30,6 @@ English · [中文说明](./ReadMe.zh.md) · [Wiki](https://github.com/D0n9X1n/h
 - [Configuration](#configuration)
 - [Theme integration](#theme-integration)
 - [Browser support](#browser-support)
-- [Why upgrade from v3?](#why-upgrade-from-v3)
-- [Upgrading from v3](#upgrading-from-v3)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -325,52 +323,6 @@ the current Playwright builds, not these minimums.
 On plain HTTP from a non-localhost host, `crypto.subtle` is `undefined`, so
 decryption cannot run; the post shows an "open this page over HTTPS" message
 instead of the wrong-password error. Always serve production sites over HTTPS.
-
-## Why upgrade from v3?
-
-v4 closes real security gaps and fixes v3's UX problems:
-
-- **Stronger crypto.** **AES-256-GCM** with a built-in authentication tag
-  replaces v3's AES-CBC plus a separate HMAC: one primitive, one
-  authentication path, and no CBC padding-oracle or HMAC-comparison bugs.
-- **Per-post salt and nonce.** v3 used the same salt for every post, so one
-  password derived the same key everywhere. v4 derives an independent key per
-  post, so an attacker cannot reuse PBKDF2 work across posts that share a
-  password.
-- **Stronger KDF defaults.** v3 used **1,024** PBKDF2-SHA256 iterations. v4
-  defaults to **250,000** (about 240 times more work per guess) and recommends
-  600,000 or more (OWASP 2023). Tune it per post with `kdf.iterations`.
-- **Privacy by default.** v3 always cached decrypted posts in `localStorage`,
-  so anyone with later access to the device could read them again. v4 defaults
-  to `autoSave: false`; you opt in per post or globally.
-- **Inline errors.** v3 showed a `window.alert()` dialog on a wrong password.
-  v4 shows the error next to the field (`role="alert"`).
-- **Optional decrypt button** for readers who don't know Enter submits the form.
-- **Smaller bundle.** CryptoJS is gone; the browser bundle is about 6 KB
-  minified.
-- **Tested.** 100% server coverage plus Playwright tests across all eight
-  themes, on every push.
-
-The rationale for each change is on the wiki:
-[Migration v3 → v4](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki/Migration-v3-to-v4).
-
-## Upgrading from v3
-
-v4 changed the encrypted format (AES-GCM, per-post salt and nonce). v4 cannot
-read v3 output and v3 cannot read v4 output.
-
-1. Upgrade the plugin: `npm install --save hexo-blog-encrypt@^4`.
-2. Rebuild from source: `hexo clean && hexo generate`.
-3. Purge your CDN if you use one. Post HTML changes on every build because each
-   encryption uses a fresh nonce. The runtime asset `lib/hbe.<hash>.js` is
-   content-hashed and changes only when the bundle changes.
-4. Optional: remove `wrong_hash_message` from your config and front matter. It
-   is deprecated in v4 and will be removed in v5.
-
-Your source `.md` files are not touched. See the
-[v4.0.0 release notes](https://github.com/D0n9X1n/hexo-blog-encrypt/releases/tag/v4.0.0)
-and [Releases](https://github.com/D0n9X1n/hexo-blog-encrypt/releases) for the
-full list of breaking changes.
 
 ## Contributing
 
