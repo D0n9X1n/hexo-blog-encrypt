@@ -32,7 +32,8 @@ with `Closes #N` so they appear under "Resolved issues" (see
 
 Run `npm test`, `npm pack --dry-run --json > pack.json`, and
 `node build/verify-pack.js pack.json` before pushing. Keep the generated
-`pack.json`, lockfiles and bundles out of commits. Merge the release changes
+`pack.json` and the built bundle out of commits (`package-lock.json` is
+committed; CI installs with `npm ci`). Merge the release changes
 only after the `Tests` workflow passes; create the tag from that exact commit.
 
 > **Heads-up: deploy-demo can fail before publication.** The Pages deploy
@@ -58,6 +59,12 @@ This single tag push triggers **two workflows in parallel**:
 | --- | --- |
 | `.github/workflows/release.yml` | `hexo-blog-encrypt@X.Y.Z` to npmjs.com via OIDC + provenance |
 | `.github/workflows/publish-gh-packages.yml` | `@d0n9x1n/hexo-blog-encrypt@X.Y.Z` to npm.pkg.github.com via GITHUB_TOKEN + provenance |
+
+Both run the same gates before publishing: version matches the tag, `npm test`
+(lint + server tests with coverage + e2e), and `build/verify-pack.js`. A version
+that fails canonical validation never reaches the mirror. The mirror keeps its
+own tag trigger rather than `workflow_run` on `release.yml`, because under
+`workflow_run` the provenance would name master's HEAD, not the tagged commit.
 
 Watch them:
 
