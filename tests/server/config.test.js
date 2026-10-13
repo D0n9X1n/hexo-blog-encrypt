@@ -27,6 +27,18 @@ test('DEFAULTS exposes the documented v4 keys + values', () => {
   assert.equal(typeof DEFAULTS.wrong_pass_message, 'string');
 });
 
+test('#260: server KDF default is defined once (crypto.js) and reused by config.js', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const { DEFAULT_ITERATIONS } = require('../../src/server/crypto');
+  assert.equal(DEFAULTS.kdf.iterations, DEFAULT_ITERATIONS);
+  const dir = path.resolve(__dirname, '..', '..', 'src', 'server');
+  const hits = fs.readdirSync(dir)
+    .filter((f) => f.endsWith('.js'))
+    .flatMap((f) => (fs.readFileSync(path.join(dir, f), 'utf8').match(/\b250_?000\b/g) || []).map(() => f));
+  assert.deepEqual(hits, ['crypto.js'], `default iteration literal must live only in crypto.js; found in ${hits}`);
+});
+
 test('resolve() returns a NEW object; inputs are not mutated', () => {
   const hexoConfig = { encrypt: { theme: 'shrink' } };
   const data = { password: 'pw' };

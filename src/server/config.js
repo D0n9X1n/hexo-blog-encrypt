@@ -1,5 +1,7 @@
 'use strict';
 
+const { DEFAULT_ITERATIONS } = require('./crypto');
+
 const FLOOR = 100000;
 const RECOMMENDED = 600000;
 
@@ -19,7 +21,7 @@ const DEFAULTS = Object.freeze({
     text: 'Decrypt',
   }),
   kdf: Object.freeze({
-    iterations: 250000,
+    iterations: DEFAULT_ITERATIONS, // single server-side default (#260)
   }),
 });
 
