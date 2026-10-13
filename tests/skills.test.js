@@ -8,8 +8,18 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
 const repoRoot = path.resolve(__dirname, '..');
-const skillDir = path.join(repoRoot, 'plugins', 'hexo-encrypt', 'skills', 'hexo-encrypt-toc');
-const checker = path.join(skillDir, 'scripts', 'check-toc-leak.js');
+const skillFile = path.join(repoRoot, 'skills', 'hexo-encrypt-toc', 'SKILL.md');
+const skillBody = fs.readFileSync(skillFile, 'utf8');
+
+// The skill is a single file; its scripts are fenced blocks in appendices.
+function appendix(title) {
+  const match = new RegExp(`^## ${title}\\n[\\s\\S]*?^\`\`\`\`js\\n([\\s\\S]*?)^\`\`\`\`$`, 'm').exec(skillBody);
+  assert.ok(match, `SKILL.md must contain a \`\`\`\`js block under "## ${title}"`);
+  return match[1];
+}
+
+const checker = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'hbe-skill-')), 'check-toc-leak.js');
+fs.writeFileSync(checker, appendix('Appendix B: check-toc-leak.js'));
 const { hasPassword, headings } = require(checker);
 
 function site(posts, publicFiles) {
@@ -86,29 +96,23 @@ test('checker reports usage and missing-output errors with exit 2', () => {
   assert.equal(run(dir, ['--bogus']).status, 2);
 });
 
-test('skill has valid frontmatter and its referenced files exist', () => {
-  const body = fs.readFileSync(path.join(skillDir, 'SKILL.md'), 'utf8');
-  const fm = /^---\n([\s\S]*?)\n---\n/.exec(body);
+test('skill is one self-contained file with valid frontmatter', () => {
+  const fm = /^---\n([\s\S]*?)\n---\n/.exec(skillBody);
   assert.ok(fm, 'SKILL.md must start with YAML frontmatter');
   assert.match(fm[1], /^name: hexo-encrypt-toc$/m);
   assert.match(fm[1], /^description: .{40,}$/m);
-  for (const [, target] of body.matchAll(/\]\(((?:scripts|references)\/[^)]+)\)/g)) {
-    assert.ok(fs.existsSync(path.join(skillDir, target)), `SKILL.md links missing file ${target}`);
+  // No links to sibling files: everything the skill needs is inline.
+  assert.doesNotMatch(skillBody, /\]\((?:scripts|references)\//);
+  assert.doesNotMatch(skillBody, /CLAUDE_(?:SKILL_DIR|PLUGIN_ROOT)/);
+  for (const anchor of ['#appendix-a-hbe-tocjs', '#appendix-b-check-toc-leakjs', '#per-theme-examples']) {
+    assert.ok(skillBody.includes(`](${anchor})`), `SKILL.md must link ${anchor}`);
   }
+  assert.match(appendix('Appendix A: hbe-toc.js'), /hexo-blog-decrypt/);
 });
 
-test('the Claude Code plugin is listed in the marketplace and not shipped to npm', () => {
+test('the skill is not shipped in the npm package', () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8'));
-  assert.ok(!pkg.files.some((entry) => /^(plugins|\.claude)/.test(entry)));
-  const market = JSON.parse(fs.readFileSync(path.join(repoRoot, '.claude-plugin', 'marketplace.json'), 'utf8'));
-  assert.equal(market.name, 'hexo-blog-encrypt');
-  const entry = market.plugins.find((plugin) => plugin.name === 'hexo-encrypt');
-  assert.ok(entry, 'marketplace must list the hexo-encrypt plugin');
-  const pluginRoot = path.join(repoRoot, entry.source);
-  const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, '.claude-plugin', 'plugin.json'), 'utf8'));
-  assert.equal(manifest.name, 'hexo-encrypt');
-  assert.equal(manifest.version, pkg.version, 'plugin version must match package.json version');
-  assert.ok(fs.existsSync(path.join(pluginRoot, 'skills', 'hexo-encrypt-toc', 'SKILL.md')));
+  assert.ok(!pkg.files.some((entry) => entry.startsWith('skills')));
 });
 
 test('wiki source: every page is in the sidebar and every sidebar link resolves', () => {

@@ -54,7 +54,7 @@ Any generator or theme helper that reads those fields publishes the post. Before
    node check-toc-leak.js --source source/_posts --public public --body
    ```
 
-   The checker is in the [`hexo-encrypt` Claude Code plugin](Encrypted-TOC#let-claude-code-do-it) and in this repo under `plugins/hexo-encrypt/skills/hexo-encrypt-toc/scripts/`.
+   The checker is Appendix B of the [`hexo-encrypt-toc` skill](https://github.com/D0n9X1n/hexo-blog-encrypt/blob/master/skills/hexo-encrypt-toc/SKILL.md#appendix-b-check-toc-leakjs); see [Encrypted TOC](Encrypted-TOC#let-claude-code-do-it).
 
 ### Reader-side attacks
 - **Browser extensions, malware, screen scrapers** — once the reader decrypts, the plaintext lives in the DOM. Anything running in the reader's browser can read it.
