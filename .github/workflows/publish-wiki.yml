@@ -1,0 +1,46 @@
+name: Publish wiki
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'docs/wiki/**'
+      - 'scripts/publish-wiki.sh'
+      - '.github/workflows/publish-wiki.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-wiki
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # The only job that writes Git content it did not build: it pushes the
+    # docs/wiki mirror to the wiki's master. The grant lives on the job so it
+    # cannot widen to a future sibling.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clone wiki repository
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git clone \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" \
+            wiki-repo
+
+      - name: Build wiki mirror
+        id: mirror
+        run: bash scripts/publish-wiki.sh docs/wiki wiki-repo "$GITHUB_SHA"
+
+      - name: Push wiki mirror
+        if: steps.mirror.outputs.changed == 'true'
+        run: git -C wiki-repo push origin HEAD:master
