@@ -3,6 +3,13 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
+// src/browser/storage.js uses the browser's global `crypto`. Node exposes
+// WebCrypto as a global from Node 19; on Node 18 provide it the way a
+// browser would.
+if (typeof globalThis.crypto === 'undefined') {
+  globalThis.crypto = require('node:crypto').webcrypto;
+}
+
 const storage = require('../../src/browser/storage');
 
 const PAGE_KEY = '/autosave-default/';
