@@ -21,9 +21,11 @@ The 8 themes that ship today are: `default`, `blink`, `flip`, `shrink`,
      - A password input `<input id="hbePass" type="password">`.
      - A submit button with class `hbe-button`.
      - An empty alert region: `<div role="alert" aria-live="polite">…</div>`.
-     - **No `onsubmit` JS** — the bundle attaches a `submit` listener that
-       prevents default; an inline `onsubmit="return false"` is harmless but
-       unnecessary.
+     - **No inline event handlers** (`onsubmit`, `onclick`, …). The bundle
+       attaches a `submit` listener that calls `preventDefault()`. Inline
+       handlers are blocked by a strict Content-Security-Policy
+       (`script-src` / `script-src-attr` without `'unsafe-inline'`), and the
+       e2e CSP test fails on them.
    - A `<script id="hbeData" type="hbeData">{{hbeEncryptedData}}</script>`
      element whose body is the AES-256-GCM ciphertext (with the 16-byte auth
      tag appended) as hex.

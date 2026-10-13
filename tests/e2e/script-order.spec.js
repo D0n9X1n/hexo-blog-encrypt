@@ -313,9 +313,12 @@ test('script order: preserves script nonces under a header-delivered CSP', async
   `, false, { 'content-security-policy': "script-src 'self' 'nonce-hbe-demo'" });
   await page.addInitScript(() => {
     window.cspViolations = [];
+    // script-src-attr catches inline event-handler attributes in the theme
+    // markup (e.g. a stray `onsubmit="return false"`), which a strict
+    // policy blocks just like unnonced inline scripts.
     document.addEventListener('securitypolicyviolation', (event) => {
-      if (event.violatedDirective === 'script-src-elem') {
-        window.cspViolations.push(event.blockedURI);
+      if (event.violatedDirective === 'script-src-elem' || event.violatedDirective === 'script-src-attr') {
+        window.cspViolations.push(event.violatedDirective + ' ' + event.blockedURI);
       }
     });
   });
