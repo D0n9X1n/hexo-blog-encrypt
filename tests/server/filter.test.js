@@ -948,6 +948,30 @@ test('#252: after_post_render filter returns a Promise and concurrent posts all 
 });
 
 // ---------------------------------------------------------------------------
+// #259 — localized defaults reach the rendered wrapper and the excerpt.
+// ---------------------------------------------------------------------------
+test('#259: site language zh-CN renders Chinese default message, button and abstract', async () => {
+  const originalLanguage = hexo.config.language;
+  hexo.config.language = 'zh-CN';
+  hexo.config.encrypt = {};
+  try {
+    const data = makeSyntheticData({ title: 'zh-defaults', password: 'p' });
+    await hexo.execFilter('after_post_render', data, { context: hexo });
+    assert.ok(data.content.includes('您好, 这里需要密码.'));
+    assert.match(data.content, /<button class="hbe hbe-button"[^>]*>解密<\/button>/);
+    assert.equal(extractPayload(data.content).wpm, '抱歉, 这个密码看着不太对, 请再试试.');
+    assert.equal(data.more, '有东西被加密了, 请输入密码查看.');
+
+    const en = makeSyntheticData({ title: 'en-post', password: 'p', lang: 'en' });
+    await hexo.execFilter('after_post_render', en, { context: hexo });
+    assert.ok(en.content.includes(DEFAULT_MESSAGE));
+    assert.equal(en.more, DEFAULT_ABSTRACT);
+  } finally {
+    hexo.config.language = originalLanguage;
+  }
+});
+
+// ---------------------------------------------------------------------------
 // register() argument validation
 // ---------------------------------------------------------------------------
 test('register(undefined) throws a clear error', () => {

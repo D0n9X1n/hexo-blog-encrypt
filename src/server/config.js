@@ -23,6 +23,39 @@ const DEFAULTS = Object.freeze({
   }),
 });
 
+// Localized user-facing defaults (#259). English lives in DEFAULTS; other
+// locales override only these strings. Explicit config always wins.
+const LOCALIZED_DEFAULTS = Object.freeze({
+  'zh-CN': Object.freeze({
+    abstract: '有东西被加密了, 请输入密码查看.',
+    message: '您好, 这里需要密码.',
+    wrong_pass_message: '抱歉, 这个密码看着不太对, 请再试试.',
+    decryptButton: Object.freeze({ text: '解密' }),
+  }),
+});
+
+// Map a language tag to a supported locale key. `zh`, `zh-CN`, `zh_CN` and
+// `zh-Hans` select Simplified Chinese; everything else falls back to English.
+function pickLocale(lang) {
+  const tag = typeof lang === 'string' ? lang.trim().toLowerCase().replace(/_/g, '-') : '';
+  if (tag === 'zh' || tag === 'zh-cn' || tag === 'zh-hans' || tag.startsWith('zh-hans-')) return 'zh-CN';
+  return 'en';
+}
+
+// Post `lang` / `language` front matter wins over the site `language`
+// (which Hexo allows to be a list; the first entry is the primary language).
+function languageOf(hexoConfig, post) {
+  if (typeof post.lang === 'string' && post.lang) return post.lang;
+  if (typeof post.language === 'string' && post.language) return post.language;
+  const site = hexoConfig && hexoConfig.language;
+  return Array.isArray(site) ? site[0] : site;
+}
+
+function localizedDefaults(hexoConfig, post) {
+  const locale = pickLocale(languageOf(hexoConfig, post));
+  return locale === 'en' ? DEFAULTS : deepMerge(DEFAULTS, LOCALIZED_DEFAULTS[locale]);
+}
+
 function clone(value) {
   if (value === null || typeof value !== 'object') return value;
   if (typeof structuredClone === 'function') return structuredClone(value);
@@ -162,7 +195,7 @@ function resolve(hexoConfig, postData, logger) {
   const post = postData || {};
 
   // Layer 1: defaults → hexo encrypt block (for top-level shared keys, NOT password/theme overrides per-post).
-  let merged = deepMerge(DEFAULTS, normalizeBooleans(shallowPickKnown(hexoEncrypt, KNOWN_KEYS), 'encrypt.', log));
+  let merged = deepMerge(localizedDefaults(hexoConfig, post), normalizeBooleans(shallowPickKnown(hexoEncrypt, KNOWN_KEYS), 'encrypt.', log));
 
   // Layer 2: post front-matter wins. Use POST_KNOWN_KEYS (which excludes
   // `tags`) to avoid pulling Hexo's Warehouse Query for `post.tags` into

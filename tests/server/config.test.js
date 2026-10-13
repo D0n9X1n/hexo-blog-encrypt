@@ -376,3 +376,68 @@ test('#251: env resolution does not mutate the caller\'s front matter', () => {
     assert.deepEqual(post.password, { env: ENV_NAME });
   });
 });
+
+// ---------------------------------------------------------------------------
+// #259 — localized defaults from post lang/language or site language.
+// ---------------------------------------------------------------------------
+const ZH = {
+  abstract: '有东西被加密了, 请输入密码查看.',
+  message: '您好, 这里需要密码.',
+  wrong_pass_message: '抱歉, 这个密码看着不太对, 请再试试.',
+  button: '解密',
+};
+
+function assertZh(out) {
+  assert.equal(out.abstract, ZH.abstract);
+  assert.equal(out.message, ZH.message);
+  assert.equal(out.wrong_pass_message, ZH.wrong_pass_message);
+  assert.equal(out.wrong_hash_message, ZH.wrong_pass_message);
+  assert.equal(out.decryptButton.text, ZH.button);
+}
+
+function assertEn(out) {
+  assert.equal(out.abstract, DEFAULTS.abstract);
+  assert.equal(out.message, DEFAULTS.message);
+  assert.equal(out.wrong_pass_message, DEFAULTS.wrong_pass_message);
+  assert.equal(out.decryptButton.text, DEFAULTS.decryptButton.text);
+}
+
+for (const lang of ['zh-CN', 'zh-cn', 'zh_CN', 'zh-Hans', 'zh', ' ZH-HANS ', 'zh-Hans-CN']) {
+  test(`#259: site language ${JSON.stringify(lang)} selects Simplified Chinese defaults`, () => {
+    assertZh(resolve({ language: lang }, { password: 'pw' }));
+  });
+}
+
+test('#259: site language as an array uses the first entry', () => {
+  assertZh(resolve({ language: ['zh-CN', 'en'] }, { password: 'pw' }));
+  assertEn(resolve({ language: ['en', 'zh-CN'] }, { password: 'pw' }));
+});
+
+test('#259: post lang / language override the site language', () => {
+  assertZh(resolve({ language: 'en' }, { password: 'pw', lang: 'zh-CN' }));
+  assertZh(resolve({ language: 'en' }, { password: 'pw', language: 'zh-Hans' }));
+  assertEn(resolve({ language: 'zh-CN' }, { password: 'pw', lang: 'en' }));
+});
+
+for (const lang of [undefined, 'en', 'en-US', 'fr', 'zh-TW', 'zh-Hant', '', 42, [], null]) {
+  test(`#259: language ${JSON.stringify(lang)} falls back to English defaults`, () => {
+    assertEn(resolve({ language: lang }, { password: 'pw' }));
+  });
+}
+
+test('#259: explicit site and post config always win over localized defaults', () => {
+  const out = resolve(
+    { language: 'zh-CN', encrypt: { message: 'site msg', decryptButton: { text: 'Open' } } },
+    { password: 'pw', abstract: 'post abstract' },
+  );
+  assert.equal(out.message, 'site msg');
+  assert.equal(out.decryptButton.text, 'Open');
+  assert.equal(out.abstract, 'post abstract');
+  assert.equal(out.wrong_pass_message, ZH.wrong_pass_message);
+});
+
+test('#259: post lang is not treated as an encrypt option', () => {
+  const out = resolve({}, { password: 'pw', lang: 'zh-CN' });
+  assert.equal(out.lang, undefined);
+  assert.equal(out.language, undefined);
+});
