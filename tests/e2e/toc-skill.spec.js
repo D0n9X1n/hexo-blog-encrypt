@@ -46,8 +46,8 @@ test.describe('hexo-encrypt-toc builder', () => {
     await expect(toc.locator('span.toc-text').nth(1)).toHaveText('Setup & install');
 
     const generatedId = await page.locator('#hexo-blog-encrypt h3').getAttribute('id');
-    expect(generatedId).toBe('no-idimg-srcx');
-    await expect(toc.locator('a.toc-link').nth(2)).toHaveAttribute('href', '#no-idimg-srcx');
+    expect(generatedId).toBe('no-id-img-srcx');
+    await expect(toc.locator('a.toc-link').nth(2)).toHaveAttribute('href', '#no-id-img-srcx');
     // Heading markup is copied as text only: the escaped tag stays literal and
     // no element from the heading (here <b>) is cloned into the TOC.
     await expect(toc.locator('span.toc-text').nth(2)).toHaveText('No id <img src=x>');
