@@ -15,6 +15,12 @@ const dom = require('./dom');
 const storage = require('./storage');
 
 const SUPPORTED_FORMAT = '4';
+// The iteration count always comes from `data-kdf-iterations`, which the
+// server writes for every post from its single default
+// (`DEFAULT_ITERATIONS` in src/server/crypto.js). This fallback only applies
+// to a hand-written theme that omits the attribute; a server unit test keeps
+// it equal to the server default.
+const FALLBACK_KDF_ITERATIONS = 250000;
 // Any element a theme may use as the wrapper. Decrypted containers keep
 // id="hexo-blog-encrypt", so they also match: that keeps each post's
 // position (and storage id) stable after earlier posts are revealed.
@@ -37,7 +43,7 @@ function readWireFormat(el) {
     whm: ds.whm || ds.wpm || 'Wrong password.',
     saltHex: ds.salt,
     nonceHex: ds.nonce,
-    iterations: parseInt(ds.kdfIterations, 10) || 250000,
+    iterations: parseInt(ds.kdfIterations, 10) || FALLBACK_KDF_ITERATIONS,
     autoSave: ds.autoSave === 'true',
     ciphertextHex: ciphertextNode ? ciphertextNode.textContent.trim() : '',
   };
