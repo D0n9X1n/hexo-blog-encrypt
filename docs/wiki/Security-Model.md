@@ -32,7 +32,29 @@ Your `_config.yml` `tags[].password` values **never appear in the published HTML
 This plugin doesn't help you choose, store, or transmit passwords. Picking `hello` is not secure regardless of how strong AES-GCM is.
 
 ### The page chrome
-Title, date, tags, abstract, the password prompt, and any unencrypted text **above** the `<!-- more -->` cut are all plaintext in the published HTML. If the title is "My password to bank.example.com is hunter2" — sorry, AES-GCM can't help.
+Title, date, tags, categories, `description`, `abstract` and the password prompt are plaintext in the published HTML. The whole rendered body is encrypted, including text above `<!-- more -->`; index pages show `abstract` instead. If the title is "My password to bank.example.com is hunter2", AES-GCM can't help.
+
+### Other plugins that read the post
+The plugin encrypts `post.content` and replaces `post.excerpt` / `post.more` with the abstract. Plaintext still exists on the post object while Hexo builds:
+
+| Field | Holds | Who might publish it |
+| --- | --- | --- |
+| `post.origin` | rendered plaintext HTML | themes (TOC widgets), custom helpers |
+| `post.raw`, `post._content` | Markdown source | search-index and JSON generators, some feed generators |
+| `post.description` | front-matter description | `open_graph()` meta tags, feeds |
+
+Any generator or theme helper that reads those fields publishes the post. Before deploying:
+
+1. Configure search, feed and sitemap generators to use `content` or `excerpt`, never `raw`, `_content` or `origin`, or exclude encrypted posts (`encrypt: true`).
+2. Don't put secrets in `description` or `abstract`.
+3. Fix theme TOCs with [Encrypted TOC](Encrypted-TOC).
+4. Run the leak checker after `hexo generate`; `--body` also checks every prose line:
+
+   ```bash
+   node check-toc-leak.js --source source/_posts --public public --body
+   ```
+
+   The checker is in the [`hexo-encrypt` Claude Code plugin](Encrypted-TOC#let-claude-code-do-it) and in this repo under `plugins/hexo-encrypt/skills/hexo-encrypt-toc/scripts/`.
 
 ### Reader-side attacks
 - **Browser extensions, malware, screen scrapers** — once the reader decrypts, the plaintext lives in the DOM. Anything running in the reader's browser can read it.
@@ -48,7 +70,8 @@ This plugin doesn't help if you're compelled (by law, by employer, by anyone wit
 
 ### Search and crawlers
 - Encrypted post content is invisible to search engines. That's the **point** but worth saying.
-- Anything **above the `<!-- more -->` cut** (the abstract / preview text) is fully indexed. Don't put secrets there.
+- The title, `description` and `abstract` are fully indexed. Don't put secrets there.
+- Search-index plugins run at build time, not as crawlers. See [Other plugins that read the post](#other-plugins-that-read-the-post).
 
 ## Crypto details (for reviewers)
 

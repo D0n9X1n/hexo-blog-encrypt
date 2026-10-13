@@ -67,6 +67,12 @@ This was a real bug introduced during the v4 redesign and caught by cross-model 
 
 There are 4 server unit tests + 2 e2e tests guarding this codepath. If you're a plugin contributor: please don't replace the `toArray` / `forEach` checks with `Array.isArray`.
 
+## A shared password, not a shared unlock
+
+Posts encrypted through the same tag use the same **password**, but each post still has its own random salt, and therefore its own key. Readers enter the password once **per post**. `autoSave` remembers the key per page, so it doesn't unlock other posts with the same tag either.
+
+This is deliberate: a shared key would let an attacker who cracks one post read every post with that tag, and it would need a site-wide salt, which v4 removed. If group unlocking is added in the future, it will be opt-in and limited to one tag.
+
 ## Mixing tag-based and per-post
 
 ```yaml
