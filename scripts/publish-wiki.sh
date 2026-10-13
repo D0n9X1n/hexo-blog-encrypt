@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Mirror docs/wiki/*.md into a cloned GitHub wiki repository and commit.
+# Mirror wiki/*.md into a cloned GitHub wiki repository and commit.
 set -euo pipefail
 
 if [[ $# -ne 3 ]]; then

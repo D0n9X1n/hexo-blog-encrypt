@@ -1,5 +1,7 @@
 # Callbacks & MathJax
 
+[简体中文](Callbacks-and-MathJax-zh-CN)
+
 After a post decrypts, you may need to re-initialize page-level libraries that scanned the DOM at load time:
 
 - **MathJax / KaTeX** — re-typeset newly-revealed math

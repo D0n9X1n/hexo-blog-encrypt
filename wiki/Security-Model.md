@@ -1,5 +1,7 @@
 # Security Model
 
+[简体中文](Security-Model-zh-CN)
+
 Plain English: what `hexo-blog-encrypt` is and isn't designed to protect against.
 
 ## TL;DR

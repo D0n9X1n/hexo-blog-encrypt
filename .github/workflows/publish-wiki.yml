@@ -1,12 +1,10 @@
 name: Publish wiki
 
+# wiki/ is the only documentation source. Every push to master, including
+# every merged pull request, mirrors wiki/*.md to the GitHub wiki.
 on:
   push:
     branches: [master]
-    paths:
-      - 'docs/wiki/**'
-      - 'scripts/publish-wiki.sh'
-      - '.github/workflows/publish-wiki.yml'
   workflow_dispatch:
 
 permissions:
@@ -22,12 +20,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     # The only job that writes Git content it did not build: it pushes the
-    # docs/wiki mirror to the wiki's master. The grant lives on the job so it
+    # wiki/ mirror to the wiki's master. The grant lives on the job so it
     # cannot widen to a future sibling.
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
+
+      - name: Check wiki pages
+        run: python3 scripts/check-wiki.py
 
       - name: Clone wiki repository
         env:
@@ -39,7 +40,7 @@ jobs:
 
       - name: Build wiki mirror
         id: mirror
-        run: bash scripts/publish-wiki.sh docs/wiki wiki-repo "$GITHUB_SHA"
+        run: bash scripts/publish-wiki.sh wiki wiki-repo "$GITHUB_SHA"
 
       - name: Push wiki mirror
         if: steps.mirror.outputs.changed == 'true'

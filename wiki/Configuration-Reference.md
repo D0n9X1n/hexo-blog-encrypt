@@ -1,5 +1,7 @@
 # Configuration Reference
 
+[简体中文](Configuration-Reference-zh-CN)
+
 Every option, default, type, and where it can be set.
 
 ## Where to set options

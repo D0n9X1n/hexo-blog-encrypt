@@ -1,5 +1,7 @@
 # Tag-Based Encryption
 
+[简体中文](Tag-Based-Encryption-zh-CN)
+
 Tag-based encryption lets you encrypt a whole class of posts (e.g. "drafts", "diary", "client-X") with a shared password by tagging them — no per-post `password:` field needed.
 
 ## How it works

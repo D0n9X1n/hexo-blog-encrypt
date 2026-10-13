@@ -10,7 +10,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/hexo-blog-encrypt?logo=npm&label=downloads)](https://www.npmjs.com/package/hexo-blog-encrypt)
 [![License](https://img.shields.io/npm/l/hexo-blog-encrypt?color=brightgreen)](./LICENSE)
 [![Tests](https://github.com/D0n9X1n/hexo-blog-encrypt/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/D0n9X1n/hexo-blog-encrypt/actions/workflows/test.yml)
-[![Coverage](https://img.shields.io/badge/server%20coverage-100%25-brightgreen)](./docs/DEVELOPMENT.md)
+[![Coverage](https://img.shields.io/badge/server%20coverage-100%25-brightgreen)](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki/Development-zh-CN)
 [![Live Demo](https://img.shields.io/badge/demo-online-brightgreen?logo=github)](https://d0n9x1n.github.io/hexo-blog-encrypt/)
 [![Node](https://img.shields.io/node/v/hexo-blog-encrypt?logo=node.js&color=brightgreen)](./package.json)
 [![Hexo](https://img.shields.io/npm/dependency-version/hexo-blog-encrypt/peer/hexo?logo=hexo&label=hexo)](https://hexo.io/)
@@ -289,7 +289,7 @@ curl -fsSL https://raw.githubusercontent.com/D0n9X1n/hexo-blog-encrypt/master/sk
 [wave](https://d0n9x1n.github.io/hexo-blog-encrypt/demo/theme/wave/) ·
 [xray](https://d0n9x1n.github.io/hexo-blog-encrypt/demo/theme/xray/)
 
-新增主题请参阅 [docs/THEMES.md](./docs/THEMES.md).
+新增主题请参阅 [主题开发](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki/Theme-Authoring-zh-CN).
 
 ## 浏览器支持
 
@@ -355,10 +355,10 @@ v4 修改了加密格式 (AES-GCM, 每篇独立 salt 和 nonce). v4 无法读取
 [CONTRIBUTING.md](./.github/CONTRIBUTING.md). 报告 bug 时请附上复现步骤、日志和
 配置, 信息不完整的 issue 可能会被关闭.
 
-- [架构](./docs/ARCHITECTURE.md)
-- [开发](./docs/DEVELOPMENT.md)
-- [发布](./docs/RELEASING.md)
-- [主题](./docs/THEMES.md)
+- [架构](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki/Architecture-zh-CN)
+- [开发](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki/Development-zh-CN)
+- [发布](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki/Release-Process-zh-CN)
+- [主题](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki/Theme-Authoring-zh-CN)
 
 ## 许可
 

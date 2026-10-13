@@ -115,19 +115,8 @@ test('the skill is not shipped in the npm package', () => {
   assert.ok(!pkg.files.some((entry) => entry.startsWith('skills')));
 });
 
-test('wiki source: every page is in the sidebar and every sidebar link resolves', () => {
-  const wikiDir = path.join(repoRoot, 'docs', 'wiki');
-  const pages = fs.readdirSync(wikiDir).filter((name) => name.endsWith('.md')).map((name) => name.slice(0, -3));
-  const sidebar = fs.readFileSync(path.join(wikiDir, '_Sidebar.md'), 'utf8');
-  const links = [...sidebar.matchAll(/\]\(([A-Za-z0-9-]+)\)/g)].map((m) => m[1]);
-  for (const link of links) assert.ok(pages.includes(link), `_Sidebar.md links missing page ${link}`);
-  for (const page of pages.filter((name) => !name.startsWith('_'))) {
-    assert.ok(links.includes(page), `wiki page ${page} is not linked from _Sidebar.md`);
-  }
-});
-
 test('wiki never recommends rendering toc(post.origin)', () => {
-  const wikiDir = path.join(repoRoot, 'docs', 'wiki');
+  const wikiDir = path.join(repoRoot, 'wiki');
   for (const name of fs.readdirSync(wikiDir)) {
     const body = fs.readFileSync(path.join(wikiDir, name), 'utf8');
     for (const block of body.match(/```[\s\S]*?```/g) || []) {

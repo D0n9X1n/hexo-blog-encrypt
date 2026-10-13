@@ -1,5 +1,7 @@
 # Architecture
 
+[简体中文](Architecture-zh-CN)
+
 A Hexo plugin that encrypts blog posts at build time. Readers enter a
 password in the browser to decrypt content client-side via the **Web
 Crypto API**. Plain Node.js — uses Hexo's filter/generator hooks; the
@@ -12,10 +14,10 @@ browser bundle is built with esbuild (no runtime bundler).
 | `index.js` | Hexo entry point. Registers config defaults, the `hexo-blog-encrypt` filter on `after_post_render`, and the asset generators that emit `css/hbe.style.css` + `lib/hbe.<hash10>.js`. Thin shim over `src/server/index.js`. |
 | `src/server/` | Server-side composition. See [Server modules](#server-modules) below. |
 | `src/browser/` | Browser-side composition. Single esbuild bundle output to `lib/hbe.bundle.js`; emitted at deploy time as `lib/hbe.<hash10>.js` for cache-busting. |
-| `lib/hbe.<theme>.html` | Per-theme HTML wrappers. **One file = one theme** — auto-discovered at filter time. See [`docs/THEMES.md`](THEMES.md). |
+| `lib/hbe.<theme>.html` | Per-theme HTML wrappers. **One file = one theme** — auto-discovered at filter time. See [Theme Authoring](Theme-Authoring). |
 | `lib/hbe.style.css` | Single stylesheet shared by every theme. |
 | `tests/` | Real-Hexo + Playwright e2e harness. `npm test` runs lint + server tests + e2e. |
-| `docs/` | Source-of-truth project documentation (you are here). |
+| `wiki/` | The only documentation source: English `<Page>.md` and Chinese `<Page>-zh-CN.md`, mirrored to the GitHub wiki by `publish-wiki.yml` (you are here). |
 | `.github/workflows/` | CI: `test.yml` (every push/PR), `release.yml` (npm), `publish-gh-packages.yml` (GH Packages mirror), `deploy-demo.yml` (Pages). |
 | `demo/` | Live-demo Hexo site published to GitHub Pages. References the published npm package, NOT a `file:..` path. |
 | `ReadMe.md` / `ReadMe.zh.md` | User-facing README in English / 中文. **Both must be updated** when user-facing behavior changes. |
@@ -50,7 +52,7 @@ file is **not** committed; it's regenerated on `npm run build` and on
 
 Browser ↔ server contract is the seven `data-*` attributes on the
 `#hexo-blog-encrypt` wrapper plus the `<script id="hbeData">` body. The
-exact attribute / placeholder table is in [`docs/THEMES.md`](THEMES.md);
+exact attribute / placeholder table is in [Theme Authoring](Theme-Authoring);
 the bundle gates on `data-hbe-format="4"` and refuses to attempt
 decryption against any other value, so changing the wire format requires
 bumping the version byte and the bundle in lockstep.
@@ -94,6 +96,6 @@ self-heal re-prompts.
 
 ## See also
 
-- [`docs/THEMES.md`](THEMES.md) — the one-file theme drop contract.
-- [`docs/RELEASING.md`](RELEASING.md) — release procedure.
-- [`docs/DEVELOPMENT.md`](DEVELOPMENT.md) — workflow rules + commands.
+- [Theme Authoring](Theme-Authoring) — the one-file theme drop contract.
+- [Release Process](Release-Process) — release procedure.
+- [Development](Development) — workflow rules + commands.

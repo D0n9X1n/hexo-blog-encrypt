@@ -1,4 +1,6 @@
-# Releasing
+# Release Process
+
+[简体中文](Release-Process-zh-CN)
 
 This is the **maintainer-facing** release procedure. End users install
 the published package per [`Getting-Started`](https://github.com/D0n9X1n/hexo-blog-encrypt/wiki/Getting-Started)
@@ -40,7 +42,7 @@ only after the `Tests` workflow passes; create the tag from that exact commit.
 > runs `npm install` against the demo site, which now wants
 > `hexo-blog-encrypt@^X.Y.Z` from npmjs — and that version doesn't
 > exist yet. This is expected. Retrigger deploy-demo once the release
-> workflow has published (see step 5 below).
+> workflow has published (see step 3 under Post-publish).
 
 ## Tag + push
 
@@ -247,9 +249,9 @@ name (see Getting Started for the install snippet).
 
 ## See also
 
-- [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) — codebase orientation.
-- [`docs/DEVELOPMENT.md`](DEVELOPMENT.md) — workflow rules + commands.
-- [`.github/workflows/release.yml`](../.github/workflows/release.yml) — npmjs publish workflow.
-- [`.github/workflows/publish-gh-packages.yml`](../.github/workflows/publish-gh-packages.yml) — GH Packages mirror workflow.
+- [Architecture](Architecture) — codebase orientation.
+- [Development](Development) — workflow rules + commands.
+- [`.github/workflows/release.yml`](https://github.com/D0n9X1n/hexo-blog-encrypt/blob/master/.github/workflows/release.yml) — npmjs publish workflow.
+- [`.github/workflows/publish-gh-packages.yml`](https://github.com/D0n9X1n/hexo-blog-encrypt/blob/master/.github/workflows/publish-gh-packages.yml) — GH Packages mirror workflow.
 - [GitHub Releases](https://github.com/D0n9X1n/hexo-blog-encrypt/releases) — release history.
-- [`scripts/release-notes.sh`](../scripts/release-notes.sh) — release-notes generator.
+- [`scripts/release-notes.sh`](https://github.com/D0n9X1n/hexo-blog-encrypt/blob/master/scripts/release-notes.sh) — release-notes generator.

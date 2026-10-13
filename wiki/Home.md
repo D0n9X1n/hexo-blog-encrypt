@@ -1,5 +1,7 @@
 # hexo-blog-encrypt
 
+[简体中文](Home-zh-CN)
+
 > Encrypt individual Hexo blog posts at build time. Readers enter a password and decrypt client-side via the Web Crypto API. Zero server. Zero plaintext on disk after the build.
 
 [**🔗 Live demo**](https://d0n9x1n.github.io/hexo-blog-encrypt/) · [**📦 npm**](https://www.npmjs.com/package/hexo-blog-encrypt) · [**📝 Source**](https://github.com/D0n9X1n/hexo-blog-encrypt) · [**📋 Releases**](https://github.com/D0n9X1n/hexo-blog-encrypt/releases)
@@ -18,7 +20,7 @@
 | **Optional `stableSalt`** | Off by default. Derives the salt from the post permalink so it stays stable across clean rebuilds — keeps `autoSave` caches valid on Cloudflare Pages / Vercel / Netlify / GitHub Actions. Nonce stays random. See [Security Model](Security-Model#deterministic-salt-stablesalt-opt-in). |
 | **Tag-based encryption** | Define a `{name, password}` registry in `_config.yml`; matching post tags get encrypted with the registry password. |
 | **Decryption callback** | `window.addEventListener('hexo-blog-decrypt', fn)` — re-init MathJax / hljs / TOC / etc. after the post reveals. |
-| **Tested** | 158 server tests at 100 % coverage + 44 Playwright e2e tests across all 8 themes. CI green on every push. |
+| **Tested** | 100 % server coverage on Node 18–26 and Hexo 7/8, plus Playwright end-to-end tests on Chromium, Firefox and WebKit across all 8 themes. |
 
 ---
 
@@ -41,6 +43,16 @@
 **Decryption silently fails?** → [Browser Support](Browser-Support) and [Troubleshooting](Troubleshooting).
 
 **Have a question?** → [FAQ](FAQ).
+
+**TOC empty or leaking on encrypted posts?** → [Encrypted TOC](Encrypted-TOC).
+
+## Maintainers
+
+- [Architecture](Architecture) — modules, wire format, key files.
+- [Development](Development) — setup, test commands, workflow rules.
+- [Theme Authoring](Theme-Authoring) — the one-file theme contract.
+- [Release Process](Release-Process) — tag-driven npm and GitHub Packages release.
+- [Wiki Publication](Wiki-Publication) — how this wiki is written, checked and published.
 
 ---
 

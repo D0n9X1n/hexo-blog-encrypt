@@ -1,5 +1,7 @@
 # FAQ
 
+[简体中文](FAQ-zh-CN)
+
 Common questions, in order of how often they come up.
 
 ## Is the password ever sent over the network?

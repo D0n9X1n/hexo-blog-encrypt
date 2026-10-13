@@ -57,6 +57,10 @@ jobs:
           npm run build
           node --test tests/server/*.test.js tests/*.test.js
 
+      - name: Check wiki pages
+        if: matrix.primary
+        run: python3 scripts/check-wiki.py
+
       - name: Wiki publish script tests
         if: matrix.primary
         run: bash scripts/test-wiki-publish.sh
