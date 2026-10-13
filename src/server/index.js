@@ -109,11 +109,19 @@ function register(hexo) {
       return data;
     }
 
+    const titleText = (typeof data.title === 'string') ? data.title.trim() : '(untitled)';
     let effectivePostData = data;
     if (fmPassword === undefined || fmPassword === null) {
       const tagMatch = resolveTagPassword(hexo.config && hexo.config.encrypt, data.tags);
-      if (!tagMatch || tagMatch.password === undefined || tagMatch.password === null) {
-        return data;
+      if (!tagMatch) return data;
+      if (tagMatch.password === undefined || tagMatch.password === null) {
+        // Fail closed (#244): a matching tag entry without a password is a
+        // config mistake; publishing the post in plaintext would be silent.
+        throw new Error(
+          `hexo-blog-encrypt: post "${titleText}" matches encrypt.tags entry "${tagMatch.name}", ` +
+          'but that entry has no password. Set a password on the tag entry in _config.yml, ' +
+          'or add `password: ""` to the post front matter to publish it unencrypted.'
+        );
       }
       effectivePostData = Object.assign({}, data, { password: tagMatch.password });
       effectivePostData.__tagName = tagMatch.name;
@@ -132,7 +140,6 @@ function register(hexo) {
     logger.updateSilent(!!cfg.silent);
 
     const tagName = effectivePostData.__tagName;
-    const titleText = (typeof data.title === 'string') ? data.title.trim() : '(untitled)';
     if (tagName) {
       logger.info(`hexo-blog-encrypt: encrypting "${titleText}" via tag "${tagName}" with theme ${cfg.theme}.`);
     } else {

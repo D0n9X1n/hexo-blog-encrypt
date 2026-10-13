@@ -786,6 +786,54 @@ test('matching tag with empty-string password is bypassed (cfg null guard)', asy
 });
 
 // ---------------------------------------------------------------------------
+// #244 — a matching tag WITHOUT a password must fail the build (fail closed),
+// never publish the post in plaintext.
+// ---------------------------------------------------------------------------
+for (const [label, tagEntry] of [
+  ['missing', { name: 'Secret' }],
+  ['null', { name: 'Secret', password: null }],
+]) {
+  test(`#244: matching tag with ${label} password fails the build with a descriptive error`, async () => {
+    hexo.config.encrypt = { tags: [tagEntry] };
+    const data = makeSyntheticData({
+      title: `tag-${label}-pw`,
+      tags: [{ name: 'Secret' }],
+    });
+    delete data.password;
+
+    await assert.rejects(
+      hexo.execFilter('after_post_render', data, { context: hexo }),
+      (err) => /encrypt\.tags/.test(err.message)
+        && /"Secret"/.test(err.message)
+        && /tag-.*-pw/.test(err.message)
+        && /password/.test(err.message),
+    );
+    assert.notEqual(data.encrypt, true);
+    assert.ok(data.content.includes(SECRET_NEEDLE), 'content untouched (build fails instead)');
+  });
+}
+
+test('#244: front-matter password: "" still opts out of a password-less matching tag', async () => {
+  hexo.config.encrypt = { tags: [{ name: 'Secret' }] };
+  const data = makeSyntheticData({
+    title: 'tag-no-pw-optout',
+    password: '',
+    tags: [{ name: 'Secret' }],
+  });
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  assert.equal(data.encrypt, undefined);
+});
+
+test('#244: a password-less tag entry does not affect posts without that tag', async () => {
+  hexo.config.encrypt = { tags: [{ name: 'Secret' }] };
+  const data = makeSyntheticData({ title: 'other-tag', tags: [{ name: 'Public' }] });
+  delete data.password;
+  await hexo.execFilter('after_post_render', data, { context: hexo });
+  assert.equal(data.encrypt, undefined);
+  assert.ok(data.content.includes(SECRET_NEEDLE));
+});
+
+// ---------------------------------------------------------------------------
 // register() argument validation
 // ---------------------------------------------------------------------------
 test('register(undefined) throws a clear error', () => {
