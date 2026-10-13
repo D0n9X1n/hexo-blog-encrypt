@@ -9,6 +9,18 @@ function hex10(buf) {
   return crypto.createHash('sha256').update(buf).digest('hex').slice(0, HASH_BYTES * 2);
 }
 
+// esbuild ends the bundle with `//# sourceMappingURL=hbe.bundle.js.map`, a
+// file that is never served (#262). Point it at the emitted hashed map, or
+// strip it when no map route is emitted, so browsers never request a 404.
+const SOURCEMAP_COMMENT_RE = /\n?\/\/# sourceMappingURL=\S+\s*$/;
+
+function linkSourcemap(bytes, mapName) {
+  const text = bytes.toString('utf8');
+  if (!SOURCEMAP_COMMENT_RE.test(text)) return bytes;
+  const replacement = mapName ? `\n//# sourceMappingURL=${mapName}\n` : '\n';
+  return Buffer.from(text.replace(SOURCEMAP_COMMENT_RE, replacement), 'utf8');
+}
+
 /**
  * Build the v4 Hexo generator function. Returns a function that, when
  * invoked by Hexo's generator pipeline, yields:
@@ -68,8 +80,12 @@ function createGenerator(opts) {
         hash: hex10(bundleBytes),
       };
     }
-    const { bytes: bundleBytes, hash } = cache;
+    // The hash is computed over the on-disk bundle bytes; the filter and the
+    // generator share this instance, so both always agree on the route name.
+    const { bytes: rawBundleBytes, hash } = cache;
     const jsRoutePath = `lib/hbe.${hash}.js`;
+    const hasMap = Boolean(sourcemapPath && fs.existsSync(sourcemapPath));
+    const bundleBytes = linkSourcemap(rawBundleBytes, hasMap ? `hbe.${hash}.js.map` : null);
 
     const routes = [
       {
@@ -82,7 +98,7 @@ function createGenerator(opts) {
       },
     ];
 
-    if (sourcemapPath && fs.existsSync(sourcemapPath)) {
+    if (hasMap) {
       const mapBytes = fs.readFileSync(sourcemapPath);
       routes.push({
         path: `lib/hbe.${hash}.js.map`,
