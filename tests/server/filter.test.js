@@ -927,6 +927,27 @@ for (const where of ['front matter', 'encrypt.tags']) {
 }
 
 // ---------------------------------------------------------------------------
+// #252 — the filter is async (Hexo awaits it) so PBKDF2 does not block the loop.
+// ---------------------------------------------------------------------------
+test('#252: after_post_render filter returns a Promise and concurrent posts all decrypt', async () => {
+  hexo.config.encrypt = {};
+  const fn = hexo.extend.filter.list('after_post_render').find((f) => f.name === 'v4Filter');
+  assert.ok(fn, 'v4Filter must be registered');
+  const probe = makeSyntheticData({ title: 'async-probe', password: 'p' });
+  const ret = fn.call(hexo, probe);
+  assert.ok(ret instanceof Promise, 'filter must return a Promise');
+  await ret;
+  assert.equal(probe.encrypt, true);
+
+  const posts = [1, 2, 3, 4].map((i) => makeSyntheticData({ title: `async-${i}`, password: `pw${i}` }));
+  await Promise.all(posts.map((d) => hexo.execFilter('after_post_render', d, { context: hexo })));
+  posts.forEach((d, i) => {
+    assert.equal(d.encrypt, true);
+    assert.ok(decryptHbeV4({ password: `pw${i + 1}`, ...extractPayload(d.content) }).includes(SECRET_NEEDLE));
+  });
+});
+
+// ---------------------------------------------------------------------------
 // register() argument validation
 // ---------------------------------------------------------------------------
 test('register(undefined) throws a clear error', () => {

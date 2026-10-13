@@ -91,7 +91,7 @@ function register(hexo) {
     sourcemapPath: BUNDLE_SOURCEMAP_PATH,
   });
 
-  hexo.extend.filter.register('after_post_render', function v4Filter(data) {
+  hexo.extend.filter.register('after_post_render', async function v4Filter(data) {
     // Idempotence: stamp a per-instance Symbol on `data` after a successful
     // pass so re-entry on the same object is a no-op. We deliberately do NOT
     // use `data.encrypt === true` (a user-set "please encrypt" front-matter
@@ -153,7 +153,7 @@ function register(hexo) {
     const stableSaltEnabled = cfg.stableSalt === true
       && typeof data.permalink === 'string'
       && data.permalink.length > 0;
-    const { salt, nonce, ciphertext } = encrypt(plaintext, cfg.password, {
+    const { salt, nonce, ciphertext } = await encrypt(plaintext, cfg.password, {
       iterations: cfg.kdf.iterations,
       salt: stableSaltEnabled ? stableSaltFromPermalink(data.permalink) : undefined,
     });
