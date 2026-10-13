@@ -4,6 +4,9 @@
 // produced the corresponding ciphertext. On reload we re-import the key and
 // attempt decryption silently; the user is never re-prompted.
 //
+// Key: `hbe.v4.` + id, where id is the page path (+ `#<n>` for the 2nd+
+// encrypted post on the same page; see main.js#storageId).
+//
 // Schema (v4):
 //   {
 //     version: 4,
@@ -19,8 +22,8 @@
 const STORAGE_KEY_PREFIX = 'hbe.v4.';
 const SCHEMA_VERSION = 4;
 
-function storageKey(pageKey) {
-  return STORAGE_KEY_PREFIX + pageKey;
+function storageKey(id) {
+  return STORAGE_KEY_PREFIX + id;
 }
 
 function bytesToBase64(bytes) {
@@ -36,7 +39,7 @@ function base64ToBytes(b64) {
   return out;
 }
 
-async function save({ pageKey, key, saltHex, nonceHex, autoSave }) {
+async function save({ id, key, saltHex, nonceHex, autoSave }) {
   if (!autoSave) return;
   try {
     const raw = await crypto.subtle.exportKey('raw', key);
@@ -46,7 +49,7 @@ async function save({ pageKey, key, saltHex, nonceHex, autoSave }) {
       salt: saltHex,
       nonce: nonceHex,
     };
-    localStorage.setItem(storageKey(pageKey), JSON.stringify(entry));
+    localStorage.setItem(storageKey(id), JSON.stringify(entry));
   } catch (_e) {
     // localStorage.setItem can throw QuotaExceededError or SecurityError
     // (private mode, disabled storage). Silently ignore — autoSave is
@@ -54,10 +57,10 @@ async function save({ pageKey, key, saltHex, nonceHex, autoSave }) {
   }
 }
 
-async function load({ pageKey, expectedSaltHex }) {
+async function load({ id, expectedSaltHex }) {
   let entry;
   try {
-    const raw = localStorage.getItem(storageKey(pageKey));
+    const raw = localStorage.getItem(storageKey(id));
     if (!raw) return null;
     entry = JSON.parse(raw);
   } catch (_e) {
@@ -74,7 +77,7 @@ async function load({ pageKey, expectedSaltHex }) {
     || 'hmk' in entry
     || 'hmacDigest' in entry
   ) {
-    try { localStorage.removeItem(storageKey(pageKey)); } catch (_e) { /* ignore */ }
+    try { localStorage.removeItem(storageKey(id)); } catch (_e) { /* ignore */ }
     return null;
   }
 
@@ -82,7 +85,7 @@ async function load({ pageKey, expectedSaltHex }) {
   // not part of PBKDF2 key derivation; decrypt still uses the current page's
   // nonce and ciphertext, and failure clears the cache in main.js.
   if (entry.salt !== expectedSaltHex) {
-    try { localStorage.removeItem(storageKey(pageKey)); } catch (_e) { /* ignore */ }
+    try { localStorage.removeItem(storageKey(id)); } catch (_e) { /* ignore */ }
     return null;
   }
 
@@ -97,13 +100,13 @@ async function load({ pageKey, expectedSaltHex }) {
     );
     return key;
   } catch (_e) {
-    try { localStorage.removeItem(storageKey(pageKey)); } catch (_e2) { /* ignore */ }
+    try { localStorage.removeItem(storageKey(id)); } catch (_e2) { /* ignore */ }
     return null;
   }
 }
 
-function clear(pageKey) {
-  try { localStorage.removeItem(storageKey(pageKey)); } catch (_e) { /* ignore */ }
+function clear(id) {
+  try { localStorage.removeItem(storageKey(id)); } catch (_e) { /* ignore */ }
 }
 
 module.exports = {

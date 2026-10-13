@@ -15,10 +15,15 @@ The 8 themes that ship today are: `default`, `blink`, `flip`, `shrink`,
 1. Create `lib/hbe.<name>.html` containing:
    - All 11 `{{hbe...}}` placeholders (see below) — the server-side filter
      substitutes them at render time.
-   - A wrapper element with `id="hexo-blog-encrypt"` (the browser bundle finds
-     it by id) carrying the seven `data-*` attributes listed below.
-   - A form `<form id="hbeForm">` containing:
-     - A password input `<input id="hbePass" type="password">`.
+   - A wrapper element with `id="hexo-blog-encrypt"` and class
+     `hbe-container`, carrying the seven `data-*` attributes listed below.
+     The bundle initializes **every** `[data-hbe-format]` / `.hbe-container`
+     on the page once, so index pages may show several encrypted posts.
+   - A form `<form id="hbeForm" class="hbe-form">` containing:
+     - A password input `<input id="hbePass" class="hbe-input-field" type="password">`
+       and a `<label for="hbePass">`. Lookups are scoped to the wrapper; when
+       several posts share a page the bundle renames duplicate input ids and
+       re-points that post's label.
      - A submit button with class `hbe-button`.
      - An empty alert region: `<div role="alert" aria-live="polite">…</div>`.
      - **No inline event handlers** (`onsubmit`, `onclick`, …). The bundle
@@ -86,9 +91,11 @@ To keep the one-file-drop contract intact:
   implicit wire format and the version is bumped via `{{hbeFormat}}`.
 - **Don’t** rename or remove any of the 11 placeholders. Existing themes —
   and every encrypted post in the wild — depend on them.
-- **Don’t** move or rename the `#hexo-blog-encrypt` wrapper, the `#hbeForm`
-  form, the `#hbePass` input, the `.hbe-button` submit button, or the
-  `[role="alert"]` region. The bundle selects them by id / class / role.
+- **Don’t** move or rename the `#hexo-blog-encrypt` / `.hbe-container`
+  wrapper, the `#hbeForm` / `.hbe-form` form, the `#hbePass` /
+  `.hbe-input-field` input, the `.hbe-button` submit button, or the
+  `[role="alert"]` region. The bundle selects them inside each wrapper by
+  id / class / role.
 - **Don’t** ship a theme without running `npm run test`. The harness guards
   the contract; CI will reject regressions.
 

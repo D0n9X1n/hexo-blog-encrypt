@@ -1,8 +1,13 @@
 'use strict';
 
-// Browser entry point. Reads the wire-format from the encrypted-post wrapper,
-// drives the UI via `ui.js`, derives & decrypts via `crypto.js`, and persists
-// the derived key (when autoSave is on) via `storage.js`.
+// Browser entry point. Finds every encrypted-post wrapper on the page, drives
+// the UI via `ui.js`, derives & decrypts via `crypto.js`, and persists the
+// derived key (when autoSave is on) via `storage.js`.
+//
+// The bundle is injected once per encrypted post, so it may execute several
+// times on one page (index/archive pages, PJAX). Every wrapper is therefore
+// initialised exactly once, guarded by a flag on the element itself (shared by
+// all bundle executions), and every lookup is scoped to its wrapper.
 
 const ui = require('./ui');
 const cryptoMod = require('./crypto');
@@ -10,10 +15,15 @@ const dom = require('./dom');
 const storage = require('./storage');
 
 const SUPPORTED_FORMAT = '4';
+// Any element a theme may use as the wrapper. Decrypted containers keep
+// id="hexo-blog-encrypt", so they also match: that keeps each post's
+// position (and storage id) stable after earlier posts are revealed.
+const WRAPPER = '[data-hbe-format],.hbe-container,#hexo-blog-encrypt';
+const INIT_FLAG = '__hbeInit';
 
-function readWireFormat(mainElement) {
-  const ds = mainElement.dataset;
-  const ciphertextNode = mainElement.querySelector('script#hbeData');
+function readWireFormat(el) {
+  const ds = el.dataset;
+  const ciphertextNode = el.querySelector('script#hbeData,script[type="hbeData"]');
   return {
     format: ds.hbeFormat,
     wpm: ds.wpm || 'Wrong password.',
@@ -26,38 +36,99 @@ function readWireFormat(mainElement) {
   };
 }
 
-function dispatchDecryptEvent(mode) {
+function dispatchDecryptEvent(mode, element) {
   // Fire on `window` for v3 back-compat — both READMEs document
   // `window.addEventListener('hexo-blog-decrypt', fn)` as the public API.
-  // Old listeners that only access `e.type` continue to work; new listeners
-  // can additionally read `e.detail.mode` ('manual' | 'cached').
+  // `detail.mode` is 'manual' | 'cached'; `detail.element` is the revealed
+  // container, so pages with several encrypted posts can tell them apart.
   try {
-    window.dispatchEvent(new CustomEvent('hexo-blog-decrypt', { detail: { mode } }));
+    window.dispatchEvent(new CustomEvent('hexo-blog-decrypt', { detail: { mode, element } }));
   } catch (_e) {
-    // CustomEvent constructor unavailable on very old browsers — fall back
-    // to plain Event (no detail).
     try {
       window.dispatchEvent(new Event('hexo-blog-decrypt'));
     } catch (_e2) { /* ignore — no event API at all */ }
   }
 }
 
-function pageKey() {
-  // Per-URL bucket so different encrypted posts don't collide in localStorage.
-  return location.pathname + location.search;
+// Per-post storage id: the page URL, plus the post's position for the 2nd+
+// post on a page. The first post keeps the bare URL, so keys saved before
+// multi-post support keep working. The salt stored with each entry guards
+// against a post moving position (mismatch => entry dropped, re-prompt).
+function storageId(el) {
+  const base = location.pathname + location.search;
+  const index = Array.prototype.indexOf.call(document.querySelectorAll(WRAPPER), el);
+  return index > 0 ? base + '#' + index : base;
 }
 
-async function reveal(mainElement, plaintext, mode) {
-  await dom.swapInDecryptedDOM(mainElement, plaintext);
-  dispatchDecryptEvent(mode);
-}
+function setup(el) {
+  if (el[INIT_FLAG] || el.classList.contains('hbe-decrypted-content')) return;
+  el[INIT_FLAG] = true;
+  const wire = readWireFormat(el);
 
-async function tryAutoDecrypt(mainElement, wire, guardedReveal) {
-  if (!wire.autoSave) return false;
-  const cachedKey = await storage.load({
-    pageKey: pageKey(),
-    expectedSaltHex: wire.saltHex,
+  if (wire.format !== SUPPORTED_FORMAT) {
+    ui.showError(
+      el,
+      'hexo-blog-encrypt: this page was built with an incompatible plugin version. ' +
+      'Rebuild the site after upgrading the plugin.'
+    );
+    return;
+  }
+
+  const form = ui.findForm(el);
+  const input = ui.findInput(el);
+  ui.ensureUniqueId(el, input);
+  const id = storageId(el);
+
+  // Single-shot reveal guard: with autoSave on, the cached-key attempt runs
+  // in parallel with the submit handler; whichever wins mutates the DOM.
+  let revealed = false;
+  const reveal = async (plaintext, mode) => {
+    if (revealed) return;
+    revealed = true;
+    const decrypted = await dom.swapInDecryptedDOM(el, plaintext);
+    dispatchDecryptEvent(mode, decrypted);
+  };
+
+  ui.attachSubmit(form, async () => {
+    ui.clearError(el);
+    const password = input ? input.value : '';
+    if (!password) {
+      ui.showError(el, wire.wpm);
+      return;
+    }
+    ui.setBusy(form, input, true);
+    let result;
+    try {
+      result = await cryptoMod.tryDecryptWithPassword({
+        password,
+        saltHex: wire.saltHex,
+        nonceHex: wire.nonceHex,
+        ciphertextHex: wire.ciphertextHex,
+        iterations: wire.iterations,
+      });
+    } finally {
+      ui.setBusy(form, input, false);
+    }
+    if (!result.ok) {
+      ui.showError(el, wire.wpm);
+      return;
+    }
+    if (wire.autoSave) {
+      await storage.save({ id, key: result.key, saltHex: wire.saltHex, nonceHex: wire.nonceHex, autoSave: true });
+    }
+    await reveal(result.plaintext, 'manual');
   });
+
+  tryAutoDecrypt(wire, id, reveal).then((auto) => {
+    // Focus the first locked post only; never steal focus from the reader.
+    const active = document.activeElement;
+    if (!auto && !revealed && input && (!active || active === document.body)) input.focus();
+  });
+}
+
+async function tryAutoDecrypt(wire, id, reveal) {
+  if (!wire.autoSave) return false;
+  const cachedKey = await storage.load({ id, expectedSaltHex: wire.saltHex });
   if (!cachedKey) return false;
   const result = await cryptoMod.tryDecryptWithKey({
     key: cachedKey,
@@ -65,89 +136,20 @@ async function tryAutoDecrypt(mainElement, wire, guardedReveal) {
     ciphertextHex: wire.ciphertextHex,
   });
   if (!result.ok) {
-    storage.clear(pageKey());
+    storage.clear(id);
     return false;
   }
-  await guardedReveal(result.plaintext, 'cached');
+  await reveal(result.plaintext, 'cached');
   return true;
 }
 
-async function handleSubmit(mainElement, wire, form, guardedReveal) {
-  ui.clearError(mainElement);
-  ui.setBusy(form, true);
-  const password = ui.readPassword(form);
-  if (!password) {
-    ui.setBusy(form, false);
-    ui.showError(mainElement, wire.wpm);
-    return;
-  }
-  let result;
-  try {
-    result = await cryptoMod.tryDecryptWithPassword({
-      password,
-      saltHex: wire.saltHex,
-      nonceHex: wire.nonceHex,
-      ciphertextHex: wire.ciphertextHex,
-      iterations: wire.iterations,
-    });
-  } finally {
-    ui.setBusy(form, false);
-  }
-  if (!result.ok) {
-    ui.showError(mainElement, wire.wpm);
-    return;
-  }
-  if (wire.autoSave) {
-    await storage.save({
-      pageKey: pageKey(),
-      key: result.key,
-      saltHex: wire.saltHex,
-      nonceHex: wire.nonceHex,
-      autoSave: true,
-    });
-  }
-  await guardedReveal(result.plaintext, 'manual');
-}
-
-async function bootstrap() {
-  const mainElement = document.getElementById('hexo-blog-encrypt');
-  if (!mainElement) return;
-  const wire = readWireFormat(mainElement);
-
-  if (wire.format !== SUPPORTED_FORMAT) {
-    ui.showError(
-      mainElement,
-      'hexo-blog-encrypt: this page was built with an incompatible plugin version. ' +
-      'Rebuild the site after upgrading the plugin.'
-    );
-    return;
-  }
-
-  // Single-shot reveal guard: with autoSave on, `tryAutoDecrypt` runs in
-  // parallel with the form submit handler. If the user types fast enough
-  // to submit BEFORE auto-decrypt resolves, both paths can call `reveal`
-  // on the same `mainElement` — the second `replaceChild` would throw
-  // because the wrapper is already detached. The guard makes whoever
-  // wins the race the sole DOM-mutator.
-  let revealed = false;
-  const guardedReveal = async (plaintext, mode) => {
-    if (revealed) return;
-    revealed = true;
-    await reveal(mainElement, plaintext, mode);
-  };
-
-  const form = mainElement.querySelector('#hbeForm');
-  ui.attachSubmit(form, () => handleSubmit(mainElement, wire, form, guardedReveal));
-
-  const auto = await tryAutoDecrypt(mainElement, wire, guardedReveal);
-  if (!auto && !revealed) {
-    const input = mainElement.querySelector('#hbePass');
-    if (input) input.focus();
-  }
+function init() {
+  const wrappers = document.querySelectorAll(WRAPPER);
+  for (let i = 0; i < wrappers.length; i++) setup(wrappers[i]);
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', bootstrap);
+  document.addEventListener('DOMContentLoaded', init);
 } else {
-  bootstrap();
+  init();
 }
