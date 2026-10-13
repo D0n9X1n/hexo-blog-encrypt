@@ -129,8 +129,9 @@ node "${CLAUDE_SKILL_DIR}/scripts/check-toc-leak.js" \
 The checker ([scripts/check-toc-leak.js](scripts/check-toc-leak.js)) reads every post with a front-matter `password`, extracts its
 Markdown headings (code fences skipped, headings shorter than 4 characters
 ignored), and searches all generated `.html`, `.xml`, `.json`, `.txt`, and
-`.js` files. Pass tag-encrypted posts explicitly with `--post <file>`. Exit
-code 1 means a leak; fix it before deploying. A heading that also appears in
+`.js` files. Pass tag-encrypted posts explicitly with `--post <file>`. Add
+`--body` to also check every prose line of 40+ characters (search indexes,
+feeds, metadata). Exit code 1 means a leak; fix it before deploying. A heading that also appears in
 an unencrypted post is a false positive; confirm by viewing source.
 
 Then in a browser:

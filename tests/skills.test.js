@@ -50,7 +50,7 @@ test('checker exits 0 when no encrypted heading is published', () => {
   const dir = site({ 'a.md': SECRET_POST }, { 'a/index.html': '<div id="hexo-blog-encrypt">cipher</div>' });
   const result = run(dir);
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /1 encrypted post\(s\), 2 heading\(s\) checked, 0 leak\(s\)/);
+  assert.match(result.stdout, /1 encrypted post\(s\), 2 string\(s\) checked, 0 leak\(s\)/);
 });
 
 test('checker exits 1 on a leaked heading, including a hidden or escaped one', () => {
@@ -60,13 +60,24 @@ test('checker exits 1 on a leaked heading, including a hidden or escaped one', (
   );
   const result = run(dir);
   assert.equal(result.status, 1);
-  assert.match(result.stdout, /LEAK .*index\.html: heading "Plans & Notes"/);
+  assert.match(result.stdout, /LEAK .*index\.html: "Plans & Notes"/);
 });
 
 test('checker scans tag-encrypted posts passed with --post', () => {
   const dir = site({ 'tag.md': '---\ntitle: t\ntags: [secret]\n---\n## Tagged Heading\n' }, { 'search.json': '{"text":"Tagged Heading"}' });
   assert.equal(run(dir).status, 0);
   assert.equal(run(dir, ['--post', path.join('source', '_posts', 'tag.md')]).status, 1);
+});
+
+test('--body also catches copied prose (search index, feed)', () => {
+  const secret = 'The quarterly numbers are far worse than we told the board.';
+  const post = SECRET_POST + '\n' + secret + '\n\n- short list item\n';
+  const dir = site({ 'a.md': post }, { 'search.xml': '<content>' + secret + '</content>' });
+  assert.equal(run(dir).status, 0, 'headings-only mode ignores prose');
+  const result = run(dir, ['--body']);
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /search\.xml: "The quarterly numbers/);
+  assert.deepEqual(headings(post, true), ['Secret Plans', 'Second Step', secret]);
 });
 
 test('checker reports usage and missing-output errors with exit 2', () => {

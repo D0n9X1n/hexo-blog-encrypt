@@ -1,9 +1,12 @@
 #!/usr/bin/env node
-/* check-toc-leak.js: fail if an encrypted post's headings appear in generated files.
+/* check-toc-leak.js: fail if an encrypted post's text appears in generated files.
  *
  * Usage (from the Hexo site root, after `hexo clean && hexo generate`):
- *   node check-toc-leak.js [--source source/_posts] [--public public] [--post path.md ...]
+ *   node check-toc-leak.js [--source source/_posts] [--public public] [--post path.md ...] [--body]
  *
+ * Headings are always checked. --body also checks every prose line of at least
+ * 40 characters, which catches search indexes, feeds and metadata that copy
+ * the post body.
  * Posts with a non-empty front-matter `password` are checked automatically.
  * Tag-encrypted posts have no front-matter password; pass them with --post.
  * Exit code: 0 clean, 1 leak found, 2 usage or I/O error.
@@ -14,12 +17,17 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const MIN_HEADING_LENGTH = 4;
+const MIN_BODY_LENGTH = 40;
 const SCANNED_EXTENSIONS = new Set(['.html', '.xml', '.json', '.txt', '.js']);
 
 function parseArgs(argv) {
-  const args = { source: 'source/_posts', public: 'public', posts: [] };
+  const args = { source: 'source/_posts', public: 'public', posts: [], body: false };
   for (let i = 0; i < argv.length; i++) {
     const flag = argv[i];
+    if (flag === '--body') {
+      args.body = true;
+      continue;
+    }
     const value = argv[i + 1];
     if (!['--source', '--public', '--post'].includes(flag) || value === undefined) {
       throw new Error(`unknown or incomplete argument: ${flag}`);
@@ -43,7 +51,14 @@ function hasPassword(text) {
   return value !== '';
 }
 
-function headings(text) {
+function plain(text) {
+  return text
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/[`*_~]/g, '')
+    .trim();
+}
+
+function headings(text, includeBody = false) {
   const body = text.replace(/^---\r?\n[\s\S]*?\r?\n---/, '');
   const out = [];
   let fence = null;
@@ -55,12 +70,14 @@ function headings(text) {
     }
     if (fence) continue;
     const match = /^#{1,6}\s+(.+?)\s*#*\s*$/.exec(line);
-    if (!match) continue;
-    const plain = match[1]
-      .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
-      .replace(/[`*_~]/g, '')
-      .trim();
-    if (plain.length >= MIN_HEADING_LENGTH) out.push(plain);
+    if (match) {
+      const heading = plain(match[1]);
+      if (heading.length >= MIN_HEADING_LENGTH) out.push(heading);
+      continue;
+    }
+    if (!includeBody || /^\s*(<|\||>|[-*+]\s|\d+\.\s|<!--)/.test(line)) continue;
+    const prose = plain(line);
+    if (prose.length >= MIN_BODY_LENGTH) out.push(prose);
   }
   return out;
 }
@@ -104,7 +121,7 @@ function main() {
 
   const needles = [];
   for (const post of posts) {
-    for (const heading of headings(fs.readFileSync(post, 'utf8'))) {
+    for (const heading of headings(fs.readFileSync(post, 'utf8'), args.body)) {
       needles.push({ post, heading, forms: [heading, escapeHtml(heading), encodeURIComponent(heading)] });
     }
   }
@@ -118,9 +135,9 @@ function main() {
   }
 
   for (const leak of leaks) {
-    console.log(`LEAK ${leak.file}: heading "${leak.heading}" from ${leak.post}`);
+    console.log(`LEAK ${leak.file}: "${leak.heading}" from ${leak.post}`);
   }
-  console.log(`${posts.size} encrypted post(s), ${needles.length} heading(s) checked, ${leaks.length} leak(s).`);
+  console.log(`${posts.size} encrypted post(s), ${needles.length} string(s) checked, ${leaks.length} leak(s).`);
   return leaks.length ? 1 : 0;
 }
 
