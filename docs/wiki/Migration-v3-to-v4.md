@@ -93,4 +93,4 @@ Same drill in reverse. v3 ciphertext is regenerated from your source.
 
 ## Full release notes
 
-See [CHANGELOG.md](https://github.com/D0n9X1n/hexo-blog-encrypt/blob/master/CHANGELOG.md) for the v4.0.0 entry — it includes a complete diff of behaviour, internals, and test-coverage stats.
+See the [v4.0.0 release notes](https://github.com/D0n9X1n/hexo-blog-encrypt/releases/tag/v4.0.0) for the complete list of changes.
