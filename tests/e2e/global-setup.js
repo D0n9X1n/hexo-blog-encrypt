@@ -13,8 +13,14 @@ const { discoverThemes } = require('../helpers/buildSite');
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const E2E_DIR = __dirname;
 
-function sha256(filePath) {
-  return crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
+// The generator rewrites (or strips) the bundle's trailing sourceMappingURL so
+// it points at the emitted hashed map (#262). Everything before it must match.
+const SOURCEMAP_COMMENT_RE = /\n?\/\/# sourceMappingURL=\S+\s*$/;
+
+function sha256(filePath, { ignoreSourcemapComment = false } = {}) {
+  let bytes = fs.readFileSync(filePath);
+  if (ignoreSourcemapComment) bytes = Buffer.from(bytes.toString('utf8').replace(SOURCEMAP_COMMENT_RE, ''));
+  return crypto.createHash('sha256').update(bytes).digest('hex');
 }
 
 /**
@@ -69,6 +75,7 @@ module.exports = async () => {
       label: 'browser bundle',
       src: sourceBundle,
       served: path.join(servedLibDir, servedBundleMatches[0]),
+      ignoreSourcemapComment: true,
     },
     {
       label: 'lib/hbe.style.css',
@@ -76,9 +83,9 @@ module.exports = async () => {
       served: path.join(publicDir, 'css', 'hbe.style.css'),
     },
   ];
-  for (const { label, src, served } of checks) {
-    const sd = sha256(src);
-    const xd = sha256(served);
+  for (const { label, src, served, ignoreSourcemapComment } of checks) {
+    const sd = sha256(src, { ignoreSourcemapComment });
+    const xd = sha256(served, { ignoreSourcemapComment });
     assert.strictEqual(
       sd,
       xd,
@@ -90,6 +97,14 @@ module.exports = async () => {
         `           sha256=${xd}`,
       ].join('\n')
     );
+  }
+
+  // #262: a sourceMappingURL in the served bundle must resolve to a generated file.
+  const servedJs = fs.readFileSync(path.join(servedLibDir, servedBundleMatches[0]), 'utf8');
+  const mapUrl = (servedJs.match(/\/\/# sourceMappingURL=(\S+)\s*$/) || [])[1];
+  if (mapUrl) {
+    const mapFile = path.join(servedLibDir, mapUrl);
+    assert.ok(fs.existsSync(mapFile), `sourceMappingURL=${mapUrl} does not resolve to a generated file`);
   }
 
   const server = await serveSite({ root: publicDir });
