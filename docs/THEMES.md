@@ -80,6 +80,16 @@ page. The browser uses `data-salt` to validate cached `autoSave` keys,
 then always decrypts with the current page's `data-nonce` and
 ciphertext. If AES-GCM authentication fails, the cache is cleared.
 
+## PJAX / SPA themes
+
+The bundle is injected once per encrypted post (`<script data-pjax>`), so it
+may execute many times; each wrapper is initialized only once. The first
+execution exposes `window.hexoBlogEncrypt.init(root = document)`, which is
+idempotent, and re-runs it on `pjax:complete`, `pjax:success`,
+`swup:contentReplaced` and `turbo:load` (listened for on `document`). Routers
+that fire other events (or jQuery-only events) should call
+`window.hexoBlogEncrypt.init()` after swapping content.
+
 ## Forbidden
 
 To keep the one-file-drop contract intact:

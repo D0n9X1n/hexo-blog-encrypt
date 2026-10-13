@@ -143,13 +143,29 @@ async function tryAutoDecrypt(wire, id, reveal) {
   return true;
 }
 
-function init() {
-  const wrappers = document.querySelectorAll(WRAPPER);
+// Public, idempotent initializer: sets up every not-yet-initialized wrapper
+// inside `root` (default: the whole document). Safe to call any number of
+// times, e.g. from a PJAX/SPA theme after swapping page content.
+function init(root) {
+  root = root || document;
+  const wrappers = Array.prototype.slice.call(root.querySelectorAll(WRAPPER));
+  if (root.matches && root.matches(WRAPPER)) wrappers.unshift(root);
   for (let i = 0; i < wrappers.length; i++) setup(wrappers[i]);
 }
 
+// The bundle may execute once per post and again on every PJAX navigation.
+// Only the first execution exposes the API and registers listeners; later
+// ones just run init (wrappers are guarded per element).
+if (!window.hexoBlogEncrypt) {
+  window.hexoBlogEncrypt = { init };
+  const rerun = () => window.hexoBlogEncrypt.init();
+  ['pjax:complete', 'pjax:success', 'swup:contentReplaced', 'turbo:load'].forEach((name) => {
+    document.addEventListener(name, rerun);
+  });
+}
+
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', () => init());
 } else {
   init();
 }

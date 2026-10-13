@@ -195,15 +195,27 @@ password: ""
 
 ### 解密后事件
 
-文章显示后, 插件会在 `window` 上触发一次 `hexo-blog-decrypt`.
-`event.detail.mode` 为 `manual` (输入密码) 或 `cached` (已缓存的密钥).
+每篇文章显示后, 插件会在 `window` 上触发一次 `hexo-blog-decrypt`.
+`event.detail.mode` 为 `manual` (输入密码) 或 `cached` (已缓存的密钥),
+`event.detail.element` 是显示出的容器 (首页同时展示多篇加密文章时可用来区分).
 监听它来重新执行需要扫描正文的代码:
 
 ```js
 window.addEventListener('hexo-blog-decrypt', function (event) {
   // 重新初始化主题的目录、代码高亮等.
-  console.log('Decrypted:', event.detail.mode);
+  console.log('Decrypted:', event.detail.mode, event.detail.element);
 });
+```
+
+### PJAX 与单页应用主题
+
+脚本会初始化页面上的每一篇加密文章, 且每篇只初始化一次. 在 `document` 上触发
+`pjax:complete`, `pjax:success`, `swup:contentReplaced` 或 `turbo:load` 时会自动
+重新扫描. 其他路由方案可在替换内容后调用幂等的初始化函数:
+
+```js
+window.hexoBlogEncrypt.init();          // 整个文档
+window.hexoBlogEncrypt.init(container); // 仅某个子树
 ```
 
 ### 加密文章中的脚本

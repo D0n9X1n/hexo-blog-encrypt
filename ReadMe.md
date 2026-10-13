@@ -201,15 +201,29 @@ password: ""
 
 ### After-decrypt event
 
-The plugin dispatches `hexo-blog-decrypt` once on `window` after a post is
+The plugin dispatches `hexo-blog-decrypt` once on `window` after each post is
 revealed. `event.detail.mode` is `manual` (password entered) or `cached`
-(saved key). Listen for it to re-run anything that scans the post body:
+(saved key), and `event.detail.element` is the revealed container (useful when
+an index page shows several encrypted posts). Listen for it to re-run anything
+that scans the post body:
 
 ```js
 window.addEventListener('hexo-blog-decrypt', function (event) {
   // Reinitialize your theme's table of contents, syntax highlighting, etc.
-  console.log('Decrypted:', event.detail.mode);
+  console.log('Decrypted:', event.detail.mode, event.detail.element);
 });
+```
+
+### PJAX and SPA themes
+
+The bundle initializes every encrypted post on the page once. It re-scans
+automatically on `pjax:complete`, `pjax:success`, `swup:contentReplaced` and
+`turbo:load` (dispatched on `document`). For other routers, call the idempotent
+initializer after swapping content:
+
+```js
+window.hexoBlogEncrypt.init();          // whole document
+window.hexoBlogEncrypt.init(container); // only a subtree
 ```
 
 ### Scripts inside encrypted posts

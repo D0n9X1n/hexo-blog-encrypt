@@ -132,3 +132,102 @@ test.describe('multiple encrypted posts on one page (#246)', () => {
     ]);
   });
 });
+
+// Simulate a PJAX theme: fetch the next page, swap <body> content without a
+// reload, optionally re-execute `data-pjax` scripts (as Butterfly/NexT do),
+// then fire the library's completion event(s) on `document`.
+async function pjaxNavigate(page, url, { runScripts = false, events: names = ['pjax:complete'] } = {}) {
+  await page.evaluate(async ({ url, runScripts, names }) => {
+    const html = await (await fetch(url)).text();
+    const next = new DOMParser().parseFromString(html, 'text/html');
+    document.body.innerHTML = next.body.innerHTML;
+    history.pushState(null, '', url);
+    if (runScripts) {
+      for (const old of document.body.querySelectorAll('script[data-pjax]')) {
+        await new Promise((resolve) => {
+          const s = document.createElement('script');
+          s.src = old.src;
+          s.onload = s.onerror = resolve;
+          old.replaceWith(s);
+        });
+      }
+    }
+    for (const name of names) document.dispatchEvent(new Event(name));
+  }, { url, runScripts, names });
+}
+
+test.describe('PJAX / SPA navigation (#253)', () => {
+  test.afterEach(async ({ page }) => {
+    await page.evaluate(() => localStorage.clear()).catch(() => {});
+  });
+
+  test('plain -> encrypted -> encrypted without reload: one init, one event per reveal', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await recordDecryptEvents(page);
+    await page.goto('/plain-page/');
+    await expect(page.locator('body')).toContainText('PLAIN-PAGE-NO-ENCRYPTION');
+    expect(await page.evaluate(() => typeof window.hexoBlogEncrypt)).toBe('undefined');
+
+    // 1) First encrypted page: the theme re-runs the bundle AND fires both events.
+    await pjaxNavigate(page, '/encrypted-default/', {
+      runScripts: true, events: ['pjax:send', 'pjax:complete', 'pjax:success'],
+    });
+    expect(await page.evaluate(() => typeof window.hexoBlogEncrypt.init)).toBe('function');
+    await page.locator('#hbePass').fill('hello');
+    await page.locator('#hbePass').press('Enter');
+    await expect(page.locator('body')).toContainText('THE SECRET IS BUTTERFLY');
+    await expect.poll(() => events(page)).toEqual([{ mode: 'manual', slug: null, connected: true }]);
+
+    // 2) Second encrypted page (two posts): bundle re-run again + events.
+    await pjaxNavigate(page, MULTI, { runScripts: true, events: ['pjax:complete', 'pjax:success'] });
+    const input = post(page, BRAVO.slug).locator('input[type="password"]');
+    await input.fill(BRAVO.password);
+    await input.press('Enter');
+    await expect(post(page, BRAVO.slug)).toContainText(BRAVO.secret);
+    await expect(post(page, ALPHA.slug).locator('input[type="password"]')).toBeVisible();
+    await expect.poll(async () => (await events(page)).length).toBe(2);
+    expect((await events(page))[1]).toEqual({ mode: 'manual', slug: BRAVO.slug, connected: true });
+    expect(errors).toEqual([]);
+  });
+
+  for (const name of ['pjax:complete', 'pjax:success', 'swup:contentReplaced', 'turbo:load']) {
+    test(`'${name}' alone initializes swapped-in posts (scripts not re-run)`, async ({ page }) => {
+      await recordDecryptEvents(page);
+      await page.goto('/encrypted-default/');
+      await page.locator('#hbePass').fill('hello');
+      await page.locator('#hbePass').press('Enter');
+      await expect(page.locator('body')).toContainText('THE SECRET IS BUTTERFLY');
+
+      await pjaxNavigate(page, MULTI, { events: [name] });
+      const input = post(page, ALPHA.slug).locator('input[type="password"]');
+      await input.fill(ALPHA.password);
+      await input.press('Enter');
+      await expect(post(page, ALPHA.slug)).toContainText(ALPHA.secret);
+      await expect.poll(async () => (await events(page)).length).toBe(2);
+    });
+  }
+
+  test('hexoBlogEncrypt.init(root) is idempotent and scoped to root', async ({ page }) => {
+    await recordDecryptEvents(page);
+    await page.goto('/encrypted-default/');
+    await expect(page.locator('#hbePass')).toBeVisible();
+    // Inject another page's post and init only that subtree, repeatedly.
+    await page.evaluate(async (url) => {
+      const html = await (await fetch(url)).text();
+      const box = document.createElement('section');
+      box.id = 'injected';
+      box.innerHTML = new DOMParser().parseFromString(html, 'text/html')
+        .querySelector('article[data-slug="multi-post-alpha"]').outerHTML;
+      document.body.appendChild(box);
+      window.hexoBlogEncrypt.init(box);
+      window.hexoBlogEncrypt.init(box);
+      window.hexoBlogEncrypt.init();
+    }, MULTI);
+    const input = page.locator('#injected input[type="password"]');
+    await input.fill(ALPHA.password);
+    await input.press('Enter');
+    await expect(page.locator('#injected')).toContainText(ALPHA.secret);
+    await expect.poll(() => events(page)).toEqual([{ mode: 'manual', slug: ALPHA.slug, connected: true }]);
+  });
+});
