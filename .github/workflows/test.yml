@@ -32,6 +32,9 @@ jobs:
       - name: Server tests (with coverage)
         run: npm run test:server
 
+      - name: Wiki publish script tests
+        run: bash scripts/test-wiki-publish.sh
+
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4
